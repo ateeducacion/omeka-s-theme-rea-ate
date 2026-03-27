@@ -77,6 +77,7 @@ if ($userBar) {
 		<?php
 		echo $this->inlineScript()
 			->prependFile($this->assetUrl('js/navigation.js'))
+			->prependFile($this->assetUrl('js/resource-link-info.js'))
 			->prependFile($this->assetUrl('js/script.js'));
 		?>
 	</body>
