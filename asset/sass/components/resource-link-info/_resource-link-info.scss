@@ -1,0 +1,45 @@
+.resource-link-info {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: flex-start;
+    vertical-align: top;
+    margin-right: 15px;
+
+    &__btn {
+        background: none;
+        border: 1px solid $color__primary;
+        border-radius: 50%;
+        color: $color__primary;
+        cursor: pointer;
+        flex-shrink: 0;
+        font-size: 1rem;
+        height: 22px;
+        line-height: 1;
+        margin-left: 5px;
+        padding: 0;
+        width: 22px;
+    }
+
+    &__panel {
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 0.875rem;
+        max-height: 0;
+        max-width: 0;
+        overflow: hidden;
+        padding: 0;
+        transition: max-height 0.2s ease-out, max-width 0.2s ease-out, padding 0.2s ease-out;
+        white-space: normal;
+        width: 20vw;
+
+        p {
+            margin: 0;
+        }
+    }
+
+    &.expanded &__panel {
+        border: 1px solid $color__hr;
+        max-width: 20vw;
+        padding: 8px 10px;
+    }
+}
