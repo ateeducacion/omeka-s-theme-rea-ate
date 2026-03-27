@@ -16,7 +16,7 @@
         @media (min-width: $xl) {
             border-right: 1px solid #ececec;
             padding-right: 1.6rem;
-            width: 25%;
+            width: 20%;
             z-index: auto !important;
         }
 
@@ -41,7 +41,7 @@
         width: 100%;
 
         @media (min-width: $xl) {
-            width: 75%;
+            width: 80%;
         }
 
         .browse-controls {
@@ -96,13 +96,13 @@
     }
 
     .select-list {
-        display: flex;
-        flex-wrap: wrap;
+        display: block;
         margin-left: 0 !important;
         width: 100%;
 
         @media (min-width: $xl) {
-            display: block;
+            display: flex;
+            flex-wrap: wrap;
             margin-left: 1rem !important;
         }
 
@@ -111,10 +111,58 @@
 
             @media (min-width: $xl) {
                 margin-left: 0;
+                width: 100%;
+                flex-basis: 100%;
             }
 
             &::before {
                 content: none !important;
+            }
+
+            &:has(input.value.selected) {
+                @media (min-width: $xl) {
+                    width: auto;
+                    flex-basis: auto;
+                    padding-right: 4px;
+                }
+
+                label {
+                    background-color: hsl(270, 2%, 83%);
+                    border-radius: 4px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.25rem;
+                    cursor: pointer;
+                    padding: 0 4px;
+
+                    input[type="checkbox"] {
+                        appearance: none;
+                        -webkit-appearance: none;
+                        margin: 0;
+                        width: 0;
+                        height: 0;
+                        opacity: 0;
+                        position: absolute;
+                    }
+
+                    input[type="radio"] {
+                        appearance: none;
+                        -webkit-appearance: none;
+                        margin: 0;
+                        width: 0;
+                        height: 0;
+                        opacity: 0;
+                        position: absolute;
+                    }
+
+                    &::before {
+                        content: '✕';
+                        color: gray;
+                        font-size: 1rem;
+                        cursor: pointer;
+                        flex-shrink: 0;
+                    }
+                }
             }
         }
 
@@ -191,37 +239,109 @@
         padding: 0 5px;
     }
 
-
     table {
         border-collapse: separate;
         border-spacing: 0 15px;
+        display: block;
+        width: 100%;
 
         thead {
-            background-color: $color__gray-93;
-            color: $color__black;
-
-            th {
-                padding: 0.75rem;
-                font-weight: 600;
-                text-align: left;
-            }
+            display: none;
         }
 
         tbody {
+            display: block;
 
             tr {
-                box-shadow: 0px 1px 6px rgba($color__black, 0.2);
+                display: flex;
+                flex-wrap: wrap;
+                box-shadow: 0px 1px 6px 5px rgba($color__black, 0.2);
+                margin-bottom: 15px;
+                border-radius: 4px;
 
                 td {
                     padding: 0.75rem;
+                    .metadata-search-link {
+                        white-space: nowrap;
+                        
+                        &::marker {
+                            content: none;
+                        }
+                    }
 
-                    .resource-link {
+                    // Enlace
+                    &:nth-child(1) {
+                        width: 50%;
+                        order: 1;
+
+                        .resource-link {
+                            display: flex;
+                            align-items: center;
+                        }
+                    }
+
+                    // Descripción
+                    &:nth-child(2) {
+                        width: 100%;
+                        order: 3;
+                        border-top: 1px solid $color__gray-93;
+                        font-size: 0.9rem;
+                    }
+
+                    // Curso
+                    &:nth-child(3) {
+                        width: 10%;
+                        order: 2;
+                        text-align: right;
+                        align-content: center;
+                    }
+                    // Tipo de recurso
+                    &:nth-child(4) {
+                        width: 20%;
+                        order: 2;
+                        text-align: right;
+                        align-content: center;
+                    }
+                    // Materia
+                    &:nth-child(5) {
+                        width: 20%;
+                        order: 2;
+                        text-align: right;
+                        align-content: center;
+                    }
+
+                    // Saberes Básicos
+                    &:nth-child(n+6) {
+                        width: 100%;
+                        order: 4;
+                        border-top: 1px solid $color__gray-93;
                         display: flex;
-                        align-items: center;
+                        flex-direction: row;
+                        flex-wrap: wrap;
+                        align-items: flex-start;
+                        gap: 0.3rem;
+
+                        br {
+                            display: none;
+                        }
+                        .metadata-search-link {
+                            white-space: nowrap;
+                            
+                            &::marker {
+                                content: none;
+                            }
+                        }
+
+                        .resource-link {
+                            margin-right: none;
+                        }
                     }
                 }
             }
         }
     }
+}
 
+.tablesaw-advance {
+  float: none !important;
 }
