@@ -7,7 +7,7 @@
 
     > div:not(:last-child),
     .media-render:not(:last-child) {
-        margin-bottom: 2rem;
+        margin-bottom: 0.5rem;
     }
 
     .media-render > * {
@@ -16,14 +16,14 @@
 
     dl {
         margin-top: 0;
-        margin-bottom: 2rem;
+        margin-bottom: 0.125rem;
 
         &:last-child {
             margin-bottom: 0;
         }
 
         > .property {
-            margin-bottom: 1.25rem;
+            margin-bottom: 0.5rem;
 
             &::after {
                 content: "";
@@ -74,7 +74,7 @@
         }
     }
     .property {
-            margin-bottom: 1.25rem;
+            margin-bottom: 0.5rem;
 
             &::after {
                 content: "";
@@ -110,7 +110,7 @@
 
                 &:not(.sidebar-region &) {
                     @media (min-width: $md) {
-                        margin-left: 160px;
+                        margin-left: none;
                     }
                 }
 
@@ -195,7 +195,15 @@
     .block-tools{
         margin-top: auto
     }
-
+    .values-group.div-lomloe {
+        .property {
+            display: flex;
+            dd.value{
+                margin-right: 10px;
+            }
+            
+        }
+    }
 }
 .main-region > .metadata {
   display: flex;
