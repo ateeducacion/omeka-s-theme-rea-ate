@@ -1,0 +1,546 @@
+// Page-level styles for the AdvancedSearch block / page:
+//  - compact search form on top
+//  - two-column layout with sticky facet sidebar on the left
+//  - polished facets panel and results header
+
+// On any CMS page that embeds an AdvancedSearch block, hide the CMS page
+// title block so results get maximum vertical priority. Scoped via :has()
+// so only pages with the search block are affected. The search form and
+// "Buscar" h2 used to be hidden here too — they are now removed directly
+// from view/search/search.phtml instead.
+.blocks-inner:has(.block-searchingForm) {
+    > .block-pageTitle {
+        display: none;
+    }
+}
+
+// Top-level wrapper can appear inside a page block (.block-searchingForm)
+// or directly on the dedicated search page. Scope as generically as possible
+// so both render the same way.
+
+.block-searchingForm,
+#search-page {
+
+    // ---- Top search form (compact, centered) ----
+    #block-search,
+    .block-search {
+        margin-bottom: 1rem;
+
+        > h2 {
+            margin: 0 0 0.75rem;
+            font-size: 1.25rem;
+            text-align: center;
+
+            .title { font-weight: 600; }
+        }
+    }
+
+    #advanced-search-form-wrapper {
+        max-width: 720px;
+        margin: 0 auto 1.25rem;
+    }
+
+    #advanced-search-form {
+        width: 100%;
+    }
+
+    #form-search {
+        margin: 0;
+
+        fieldset {
+            border: none;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
+        }
+
+        .field {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+
+        // The "Búsqueda" label is redundant with the placeholder.
+        .field-meta { display: none; }
+
+        .inputs {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        input[type="search"] {
+            width: 100%;
+            padding: 0.7rem 1.1rem;
+            border: 1px solid $color__gray-87;
+            border-radius: 999px;
+            background: $color__white;
+            font-size: 1rem;
+            line-height: 1.4;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+            &:focus {
+                outline: none;
+                border-color: $color__primary;
+                box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        .search-form-buttons {
+            display: flex;
+            gap: 0.5rem;
+
+            &:empty { display: none; }
+        }
+    }
+
+    // ---- Two-column layout: facets | results ----
+    .search-results-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+
+        > aside.search-facets {
+            flex: 0 0 260px;
+            max-width: 260px;
+            min-width: 0;
+            position: sticky;
+            top: 1rem;
+            align-self: flex-start;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+        }
+
+        > #search-results,
+        > .search-results {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        @media (max-width: $lg) {
+            > aside.search-facets {
+                position: static;
+                flex: 0 0 100%;
+                max-width: 100%;
+                max-height: none;
+                overflow-y: visible;
+            }
+        }
+    }
+
+    // ---- Facets panel ----
+    #search-facets {
+        background: $color__white;
+        border: 1px solid $color__gray-93;
+        border-radius: 8px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+        > h3 {
+            margin: 0 0 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: $color__gray-46;
+            border-bottom: 1px solid $color__gray-93;
+            padding-bottom: 0.5rem;
+        }
+
+        .facets-refine {
+            margin: 0 0 1rem;
+
+            h4 {
+                margin: 0 0 0.35rem;
+
+                label {
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    color: $color__gray-46;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                }
+            }
+
+            input.search-refine {
+                width: 100%;
+                padding: 0.45rem 0.7rem;
+                border: 1px solid $color__gray-87;
+                border-radius: 4px;
+                font-size: 0.9rem;
+
+                &:focus {
+                    outline: none;
+                    border-color: $color__primary;
+                }
+            }
+
+            button.search-refine {
+                margin-top: 0.4rem;
+                font-size: 0.8rem;
+                padding: 0.3rem 0.75rem;
+            }
+        }
+
+        .facets-actions {
+            margin-bottom: 0.75rem;
+
+            button.facets-reset {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.75rem;
+                background: transparent;
+                border: 1px solid $color__gray-87;
+                color: $color__gray-40;
+
+                &:hover {
+                    background: $color__gray-95;
+                }
+            }
+        }
+
+        .facets-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            > li::before { content: none !important; }
+
+            > li.facet {
+                padding: 0 0 0.85rem;
+                margin: 0 0 0.85rem;
+                border-bottom: 1px solid $color__gray-93;
+
+                &:last-child {
+                    border-bottom: none;
+                    margin-bottom: 0;
+                    padding-bottom: 0;
+                }
+
+                > h4 {
+                    margin: 0 0 0.45rem;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: $color__headings;
+                    text-transform: capitalize;
+                }
+            }
+        }
+
+        .facet-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+
+            > li.facet-item {
+                margin: 0;
+
+                &::before { content: none !important; }
+
+                label {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.3rem 0.45rem;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 0.88rem;
+                    color: $color__gray-33;
+                    transition: background 0.15s ease;
+
+                    &:hover {
+                        background: $color__gray-95;
+                    }
+
+                    > span {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.4rem;
+                        flex: 1 1 auto;
+                        min-width: 0;
+                    }
+                }
+
+                input[type="checkbox"] {
+                    flex-shrink: 0;
+                    margin: 0 !important;
+                    width: 15px;
+                    height: 15px;
+                    accent-color: $color__primary;
+                    cursor: pointer;
+                }
+
+                .count {
+                    color: $color__gray-58;
+                    font-size: 0.78rem;
+                    font-weight: 400;
+                    margin-left: auto;
+                    flex-shrink: 0;
+                }
+
+                // Active / selected state
+                &.active label,
+                input:checked + label,
+                label:has(input:checked) {
+                    background: rgba(0, 0, 0, 0.03);
+                    font-weight: 500;
+                    color: $color__headings;
+                }
+            }
+        }
+    }
+
+    // ---- Results header (thin toolbar) ----
+    #search-results {
+        .search-results-header {
+            margin: 0 0 0.75rem;
+            padding: 0.25rem 0 0.4rem;
+            border-bottom: 1px solid $color__gray-93;
+
+            .search-results-count {
+                margin: 0;
+
+                .pagination {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                    margin: 0;
+                    padding: 0;
+                    border: none;
+                    background: transparent;
+                }
+
+                // Always visible, prominent total/range counter
+                .row-count {
+                    display: inline-block;
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    color: $color__headings;
+                    padding: 0.25rem 0.65rem;
+                    background: $color__gray-95;
+                    border-radius: 999px;
+                    white-space: nowrap;
+                    flex: 0 0 auto;
+                    order: 1;
+                }
+
+                .pager-wrapper {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.35rem;
+                    flex: 0 0 auto;
+                    order: 2;
+                    margin-left: auto;
+                }
+
+                // Prev / Next icon buttons
+                .pager-wrapper .prev,
+                .pager-wrapper .next {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 30px;
+                    height: 30px;
+                    padding: 0;
+                    margin: 0;
+                    border: 1px solid $color__gray-87;
+                    border-radius: 50%;
+                    background: $color__white;
+                    color: $color__gray-40;
+                    font-size: 0.85rem;
+                    line-height: 1;
+                    text-decoration: none;
+                    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+                    &::before {
+                        margin: 0;
+                        font-size: 0.8rem;
+                    }
+
+                    &:hover {
+                        background: $color__primary;
+                        border-color: $color__primary;
+                        color: $color__white;
+                    }
+
+                    &.disabled,
+                    &[disabled] {
+                        opacity: 0.4;
+                        cursor: not-allowed;
+                        pointer-events: none;
+
+                        &:hover {
+                            background: $color__white;
+                            border-color: $color__gray-87;
+                            color: $color__gray-40;
+                        }
+                    }
+                }
+
+                // Inline page input form
+                .pager-wrapper form.pager {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.35rem;
+                    margin: 0;
+                    padding: 0;
+
+                    label {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.35rem;
+                        margin: 0;
+                        font-size: 0.8rem;
+                        color: $color__gray-46;
+                    }
+
+                    input.page-input-top {
+                        width: 2.4rem;
+                        padding: 0.2rem 0.35rem;
+                        border: 1px solid $color__gray-87;
+                        border-radius: 4px;
+                        font-size: 0.85rem;
+                        text-align: center;
+                        background: $color__white;
+
+                        &:focus {
+                            outline: none;
+                            border-color: $color__primary;
+                        }
+                    }
+
+                    .page-count {
+                        font-size: 0.8rem;
+                        color: $color__gray-46;
+                    }
+
+                    input.gotopage-btn {
+                        padding: 0.25rem 0.6rem;
+                        font-size: 0.78rem;
+                        font-weight: 500;
+                        border: 1px solid $color__gray-87;
+                        border-radius: 4px;
+                        background: $color__white;
+                        color: $color__gray-33;
+                        cursor: pointer;
+                        transition: background 0.15s ease, border-color 0.15s ease;
+
+                        &:hover {
+                            background: $color__gray-95;
+                            border-color: $color__gray-67;
+                        }
+                    }
+                }
+            }
+        }
+
+    // The "X fichas" heading is redundant with the row-count badge.
+        .search-results-list > h3 {
+            display: none;
+        }
+
+        .search-results-footer {
+            margin-top: 1.25rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid $color__gray-93;
+        }
+    }
+
+    // ---- Active facet tags (breadcrumbs strip, inside aside.search-facets) ----
+    .facets-active {
+        list-style: none;
+        margin: 0 0 0.75rem;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+
+        // Color tokens per facet field — set on the <li> via :has()
+        // so label and value link share the same palette automatically.
+        li.facet-active:has(a[data-facet-name^="facet[lrmi:educationalLevel]"]) {
+            --_bg:     hsl(210, 70%, 91%);
+            --_border: hsl(210, 55%, 76%);
+            --_color:  hsl(210, 55%, 28%);
+        }
+        li.facet-active:has(a[data-facet-name^="facet[lrmi:learningResourceType]"]) {
+            --_bg:     hsl(270, 55%, 91%);
+            --_border: hsl(270, 45%, 75%);
+            --_color:  hsl(270, 50%, 30%);
+        }
+        li.facet-active:has(a[data-facet-name^="facet[schema:about]"]) {
+            --_bg:     hsl(160, 55%, 88%);
+            --_border: hsl(160, 45%, 68%);
+            --_color:  hsl(160, 55%, 22%);
+        }
+        li.facet-active:has(a[data-facet-name^="facet[lrmi:teaches]"]) {
+            --_bg:     hsl(35, 80%, 89%);
+            --_border: hsl(35, 65%, 70%);
+            --_color:  hsl(35, 65%, 26%);
+        }
+        li.facet-active:has(a[data-facet-name^="facet[dcterms:relation]"]) {
+            --_bg:     hsl(355, 60%, 91%);
+            --_border: hsl(355, 50%, 74%);
+            --_color:  hsl(355, 55%, 28%);
+        }
+
+        li.facet-active {
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            background: var(--_bg, hsl(0, 0%, 91%));
+            border: 1px solid var(--_border, hsl(0, 0%, 76%));
+            border-radius: 999px;
+            padding: 3px 2px 3px 2px;
+            font-size: 0.82rem;
+            line-height: 1.2;
+            transition: filter 0.15s ease;
+
+            &::before { content: none !important; }
+
+            &:hover { filter: brightness(0.94); }
+
+            // Category label shown as a muted prefix before the value
+            .facet-active-label {
+                font-weight: 600;
+                color: var(--_color, hsl(0, 0%, 30%));
+                opacity: 0.72;
+                margin-right: 0.22rem;
+                white-space: nowrap;
+                display: none;
+
+                &::after { content: ':'; }
+            }
+
+            // The link removes the facet on click; × signals that intent
+            a.facet-active-value {
+                color: var(--_color, hsl(0, 0%, 30%));
+                text-decoration: none;
+                font-weight: 500;
+                white-space: nowrap;
+
+                &::after {
+                    content: '×';
+                    display: inline-block;
+                    margin-left: 0.38rem;
+                    font-size: 1.05rem;
+                    font-weight: 300;
+                    line-height: 1;
+                    opacity: 0.45;
+                    vertical-align: middle;
+                    transition: opacity 0.15s ease;
+                    margin-right: 0px;
+                }
+
+                &:hover { text-decoration: none; }
+                &:hover::after { opacity: 1; }
+            }
+        }
+    }
+}
