@@ -1,9 +1,10 @@
 .resource-link-info {
     display: inline-flex;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
     vertical-align: top;
-    margin-right: 15px;
+    padding-left: 5px;
+
 
     &__btn {
         background: none;
