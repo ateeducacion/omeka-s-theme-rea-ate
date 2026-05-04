@@ -21,44 +21,15 @@ $leftSidebarHasBlocks = $leftSidebarBlockContent->hasBlocks();
 $rightSidebarBlockContent = $this->resourcePageBlocks($item, 'right');
 $rightSidebarHasBlocks = $rightSidebarBlockContent->hasBlocks();
 
-// Build breadcrumb "Recursos" URL: read the main Advanced Search config path
-// for this site; fall back to the generic item browse.
-$siteSlug     = $this->currentSite()->slug();
-$resourcesUrl = null;
-
-try {
-    // Try multiple site-setting keys used across AS versions.
-    $configId = $this->siteSetting('advancedsearch_main_search_page')
-        ?: $this->siteSetting('advancedsearch_main_page')
-        ?: $this->siteSetting('advancedsearch_search_main_page');
-    if (!$configId) {
-        $configs  = $this->siteSetting('advancedsearch_configs', []);
-        $configId = reset($configs) ?: null;
-    }
-    if ($configId) {
-        $searchConfig = $this->api()->read('search_configs', $configId)->getContent();
-        $resourcesUrl = $searchConfig->siteUrl($siteSlug);
-    }
-} catch (\Exception $e) {
-    // Advanced Search not available or config not found — fall through.
-}
-
-if (!$resourcesUrl) {
-    $resourcesUrl = $this->url('site/resource', [
-        'site-slug'  => $siteSlug,
-        'controller' => 'item',
-        'action'     => 'browse',
-    ]);
-}
+$plugins    = $this->getHelperPluginManager();
+$breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : null;
 ?>
 
+<?php if ($breadcrumbs): ?>
 <div class="breadcrumbs-parent">
-    <nav id="breadcrumb" class="breadcrumbs" aria-label="<?php echo $escape($translate('Breadcrumbs')); ?>">
-        <a href="<?php echo $escape($this->currentSite()->siteUrl()); ?>"><?php echo $escape($translate('Home')); ?></a>
-        <a href="<?php echo $escape($resourcesUrl); ?>"><?php echo $escape($translate('Resources')); ?></a>
-        <span aria-current="page"><?php echo $escape($item->displayTitle(null, $valueLang)); ?></span>
-    </nav>
+    <?= $breadcrumbs() ?>
 </div>
+<?php endif; ?>
 
 <div class="item-hero">
     <div class="item-hero__left">
