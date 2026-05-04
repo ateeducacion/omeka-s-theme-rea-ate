@@ -37,10 +37,7 @@ try {
     }
     if ($configId) {
         $searchConfig = $this->api()->read('search_configs', $configId)->getContent();
-        $resourcesUrl = $this->url('site/search', [
-            'site-slug' => $siteSlug,
-            'path'      => $searchConfig->path(),
-        ]);
+        $resourcesUrl = $searchConfig->siteUrl($siteSlug);
     }
 } catch (\Exception $e) {
     // Advanced Search not available or config not found — fall through.
