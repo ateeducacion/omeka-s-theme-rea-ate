@@ -597,7 +597,9 @@
 
 // When the standalone chips bar has content and sits above .noresults, keep a
 // comfortable visual gap between the chips and the "no results" message.
-.active-filter-chips:not(:empty) + .noresults {
+// Using ~ (general sibling) instead of + so the rule survives any trigger
+// output rendered between the two elements.
+.active-filter-chips:not(:empty) ~ .noresults {
     margin-top: 12px;
 }
 

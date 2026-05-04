@@ -112,6 +112,8 @@
         color: var(--ate-color-brand-blue-mid);
         padding: 4px 10px;
         margin-right: 5px;
+        position: relative; // anchor for the expanded info panel
+        overflow: visible;
         transition: background 0.15s, border-color 0.15s;
 
         &:hover {
@@ -133,6 +135,21 @@
                 background: var(--ate-color-brand-blue-mid);
                 color: var(--ate-text-on-dark);
             }
+        }
+
+        // Break the expanded panel out of the chip flow so it is never clipped.
+        .resource-link-info.expanded .resource-link-info__panel {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 10;
+            max-height: none;
+            max-width: none;
+            overflow: visible;
+            width: 220px;
+            margin-top: 4px;
+            background: var(--ate-surface-card);
+            border-radius: var(--ate-radius-md);
         }
     }
 }

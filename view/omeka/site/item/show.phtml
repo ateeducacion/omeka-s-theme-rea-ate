@@ -21,13 +21,37 @@ $leftSidebarHasBlocks = $leftSidebarBlockContent->hasBlocks();
 $rightSidebarBlockContent = $this->resourcePageBlocks($item, 'right');
 $rightSidebarHasBlocks = $rightSidebarBlockContent->hasBlocks();
 
-// Build breadcrumb "Recursos" URL: use Advanced Search route when available,
-// fall back to the generic item browse.
-$siteSlug = $this->currentSite()->slug();
+// Build breadcrumb "Recursos" URL: read the main Advanced Search config path
+// for this site; fall back to the generic item browse.
+$siteSlug     = $this->currentSite()->slug();
+$resourcesUrl = null;
+
 try {
-    $resourcesUrl = $this->url('site/search', ['site-slug' => $siteSlug]);
+    // Try multiple site-setting keys used across AS versions.
+    $configId = $this->siteSetting('advancedsearch_main_search_page')
+        ?: $this->siteSetting('advancedsearch_main_page')
+        ?: $this->siteSetting('advancedsearch_search_main_page');
+    if (!$configId) {
+        $configs  = $this->siteSetting('advancedsearch_configs', []);
+        $configId = reset($configs) ?: null;
+    }
+    if ($configId) {
+        $searchConfig = $this->api()->read('search_configs', $configId)->getContent();
+        $resourcesUrl = $this->url('site/search', [
+            'site-slug' => $siteSlug,
+            'path'      => $searchConfig->path(),
+        ]);
+    }
 } catch (\Exception $e) {
-    $resourcesUrl = $this->url('site/resource', ['site-slug' => $siteSlug, 'controller' => 'item', 'action' => 'browse']);
+    // Advanced Search not available or config not found — fall through.
+}
+
+if (!$resourcesUrl) {
+    $resourcesUrl = $this->url('site/resource', [
+        'site-slug'  => $siteSlug,
+        'controller' => 'item',
+        'action'     => 'browse',
+    ]);
 }
 ?>
 

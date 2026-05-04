@@ -39,7 +39,9 @@
 
     &.expanded &__panel {
         border: 1px solid $color__hr;
+        max-height: none;
         max-width: 20vw;
+        overflow: visible;
         padding: 8px 10px;
     }
 }
