@@ -1,0 +1,404 @@
+// ═══════════════════════════════════════════════════════════
+// Item Show — página de detalle de recurso
+// Tokens --ate-* del sistema Canarias Educativa
+// ═══════════════════════════════════════════════════════════
+
+body.item.resource.show {
+
+    // ── Breadcrumb (native Omeka-S) ─────────────────────────
+    .breadcrumbs-parent {
+        margin-bottom: 0;
+    }
+
+    .breadcrumbs {
+        display: flex !important;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 12px 0 !important;
+        background-color: transparent !important;
+        border-bottom: 1px solid var(--ate-hairline-soft);
+        border-radius: 0 !important;
+        font-size: 12px !important;
+        text-transform: none !important;
+        width: 100% !important;
+
+        a {
+            font-weight: 600;
+            color: var(--ate-text-muted);
+            text-decoration: none;
+            transition: color 0.15s ease;
+
+            &:hover { color: var(--ate-color-brand-blue-mid); }
+        }
+
+        a + a::before,
+        a + span::before {
+            content: '/';
+            margin-right: 4px;
+            color: var(--ate-hairline);
+            font-weight: 400;
+        }
+
+        span[aria-current="page"] {
+            color: var(--ate-text-muted-light);
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 300px;
+        }
+    }
+
+
+    // ── Hero ────────────────────────────────────────────────
+    .item-hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 28px 0 24px;
+        border-bottom: 3px solid var(--ate-color-brand-yellow);
+        margin-bottom: 32px;
+
+        @media (max-width: 600px) {
+            flex-direction: column;
+            gap: 12px;
+        }
+    }
+
+    .item-hero__left { flex: 1; min-width: 0; }
+
+    .item-hero__eyebrow {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .item-hero__title {
+        font-size: clamp(1.6rem, 3.5vw, 2.25rem);
+        font-weight: 800;
+        color: var(--ate-color-brand-blue-dark);
+        line-height: 1.2;
+        margin: 0;
+        text-wrap: pretty;
+    }
+
+    .item-hero__right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+        flex-shrink: 0;
+        padding-top: 4px;
+
+        @media (max-width: 600px) {
+            align-items: flex-start;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+    }
+
+
+    // ── Eyebrow components ──────────────────────────────────
+    .resource-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--ate-surface-card);
+        border: 1px solid var(--ate-hairline);
+        border-radius: var(--ate-radius-pill);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--ate-color-brand-blue-dark);
+        padding: 3px 10px 3px 7px;
+
+        .material-symbols-outlined {
+            font-size: 14px;
+            color: var(--ate-color-brand-blue-mid);
+        }
+    }
+
+    .item-set-pill {
+        display: inline-flex;
+        align-items: center;
+        background: var(--ate-color-brand-blue-mid);
+        color: var(--ate-text-on-dark);
+        border-radius: var(--ate-radius-pill);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        padding: 3px 10px;
+        text-decoration: none;
+        transition: opacity 0.15s ease;
+
+        &:hover { opacity: 0.85; }
+    }
+
+    .days-ago-tag {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--ate-text-muted);
+        background: var(--ate-surface-soft);
+        border: 1px solid var(--ate-hairline);
+        border-radius: var(--ate-radius-pill);
+        padding: 3px 10px;
+        white-space: nowrap;
+    }
+
+
+    // ── Admin actions ───────────────────────────────────────
+    .admin-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .admin-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--ate-radius-sm);
+        border: 1px solid var(--ate-hairline);
+        background: #fff;
+        color: var(--ate-text-muted);
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+        .material-symbols-outlined { font-size: 16px; }
+
+        &:hover {
+            background: var(--ate-surface-soft);
+            color: var(--ate-color-brand-blue-dark);
+            border-color: var(--ate-color-brand-blue-mid);
+        }
+
+        &--delete:hover {
+            background: #FFF0F0;
+            color: #DC2626;
+            border-color: #DC2626;
+        }
+    }
+
+
+    // ── Two-column body ─────────────────────────────────────
+    .item-body {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 40px;
+        align-items: start;
+        margin-bottom: 60px;
+
+        @media (max-width: 900px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .item-main { min-width: 0; }
+
+    .item-sidebar {
+        position: sticky;
+        top: calc(var(--header-compact-height, 72px) + 20px);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        @media (max-width: 900px) {
+            position: static;
+        }
+    }
+
+
+    // ── Description lead ───────────────────────────────────
+    .property.dcterms-description {
+        dd.value {
+            font-size: 1.0625rem;
+            line-height: 1.75;
+            color: var(--ate-text-body);
+            margin-bottom: 28px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--ate-hairline-soft);
+        }
+    }
+
+    // Oculta el label dt en el bloque metadata para propiedades que no son relación
+    .values-group.metadata .property:not(.dcterms-relation) > dt {
+        display: none;
+    }
+
+
+    // ── dcterms:relation — valores como pill tags ───────────
+    .property.dcterms-relation {
+
+        > dt {
+            display: block !important;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: var(--ate-text-muted);
+            margin-bottom: 8px;
+            float: none !important;
+            width: auto !important;
+
+            .field-term { display: none; }
+        }
+
+        // El dd completo es el pill container — mismo padding que schema:about
+        > dd.value {
+            display: inline-flex !important;
+            align-items: center;
+            padding: 5px 0 5px 14px; // derecho a 0: lo gestiona el botón
+            margin-left: 0 !important;
+            margin-bottom: 6px;
+            margin-right: 6px;
+            background: var(--ate-surface-card);
+            border: 1px solid var(--ate-hairline);
+            border-radius: var(--ate-radius-pill);
+            transition: background 0.15s ease, border-color 0.15s ease;
+            position: relative; // anchoring for the absolute panel
+
+            &:hover {
+                background: var(--ate-surface-yellow);
+                border-color: var(--ate-color-brand-yellow);
+
+                .metadata-search-link { color: var(--ate-color-brand-blue-dark); }
+            }
+
+            > span.value-content {
+                display: inline-flex;
+                align-items: center;
+            }
+
+            // El enlace: solo texto, sin padding propio
+            .metadata-search-link {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--ate-color-brand-blue-mid);
+                padding: 0;
+                text-decoration: none;
+            }
+
+            .resource-link-info {
+                display: inline-flex;
+                align-items: stretch;
+            }
+
+            // Botón "+" pegado al borde derecho — aporta el padding derecho del pill
+            .resource-link-info__btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                align-self: stretch;
+                padding: 0 14px;
+                border: none;
+                border-left: 1px solid var(--ate-hairline);
+                border-radius: 0 var(--ate-radius-pill) var(--ate-radius-pill) 0;
+                background: transparent;
+                color: var(--ate-color-brand-blue-mid);
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: background 0.15s, color 0.15s;
+
+                &:hover {
+                    background: var(--ate-color-brand-blue-mid);
+                    color: var(--ate-text-on-dark);
+                }
+            }
+
+            .resource-link-info__panel {
+                border-radius: var(--ate-radius-md);
+
+                &.expanded,
+                .expanded & { border-color: var(--ate-hairline); }
+
+                p { color: var(--ate-text-body); font-size: 0.875rem; }
+            }
+
+                // When the panel is expanded inside the pill, break it out of the
+            // inline flow so it is never clipped by the pill's overflow.
+            .resource-link-info.expanded .resource-link-info__panel {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                z-index: 10;
+                overflow: visible;
+                max-height: none;
+                max-width: none;
+                width: 260px;
+                margin-top: 4px;
+                background: var(--ate-surface-card);
+            }
+        }
+
+        // Eleva el dd que contiene el panel expandido por encima de sus hermanos.
+        // Sin esto, los dd.value posteriores en el DOM (position:relative sin
+        // z-index) tapan el panel aunque éste tenga z-index: 10.
+        > dd.value:has(.resource-link-info.expanded) {
+            z-index: 2;
+        }
+    }
+
+
+    // ── Section labels ──────────────────────────────────────
+    .item-media-label,
+    .item-metadata-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        color: var(--ate-color-brand-blue-dark);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--ate-hairline-soft);
+        }
+    }
+
+
+    // ── Item sets ──────────────────────────────────────────
+    dl.item-sets {
+        margin-top: 1.25rem;
+
+        dt {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--ate-text-muted);
+            margin-bottom: 6px;
+            float: none;
+            width: auto;
+        }
+
+        dd.value {
+            display: inline-block;
+            background: var(--ate-color-brand-blue-mid);
+            color: var(--ate-text-on-dark);
+            border-radius: var(--ate-radius-pill);
+            font-size: 11px;
+            font-weight: 700;
+            margin: 0 6px 6px 0;
+            padding: 3px 12px;
+            transition: opacity 0.15s ease;
+
+            a { color: inherit; text-decoration: none; }
+            &:hover { opacity: 0.85; }
+        }
+    }
+
+
+}

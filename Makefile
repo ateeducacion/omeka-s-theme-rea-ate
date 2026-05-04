@@ -38,7 +38,25 @@ package:
 	echo "Creating directory structure..."; \
 	rm -rf tmpzip && mkdir -p tmpzip/freedom-ate; \
 	echo "Copying theme files..."; \
-	rsync -av --exclude='tmpzip' --exclude='.git' --exclude='*.zip' --exclude='node_modules' --exclude='.DS_Store' ./ tmpzip/freedom-ate/; \
+	rsync -av \
+		--exclude='tmpzip' \
+		--exclude='.git' \
+		--exclude='.github' \
+		--exclude='.project' \
+		--exclude='*.zip' \
+		--exclude='node_modules' \
+		--exclude='.DS_Store' \
+		--exclude='asset/sass' \
+		--exclude='asset/css/*.map' \
+		--exclude='package.json' \
+		--exclude='package-lock.json' \
+		--exclude='gulpfile.js' \
+		--exclude='compile-translations.js' \
+		--exclude='compile-translations.sh' \
+		--exclude='Makefile' \
+		--exclude='AGENTS.md' \
+		--exclude='DESIGN.md' \
+		./ tmpzip/freedom-ate/; \
 	echo "Creating ZIP archive: freedom-ate-$(VERSION).zip..."; \
 	cd tmpzip && zip -qr ../freedom-ate-$(VERSION).zip freedom-ate && cd ..; \
 	rm -rf tmpzip; \

@@ -40,88 +40,83 @@ colors:
   info:               "#0768AC"   # Azul mid (brand)
 
 typography:
+  # Open Sans se carga desde Google Fonts (400/500/600/700/800 + italic 400).
   display-xl:
-    fontFamily: "Lato, sans-serif"
-    fontSize: 56px
-    fontWeight: 700
-    lineHeight: 1.05
-    letterSpacing: -1.5px
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
+    fontSize: 72px
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: -2.5px
   display-lg:
-    fontFamily: "Lato, sans-serif"
-    fontSize: 44px
-    fontWeight: 700
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
+    fontSize: 56px
+    fontWeight: 500
+    lineHeight: 1.05
+    letterSpacing: -2px
+  display-md:
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
+    fontSize: 40px
+    fontWeight: 500
     lineHeight: 1.1
     letterSpacing: -1px
-  display-md:
-    fontFamily: "Lato, sans-serif"
-    fontSize: 34px
-    fontWeight: 700
+  display-sm:
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
+    fontSize: 32px
+    fontWeight: 500
     lineHeight: 1.15
     letterSpacing: -0.5px
-  display-sm:
-    fontFamily: "Lato, sans-serif"
-    fontSize: 26px
-    fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: -0.3px
   title-lg:
-    fontFamily: "Lato, sans-serif"
-    fontSize: 22px
-    fontWeight: 700
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
+    fontSize: 24px
+    fontWeight: 600
     lineHeight: 1.3
-    letterSpacing: 0
+    letterSpacing: -0.3px
   title-md:
-    fontFamily: "Lato, sans-serif"
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
     fontSize: 18px
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1.4
     letterSpacing: 0
   title-sm:
-    fontFamily: "Lato, sans-serif"
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
     fontSize: 16px
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1.4
     letterSpacing: 0
-  body-lg:
-    fontFamily: "Source Serif 4, Georgia, serif"
-    fontSize: 18px
-    fontWeight: 400
-    lineHeight: 1.7
-    letterSpacing: 0
   body-md:
-    fontFamily: "Source Serif 4, Georgia, serif"
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
     fontSize: 16px
     fontWeight: 400
-    lineHeight: 1.7
+    lineHeight: 1.55
     letterSpacing: 0
   body-sm:
-    fontFamily: "Source Serif 4, Georgia, serif"
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
     fontSize: 14px
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.55
     letterSpacing: 0
   caption:
-    fontFamily: "Lato, sans-serif"
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
     fontSize: 13px
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: 0
   caption-uppercase:
-    fontFamily: "Lato, sans-serif"
-    fontSize: 11px
-    fontWeight: 700
-    lineHeight: 1.4
-    letterSpacing: 1.8px
-  button:
-    fontFamily: "Lato, sans-serif"
-    fontSize: 15px
-    fontWeight: 700
-    lineHeight: 1
-    letterSpacing: 0.2px
-  nav-link:
-    fontFamily: "Lato, sans-serif"
-    fontSize: 15px
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
+    fontSize: 12px
     fontWeight: 600
+    lineHeight: 1.4
+    letterSpacing: 1.5px
+  button:
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
+    fontSize: 14px
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: 0
+  nav-link:
+    fontFamily: "Open Sans, Helvetica, Arial, Lucida, sans-serif"
+    fontSize: 14px
+    fontWeight: 500
     lineHeight: 1.4
     letterSpacing: 0
   label:

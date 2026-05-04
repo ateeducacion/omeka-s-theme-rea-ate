@@ -1,32 +1,12 @@
 // Import Material Icons font
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
-// Media group sections with headers
-.media-group-section {
-  margin-bottom: 0.5rem;
+// Media embeds container
+.media-embeds {
+  margin-top: 2rem;
 
-  .media-group-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #222;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid #e0e0e0;
-    text-transform: capitalize;
-  }
-}
-
-// Media groups
-.media-group {
-  margin-bottom: 2rem;
-
-  // HTML media group (outside media-embeds)
-  &.html {
-    margin-bottom: 3rem;
-  }
-
-  // Grid for file type - 2 cards per row
-  &.masonry-grid {
+  // Single grid for all media
+  .media-grid.masonry-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
@@ -41,9 +21,9 @@
 
 // Media cards
 .media-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  background: var(--ate-surface-canvas);
+  border: 1px solid var(--ate-hairline);
+  border-radius: var(--ate-radius-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -51,8 +31,22 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
   &:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba(12, 44, 132, 0.12);
     transform: translateY(-4px);
+  }
+
+  // HTML cards take full width in the grid
+  &--html {
+    grid-column: span 2;
+
+    @media (max-width: 768px) {
+      grid-column: span 1;
+    }
+
+    .media-card-content {
+      min-height: auto;
+      padding: 1.5rem;
+    }
   }
 
   .media-card-content {
@@ -61,15 +55,22 @@
     align-items: center;
     justify-content: center;
     padding: 0rem;
-    background: #fafafa;
+    background: var(--ate-surface-soft);
     min-height: 250px;
 
+    // Remove "Source" link that Omeka S might render inside media-render
     .media-render {
       width: 100%;
       height: 100%;
       display: flex;
+      flex-direction: column; // To stack media and source (which we will hide)
       align-items: center;
       justify-content: center;
+
+      // Hide the "Source" link if it exists (often a link after the media)
+      > a:last-child:not(:first-child) {
+        display: none !important;
+      }
 
       a {
         display: flex;
@@ -81,17 +82,17 @@
 
       img {
         max-width: 100%;
-        max-height: 300px;
+        max-height: 400px;
         object-fit: contain;
         border-radius: 4px;
       }
 
-      // For embedded content (youtube, iiif, etc)
       iframe,
       video {
         max-width: 100%;
-        max-height: 300px;
+        max-height: 500px;
         width: 100%;
+        aspect-ratio: 16 / 9;
       }
     }
   }
@@ -99,21 +100,11 @@
   .media-card-footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 1rem 1.25rem;
-    background: #fff;
-    border-top: 1px solid #e0e0e0;
+    background: var(--ate-surface-canvas);
+    border-top: 1px solid var(--ate-hairline);
     gap: 1rem;
-
-    .media-title {
-      flex: 1;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #222;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
 
     .media-download {
       display: flex;
@@ -121,15 +112,15 @@
       justify-content: center;
       padding: 0.6rem;
       border-radius: 4px;
-      background: #f5f5f5;
-      color: #444;
+      background: var(--ate-surface-card);
+      color: var(--ate-text-muted);
       text-decoration: none;
       transition: all 0.2s ease;
       flex-shrink: 0;
 
       &:hover {
-        background: #007bff;
-        color: #fff;
+        background: var(--ate-color-brand-blue-mid);
+        color: var(--ate-text-on-dark);
         transform: scale(1.05);
       }
 
@@ -139,84 +130,106 @@
       }
     }
   }
+}
 
-  // Media type card variant (for other media types)
-  &.media-type-card {
-    .media-card-footer.media-type-footer {
-      justify-content: left;
-      padding: 0.75rem 1rem;
+// ── SCORM / LearningObject card ─────────────────────────────
+.scorm-card {
+  background: var(--ate-surface-soft);
+  border: 1px solid var(--ate-hairline);
+  border-radius: var(--ate-radius-lg);
+  overflow: hidden;
 
-      .media-type-tag {
-        display: inline-block;
-        border-radius: 4px;
-        color: #222;
-        font-size: 0.875rem;
-        font-weight: 600;
-        padding: 5px 10px;
-        background-color: #fff063;
-        text-transform: capitalize;
-      }
+  &__header {
+    background: var(--ate-color-brand-blue-dark);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--ate-radius-md);
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .material-symbols-outlined {
+      font-size: 22px;
+      color: #fff;
+    }
+  }
+
+  &__header-text { flex: 1; min-width: 0; }
+
+  &__type {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 2px;
+  }
+
+  &__body {
+    padding: 20px;
+    
+    // Hide source link in SCORM body as well
+    .media-render > a:last-child:not(:first-child) {
+      display: none !important;
     }
   }
 }
 
-// Media embeds container - Single column layout for groups
-.media-embeds {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
+// SCORM Buttons
+.btn-scorm-launch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ate-color-brand-blue-dark) !important;
+  color: var(--ate-text-on-dark) !important;
+  border-radius: var(--ate-radius-md) !important;
+  padding: 10px 20px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  border: none !important;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease !important;
 
-  // Each media group inside media-embeds (non-file types)
-  .media-group:not(.masonry-grid) {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+  &:hover {
+    background: var(--primary-dark, #00126a) !important;
+    color: #fff !important;
+    transform: translateY(-1px) !important;
+    text-decoration: none !important;
   }
 
-  .media-render {
-    background: #f9f9f9;
-    border-radius: 4px;
-    padding: 1rem;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .material-symbols-outlined { font-size: 16px; }
+}
 
-    // 🔹 Tamaño uniforme
-    height: 400px;
-    width: 100%;
+.btn-scorm-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff !important;
+  color: var(--ate-color-brand-blue-dark) !important;
+  border: 1.5px solid var(--ate-color-brand-blue-dark) !important;
+  border-radius: var(--ate-radius-md) !important;
+  padding: 10px 20px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: background 0.2s ease !important;
 
-    // Contenido clicable
-    a {
-      display: flex;
-      width: 100%;
-      height: 100%;
-    }
-    // Asegura que imágenes/videos no rompan el layout
-    img {
-      object-fit: contain;
-      width: 100%;
-      height: 100%;
-      border-radius: 6px;
-    }
-
-    // Estilos internos de SCORM para que no desborden
-    .learning-object-container,
-    .scorm-package {
-      height: 100%;
-      overflow: auto;  // scroll si el contenido es largo
-      margin: 0px !important;
-    }
+  &:hover {
+    background: var(--ate-surface-card) !important;
+    color: var(--ate-color-brand-blue-dark) !important;
+    text-decoration: none !important;
   }
 
-  // Responsive: una sola columna en móvil
-  @media (max-width: 768px) {
-    .media-group:not(.masonry-grid) {
-      grid-template-columns: 1fr;
-    }
-
-    .media-render {
-      height: 250px;
-    }
-  }
+  .material-symbols-outlined { font-size: 16px; }
 }

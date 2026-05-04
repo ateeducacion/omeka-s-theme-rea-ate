@@ -7,9 +7,9 @@ $bannerHeightMobile = $this->themeSetting('banner_height_mobile');
 $bannerHeading = $this->themeSetting('banner_heading');
 $bannerDescription = $this->themeSetting('banner_description');
 $bannerHeightProperty = $bannerHeading || $bannerDescription ? 'min-height' : 'height';
-$primaryColor = $this->themeSetting('primary_color') ?? '#e77f11';
-$secondaryColor = $this->themeSetting('secondary_color') ?? '#394f68';
-$accentColor = $this->themeSetting('accent_color') ?? '#394f68';
+$primaryColor = $this->themeSetting('primary_color') ?? '#0C2C84';
+$secondaryColor = $this->themeSetting('secondary_color') ?? '#0C2C84';
+$accentColor = $this->themeSetting('accent_color') ?? '#0768AC';
 
 $this->htmlElement('html')->setAttribute('lang', $this->lang());
 $this->headMeta()->setCharset('utf-8');
@@ -18,16 +18,14 @@ $this->headTitle($siteTitle)->setSeparator(' · ');
 $this->headTitle()->append($this->setting('installation_title', 'Omeka S'));
 $this->headLink()->prependStylesheet($this->assetUrl('css/style.css'));
 $this->headLink()->prependStylesheet($this->assetUrl('css/iconfonts.css', 'Omeka'));
-$this->headLink()->prependStylesheet('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap');
-$this->headLink()->prependStylesheet('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+$this->headLink()->prependStylesheet('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+$this->headLink()->prependStylesheet('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
 $this->headScript()->prependFile($this->assetUrl('js/global.js', 'Omeka'));
 $this->headScript()->prependFile($this->assetUrl('vendor/jquery/jquery.min.js', 'Omeka'));
 $this->jsTranslate();
 $this->trigger('view.layout');
 
-if ($userBar) {
-	$this->htmlElement('body')->appendAttribute('class', 'user-bar');
-}
+$this->htmlElement('body')->appendAttribute('class', 'user-bar');
 ?>
 
 <?php echo $this->doctype(); ?>
@@ -49,6 +47,46 @@ if ($userBar) {
 				--secondary-contrast: <?php echo $this->ContrastColor($secondaryColor, ['#fff', '#333']); ?>;
 				--accent: <?php echo $accentColor; ?>;
 				--accent-dark: <?php echo $this->ShadeColor($accentColor, -10); ?>;
+
+				/* Canarias Educativa — Design Tokens */
+				--ate-color-brand-yellow:      #FFB300;
+				--ate-color-brand-yellow-light: #FFCC00;
+				--ate-color-brand-blue-dark:   #0C2C84;
+				--ate-color-brand-blue-mid:    #0768AC;
+				--ate-color-brand-sage:        #A3AD99;
+				--ate-color-brand-red:         #FE000C;
+				--ate-color-brand-ochre:       #D88F1F;
+				--ate-surface-canvas:          #FFFFFF;
+				--ate-surface-soft:            #F5F7FA;
+				--ate-surface-card:            #EEF2F8;
+				--ate-surface-yellow:          #FFF8E1;
+				--ate-surface-dark:            #0C2C84;
+				--ate-surface-dark-soft:       #0E3599;
+				--ate-text-ink:                #0A0A0A;
+				--ate-text-body:               #2C2C2C;
+				--ate-text-body-soft:          #4A4A4A;
+				--ate-text-muted:              #6B7280;
+				--ate-text-muted-light:        #9CA3AF;
+				--ate-text-on-dark:            #FFFFFF;
+				--ate-text-on-dark-soft:       #B8C8E8;
+				--ate-text-on-yellow:          #0C2C84;
+				--ate-hairline:                #DDE3EC;
+				--ate-hairline-soft:           #EEF0F4;
+				--ate-success:                 #16A34A;
+				--ate-warning:                 #D97706;
+				--ate-error:                   #DC2626;
+				--ate-info:                    #0768AC;
+				--ate-font-display:            'Inter', sans-serif;
+				--ate-font-heading:            'Inter', sans-serif;
+				--ate-font-body:               'Inter', sans-serif;
+				--ate-radius-xs:               4px;
+				--ate-radius-sm:               6px;
+				--ate-radius-md:               10px;
+				--ate-radius-lg:               14px;
+				--ate-radius-xl:               20px;
+				--ate-radius-2xl:              28px;
+				--ate-radius-pill:             9999px;
+				--header-compact-height:       72px;
 			}
 			
 			<?php if($bannerHeightMobile): ?>

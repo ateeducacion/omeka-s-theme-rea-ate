@@ -1,6 +1,6 @@
 <?php
 $translate = $this->plugin('translate');
-$escape = $this->plugin('escapeHtml');
+$escape    = $this->plugin('escapeHtml');
 
 $this->headLink()->appendStylesheet($this->assetUrl('css/resource-page-blocks.css', 'Omeka'));
 $this->htmlElement('body')->appendAttribute('class', 'item resource show');
@@ -20,92 +20,117 @@ $leftSidebarBlockContent = $this->resourcePageBlocks($item, 'left');
 $leftSidebarHasBlocks = $leftSidebarBlockContent->hasBlocks();
 $rightSidebarBlockContent = $this->resourcePageBlocks($item, 'right');
 $rightSidebarHasBlocks = $rightSidebarBlockContent->hasBlocks();
+
+// Build breadcrumb "Recursos" URL: use Advanced Search route when available,
+// fall back to the generic item browse.
+$siteSlug = $this->currentSite()->slug();
+try {
+    $resourcesUrl = $this->url('site/search', ['site-slug' => $siteSlug]);
+} catch (\Exception $e) {
+    $resourcesUrl = $this->url('site/resource', ['site-slug' => $siteSlug, 'controller' => 'item', 'action' => 'browse']);
+}
 ?>
 
-<div class="item-header-container">
-    <div class="item-title">
-        <?php echo $this->pageTitle($item->displayTitle(null, $valueLang), 1); ?>
+<div class="breadcrumbs-parent">
+    <nav id="breadcrumb" class="breadcrumbs" aria-label="<?php echo $escape($translate('Breadcrumbs')); ?>">
+        <a href="<?php echo $escape($this->currentSite()->siteUrl()); ?>"><?php echo $escape($translate('Home')); ?></a>
+        <a href="<?php echo $escape($resourcesUrl); ?>"><?php echo $escape($translate('Resources')); ?></a>
+        <span aria-current="page"><?php echo $escape($item->displayTitle(null, $valueLang)); ?></span>
+    </nav>
+</div>
+
+<div class="item-hero">
+    <div class="item-hero__left">
+
+        <div class="item-hero__eyebrow">
+            <?php
+            $resourceType = $item->value('lrmi:learningResourceType');
+            if ($resourceType):
+            ?>
+            <span class="resource-type-badge">
+                <span class="material-symbols-outlined" aria-hidden="true">school</span>
+                <?php echo $escape($resourceType); ?>
+            </span>
+            <?php endif; ?>
+
+            <?php foreach ($item->itemSets() as $itemSet): ?>
+            <a href="<?php echo $escape($itemSet->siteUrl()); ?>"
+               class="item-set-pill">
+                <?php echo $escape($itemSet->displayTitle(null, $valueLang)); ?>
+            </a>
+            <?php endforeach; ?>
+        </div>
+
+        <h1 class="item-hero__title">
+            <?php echo $escape($item->displayTitle(null, $valueLang)); ?>
+        </h1>
+
     </div>
-    <div class="item-tags">
+
+    <div class="item-hero__right">
         <?php
-        // Calculate days since creation
         $createdDate = $item->created();
-        $now = new DateTime();
-        $diff = $now->diff($createdDate);
+        $diff = (new DateTime())->diff($createdDate);
         $daysAgo = $diff->days;
-
-        // Get resource tags output
-        $resourceTagsHtml = $this->ResourceTags($item);
-
-        $actionsHtml = "";
-        if ($user && $showToolboxForUser):
-            $itemId = $item->id();
-            $editUrl = $adminBasePath . '/item/' . $itemId . '/edit';
-            $addMediaUrl = $adminBasePath . '/item/' . $itemId . '/edit#item-media';
-            $actionsHtml = '<ul class="item-actions">'
-                . '<li><a class="o-icon-edit" title="' . $escape($translate('Edit')) . '" href="' . $escape($editUrl) . '" aria-label="' . $escape($translate('Edit')) . '"></a></li>'
-                . '<li><a class="o-icon-add" title="' . $escape($translate('Add media')) . '" href="' . $escape($addMediaUrl) . '" aria-label="' . $escape($translate('Add media')) . '"></a></li>'
-                . '<li><a class="o-icon-delete" title="' . $escape($translate('Delete')) . '" href="#" aria-label="' . $escape($translate('Delete')) . '" data-item-id="' . $itemId . '" data-item-title="' . $escape($item->displayTitle(null, $valueLang)) . '"></a></li>'
-                . '</ul>';
-        endif;
-
-        // Create days ago tag
-        $daysAgoTag = '<div class="resource-tag days-ago-tag" style="background-color: hsl(200, 70%, 85%);">'
-            . $escape(sprintf($translate($daysAgo == 1 ?  '%s day ago' : '%s days ago'), $daysAgo))
-            . '</div>';
-
-        // Group actions and days-ago tag together
-        $actionsGroup = '<div class="resource-tags-group">' . $actionsHtml . $daysAgoTag . '</div>';
-
-        // If resource tags exist, inject our group inside; otherwise create wrapper
-        if (!empty($resourceTagsHtml)) {
-            echo substr($resourceTagsHtml, 0, -6) . $actionsGroup . '</div>';
-        } else {
-            echo '<div class="resource-tags">' . $actionsGroup . '</div>';
-        }
         ?>
+        <span class="days-ago-tag">
+            <?php echo $escape(sprintf(
+                $translate($daysAgo == 1 ? '%s day ago' : '%s days ago'),
+                $daysAgo
+            )); ?>
+        </span>
+
+        <?php if ($user && $showToolboxForUser): ?>
+        <div class="admin-actions">
+            <a href="<?php echo $escape($adminBasePath . '/item/' . $item->id() . '/edit'); ?>"
+               class="admin-btn"
+               title="<?php echo $escape($translate('Edit')); ?>"
+               aria-label="<?php echo $escape($translate('Edit')); ?>">
+                <span class="material-symbols-outlined">edit</span>
+            </a>
+            <a href="<?php echo $escape($adminBasePath . '/item/' . $item->id() . '/edit#item-media'); ?>"
+               class="admin-btn"
+               title="<?php echo $escape($translate('Add media')); ?>"
+               aria-label="<?php echo $escape($translate('Add media')); ?>">
+                <span class="material-symbols-outlined">add_photo_alternate</span>
+            </a>
+            <button class="admin-btn admin-btn--delete"
+                    data-item-id="<?php echo $item->id(); ?>"
+                    data-item-title="<?php echo $escape($item->displayTitle(null, $valueLang)); ?>"
+                    title="<?php echo $escape($translate('Delete')); ?>"
+                    aria-label="<?php echo $escape($translate('Delete')); ?>">
+                <span class="material-symbols-outlined">delete</span>
+            </button>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 
 <?php $this->trigger('view.show.before'); ?>
 
 <?php if ($mainHasBlocks || $leftSidebarHasBlocks || $rightSidebarHasBlocks): ?>
+<div class="item-body">
 
-    <?php
-    $additionalContainerClasses = '';
-    if ($mainHasBlocks && $leftSidebarHasBlocks && $rightSidebarHasBlocks) {
-        $additionalContainerClasses = 'regions-container--all';
-    } elseif ($mainHasBlocks && !$leftSidebarHasBlocks && !$rightSidebarHasBlocks) {
-        $additionalContainerClasses = 'regions-container--main';
-    }
-    ?>
+    <?php if ($leftSidebarHasBlocks): ?>
+    <aside class="item-sidebar item-sidebar--left">
+        <?php echo $leftSidebarBlockContent->getBlocks(); ?>
+    </aside>
+    <?php endif; ?>
 
-    <div class="regions-container <?php echo $additionalContainerClasses; ?>">
-        <?php if ($leftSidebarHasBlocks && $blockContent = $leftSidebarBlockContent->getBlocks()): ?>
-            <div class="sidebar-region sidebar-region--left">
-                <div class="metadata">
-                    <?php echo $blockContent; ?>
-                </div>
-            </div>
-        <?php endif; ?>
+    <?php if ($mainHasBlocks): ?>
+    <main class="item-main" id="main-content">
+        <?php echo $mainBlockContent->getBlocks(); ?>
+    </main>
+    <?php endif; ?>
 
-        <?php if ($mainHasBlocks && $blockContent = $mainBlockContent->getBlocks()): ?>
-            <div class="main-region">
-                <div class="metadata">
-                    <?php echo $blockContent; ?>
-                </div>
-            </div>
-        <?php endif; ?>
+    <?php if ($rightSidebarHasBlocks): ?>
+    <aside class="item-sidebar item-sidebar--right">
+        <?php echo $rightSidebarBlockContent->getBlocks(); ?>
 
-        <?php if ($rightSidebarHasBlocks && $blockContent = $rightSidebarBlockContent->getBlocks()): ?>
-            <div class="sidebar-region sidebar-region--right">
-                <div class="metadata">
-                    <?php echo $blockContent; ?>
-                </div>
-            </div>
-        <?php endif; ?>
-    </div>
+    </aside>
+    <?php endif; ?>
 
+</div>
 <?php endif; ?>
 
 <?php $this->trigger('view.show.after'); ?>

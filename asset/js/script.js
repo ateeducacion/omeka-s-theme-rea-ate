@@ -14,12 +14,12 @@ const freedomScripts = () => {
     let scrollDirection = 'up';
 
     function onScroll(scrollPos) {
-        if(scrollPos > 60 && scrollDirection == 'down') {
-            mainHeader.style.top = - (userBarHeight + mainHeaderTopBar.offsetHeight) + 'px';
-            menuDrawer.style.top = mainHeaderMainBar.offsetHeight + 'px';
-            menuDrawer.style.height = 'calc(100% - ' + mainHeaderMainBar.offsetHeight + 'px)';
-        } else {
-            mainHeader.style.top = 0;
+        if (scrollPos > 60 && scrollDirection === 'down') {
+            mainHeader.classList.add('header-scrolled');
+        } else if (scrollPos === 0) {
+            mainHeader.classList.remove('header-scrolled');
+        }
+        if (menuDrawer) {
             menuDrawer.style.top = mainHeader.offsetHeight + 'px';
             menuDrawer.style.height = 'calc(100% - ' + mainHeader.offsetHeight + 'px)';
         }
@@ -61,6 +61,10 @@ const freedomScripts = () => {
     function refreshBodyPaddingTop() {
         body.style.paddingTop = mainHeader.offsetHeight + 'px';
         document.documentElement.style.scrollPaddingTop = (mainHeaderMainBar.offsetHeight + 20) + 'px';
+    }
+
+    if (window.ResizeObserver) {
+        new ResizeObserver(refreshBodyPaddingTop).observe(mainHeader);
     }
 
     function getUserBarHeight() {
@@ -166,6 +170,22 @@ const freedomScripts = () => {
         if (fieldTerm && fieldTerm.textContent.includes('dcterms:relation')) {
             property.classList.add('dcterms-relation');
         }
+    });
+
+    // Collapsible facet groups
+    document.querySelectorAll('.search-facets li.facet').forEach(function(facet) {
+        const heading = facet.querySelector('h4');
+        if (!heading) return;
+
+        const key = 'ate-facet-' + heading.textContent.trim();
+        if (sessionStorage.getItem(key) === '1') {
+            facet.classList.add('facet-collapsed');
+        }
+
+        heading.addEventListener('click', function() {
+            facet.classList.toggle('facet-collapsed');
+            sessionStorage.setItem(key, facet.classList.contains('facet-collapsed') ? '1' : '0');
+        });
     });
 }
 

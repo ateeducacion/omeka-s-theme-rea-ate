@@ -8,7 +8,10 @@ $decoration = $this->themeSetting('image_decoration');
         <dt><?php echo $this->translate('Media'); ?></dt>
         <?php foreach ($resourceMedia as $media): ?>
         <dd class="value <?php echo is_array($decoration) && in_array('media', $decoration) ? 'decoration decoration--thumbnail' : ''; ?>">
-            <?php echo $media->linkPretty(); ?>
+            <?php 
+                // Render just the thumbnail linked to the media page, without the title.
+                echo $media->linkRaw($this->thumbnail($media, 'square'));
+            ?>
         </dd>
         <?php endforeach; ?>
     </div>

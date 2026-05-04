@@ -3,10 +3,16 @@
     flex-shrink: 0;
     margin-top: 10px;
 
+    .days-ago-tag {
+        background-color: var(--ate-surface-card);
+        color: var(--ate-text-muted);
+    }
+
     .resource-tag {
         display: inline-block;
-        border-radius: 3px;
-        color: $color__black;
+        border-radius: var(--ate-radius-pill);
+        color: var(--ate-text-ink);
+        font-family: var(--ate-font-heading);
         font-size: $font__xs-size;
         font-weight: 600;
         //margin-bottom: 10px;

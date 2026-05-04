@@ -29,15 +29,15 @@ $color__gray-95: #f3f3f3;
 $color__white: #fff;
 
 //Applications
-$color__headings: $color__black;
-$color__main-text: $color__gray-40;
-$color__secondary-text: $color__gray-60;
+$color__headings: var(--ate-text-ink);
+$color__main-text: var(--ate-text-body);
+$color__secondary-text: var(--ate-text-muted);
 $color__buttons: $color__primary;
 $color__icons: $color__primary;
 $color__link: $color__accent;
 $color__menu-drawer: $color__secondary-dark;
-$color__hr: $color__gray-93;
-$color__light-bg: $color__gray-95;
+$color__hr: var(--ate-hairline);
+$color__light-bg: var(--ate-surface-soft);
 $color__disabled: $color__gray-80;
-$color__placeholder: $color__gray-46;
-$color__field-border: $color__gray-58;
+$color__placeholder: var(--ate-text-muted);
+$color__field-border: var(--ate-hairline);

@@ -1,0 +1,92 @@
+<?php
+// Bloque Anclaje Curricular — sobreescritura del bloque "block" de BlockPlus.
+// Decisión arquitectónica: .project/decisions/architect.md [2026-04-29]
+// Renderizado de valores via $value->asHtml() para heredar metadata-search-link,
+// resource-link-info y configuración de locale del sitio.
+
+$escape    = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+
+$divClass = trim((string) $this->themeSetting('anclaje_div_class')) ?: 'anclaje-curricular';
+$rawProps  = (string) $this->themeSetting('anclaje_properties');
+
+$properties = array_values(array_filter(
+    array_map('trim', explode("\n", $rawProps)),
+    fn(string $line): bool => $line !== '' && !str_starts_with($line, '#')
+));
+
+// Etiquetas traducibles; fallback al label del vocabulario si el término no está mapeado.
+$defaultLabels = [
+    'schema:educationalLevel' => 'Nivel educativo',         // @translate
+    'schema:about'            => 'Materia',                 // @translate
+    'schema:assesses'         => 'Criterios de evaluación', // @translate
+    'schema:teaches'          => 'Saberes básicos',         // @translate
+    'lrmi:educationalLevel'   => 'Nivel educativo',         // @translate
+    'lrmi:assesses'           => 'Criterios de evaluación', // @translate
+    'lrmi:teaches'            => 'Saberes básicos',         // @translate
+];
+
+// Respetar configuración de locale del sitio (igual que resource-values.phtml).
+if ($this->status()->isSiteRequest()) {
+    $filterLocale = (bool) $this->siteSetting('filter_locale_values');
+    $lang         = $filterLocale ? $this->lang() : null;
+} else {
+    $filterLocale = false;
+    $lang         = null;
+}
+
+// $resource->values() devuelve ['term' => ['property' => ..., 'values' => [...]]].
+// Filtramos por los términos configurados, en el orden declarado.
+$allResourceValues = $resource->values();
+
+$blocks = [];
+foreach ($properties as $term) {
+    if (!isset($allResourceValues[$term])) {
+        continue;
+    }
+    $termValues = $allResourceValues[$term]['values'];
+    if ($filterLocale && $lang) {
+        $termValues = array_filter($termValues, function ($v) use ($lang) {
+            $vl = $v->lang();
+            return $vl === '' || strcasecmp($vl, $lang) === 0;
+        });
+    }
+    if (!$termValues) {
+        continue;
+    }
+    $property = $allResourceValues[$term]['property'];
+    $blocks[$term] = [
+        'label'  => $defaultLabels[$term] ?? $translate($property->label()),
+        'values' => $termValues,
+    ];
+}
+
+if (!$blocks) {
+    return;
+}
+
+$termClass = fn(string $term): string => str_replace(':', '-', $term);
+?>
+<div class="<?php echo $escape($divClass); ?>">
+    <?php foreach ($blocks as $term => $data): ?>
+    <div class="property <?php echo $escape($termClass($term)); ?>">
+        <dt><?php echo $escape($translate($data['label'])); ?></dt>
+        <?php foreach ($data['values'] as $value):
+            $valueType = $value->type();
+            $ddClass   = ['value'];
+            if ('resource' === $valueType || strpos($valueType, 'resource') !== false) {
+                $ddClass[] = 'resource';
+                $ddClass[] = $escape($value->valueResource()->resourceName());
+            } elseif ('uri' === $valueType) {
+                $ddClass[] = 'uri';
+            }
+        ?>
+        <dd class="<?php echo implode(' ', $ddClass); ?>">
+            <span class="value-content"><?php
+                echo $filterLocale && $lang ? $value->asHtml($lang) : $value->asHtml();
+            ?></span>
+        </dd>
+        <?php endforeach; ?>
+    </div>
+    <?php endforeach; ?>
+</div>

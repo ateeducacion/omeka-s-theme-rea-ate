@@ -141,3 +141,92 @@
         init();
     }
 })();
+
+// ---- Scroll position preservation on facet selection ----
+// Facet checkboxes trigger a full page reload via data-url.
+// We save scrollY before the redirect and restore it on load.
+(function () {
+    // Restore scroll position if set by a previous facet click
+    var savedY = sessionStorage.getItem('rea-scroll-y');
+    if (savedY !== null) {
+        sessionStorage.removeItem('rea-scroll-y');
+        var targetY = parseInt(savedY, 10);
+        if (document.readyState === 'complete') {
+            window.scrollTo(0, targetY);
+        } else {
+            window.addEventListener('load', function () {
+                requestAnimationFrame(function () { window.scrollTo(0, targetY); });
+            });
+        }
+    }
+
+    // Save scroll before checkbox-triggered navigation
+    document.addEventListener('change', function (e) {
+        var cb = e.target;
+        if (cb.type === 'checkbox' && cb.closest('.search-facets') && cb.dataset.url) {
+            sessionStorage.setItem('rea-scroll-y', window.scrollY);
+        }
+    });
+})();
+
+// ---- Active filter chips bar ----
+(function () {
+    function getGroupName(cb) {
+        var facetLi = cb.closest('li.facet');
+        if (!facetLi) return '';
+        var h4 = facetLi.querySelector('h4');
+        return h4 ? h4.textContent.trim() : '';
+    }
+
+    function getValueText(cb) {
+        var li = cb.closest('li.facet-item');
+        if (!li) return cb.value;
+        var span = li.querySelector('label span');
+        return span ? span.textContent.replace(/\(\d+\)\s*$/, '').trim() : cb.value;
+    }
+
+    function buildFilterChips() {
+        var bar = document.getElementById('active-filter-chips');
+        if (!bar) return;
+
+        bar.innerHTML = '';
+        var checked = document.querySelectorAll('.search-facets input[type="checkbox"]:checked');
+        if (!checked.length) return;
+
+        checked.forEach(function (cb) {
+            var chip = document.createElement('a');
+            chip.className = 'filter-chip';
+            chip.href = cb.dataset.url || '#';
+            var group = getGroupName(cb);
+            var value = getValueText(cb);
+            chip.innerHTML =
+                (group ? '<span class="filter-chip__group">' + group + ':</span> ' : '') +
+                '<span class="filter-chip__value">' + value + '</span>' +
+                '<span class="filter-chip__remove" aria-hidden="true">✕</span>';
+            bar.appendChild(chip);
+        });
+
+        if (checked.length > 1) {
+            var params = new URLSearchParams(window.location.search);
+            var toDelete = [];
+            params.forEach(function (v, k) {
+                if (/^facet(\[|%5B)/i.test(k)) toDelete.push(k);
+            });
+            toDelete.forEach(function (k) { params.delete(k); });
+            var qs = params.toString();
+            var clearUrl = window.location.pathname + (qs ? '?' + qs : '');
+
+            var clearBtn = document.createElement('a');
+            clearBtn.className = 'chips-clear-all';
+            clearBtn.href = clearUrl;
+            clearBtn.textContent = 'Limpiar todo';
+            bar.appendChild(clearBtn);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', buildFilterChips);
+    } else {
+        buildFilterChips();
+    }
+})();

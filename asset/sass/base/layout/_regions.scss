@@ -1,35 +1,3 @@
-// Item header container with tags and title
-.item-header-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid #ececec;
-
-    .item-tags {
-        flex-shrink: 0;
-    }
-
-    .item-title {
-        flex: 1;
-
-        h1 {
-            margin-top: 0;
-            margin-bottom: 0 !important;
-        }
-        .title{
-            border-bottom: none !important;
-        }
-    }
-
-    @media (max-width: 768px) {
-        flex-direction: column;
-        gap: 1rem;
-    }
-}
-
 .regions-container {
     display: flex;
     flex-direction: column;
@@ -59,7 +27,7 @@
         width: 100%;
 
         @media (min-width: $md) {
-            width: 20%;
+            width: 300px;
         }
 
         &::after {
@@ -95,9 +63,9 @@
                 font-size: 1rem;
                 transition: all 0.2s ease;
 
-                // Default style - Pantone 3005 (blue)
-                background-color: hsl(4108050209, 100%, 87.5%);
-                color: #fff;
+                // Default style - azul institucional
+                background-color: var(--ate-color-brand-blue-mid);
+                color: var(--ate-text-on-dark);
 
                 &:hover {
                     opacity: 0.9;
@@ -108,11 +76,11 @@
                     margin-right: 0;
                 }
 
-                // Alternative style - Pantone 130 (orange/yellow)
+                // Alternative style - ocre institucional
                 &.alt,
                 &.highlight {
-                    background-color: #F1A022;
-                    color: #000;
+                    background-color: var(--ate-color-brand-ochre);
+                    color: var(--ate-text-on-yellow);
                 }
             }
         }

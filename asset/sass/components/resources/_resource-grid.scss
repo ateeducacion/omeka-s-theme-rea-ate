@@ -4,28 +4,29 @@
     position: relative;
 
     .resource {
-        background-color: $color__white;
-        border: $color__hr;
-        box-shadow: 0px 1px 6px rgba($color__black, 0.25);
+        background-color: var(--ate-surface-canvas);
+        border: 1px solid var(--ate-hairline);
+        box-shadow: 0 2px 8px rgba(12, 44, 132, 0.06);
         position: absolute;
         height: 320px;
-        border-radius: 6px;
-        transition: box-shadow 0.3s ease, transform 0.3s ease;
+        border-radius: var(--ate-radius-lg);
+        transition: box-shadow 0.25s ease, transform 0.25s ease;
 
         &::before {
             content: none !important;
         }
 
         &:hover {
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 4px 16px rgba(12, 44, 132, 0.12);
+            transform: translateY(-2px);
         }
 
         &__thumbnail {
             line-height: 1;
-            height: 200px; /* Alto del contenedor */
-            overflow: hidden; /* Oculta las partes que se salen */
-            border-top-left-radius: 6px;
-            border-top-right-radius: 6px;
+            height: 200px;
+            overflow: hidden;
+            border-top-left-radius: var(--ate-radius-lg);
+            border-top-right-radius: var(--ate-radius-lg);
 
             img {
                 height: 200px;
@@ -35,7 +36,7 @@
         }
 
         &__content {
-            padding: 15px;
+            padding: 14px 16px;
             display: flex;
             flex-direction: column;
             height: 120px;
@@ -44,16 +45,27 @@
         }
 
         &__meta {
-            padding: 5px 10px;
+            padding: 0;
             overflow: hidden;
             display: -webkit-box;
             -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2; /* Limita a 3 líneas */
-            line-clamp: 2; /* Para mayor compatibilidad con navegadores más nuevos */
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
             text-overflow: ellipsis;
+
             a {
+                font-family: var(--ate-font-heading);
+                font-size: 15px;
+                font-weight: 700;
+                color: var(--ate-color-brand-blue-dark);
                 text-decoration: none;
-            } 
+                line-height: 1.3;
+
+                &:hover {
+                    color: var(--ate-color-brand-blue-mid);
+                    text-decoration: underline;
+                }
+            }
         }
     }
 }

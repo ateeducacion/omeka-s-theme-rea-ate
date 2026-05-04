@@ -92,7 +92,7 @@ if (is_array($decoration) && in_array('media', $decoration)) {
                                 $resourceTagsHtml = $this->ResourceTags($resource);
 
                                 // Create days ago tag
-                                $daysAgoTag = '<div class="resource-tag days-ago-tag" style="background-color: hsl(200, 70%, 85%);">'
+                                $daysAgoTag = '<div class="resource-tag days-ago-tag">'
                                     . $escape(sprintf($translate($daysAgo == 1 ?  '%s day ago' : '%s days ago'), $daysAgo))
                                     . '</div>';
 

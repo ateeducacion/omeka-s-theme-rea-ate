@@ -178,8 +178,8 @@
             padding: 8px 14px;
             font-size: 1rem;
             transition: all 0.2s ease;
-            background-color: #F1C400;
-            color: #000;
+            background-color: var(--ate-color-brand-yellow);
+            color: var(--ate-text-on-yellow);
 
             &:hover {
                 opacity: 0.9;

@@ -108,10 +108,12 @@
             max-width: 260px;
             min-width: 0;
             position: sticky;
-            top: 1rem;
+            top: calc(var(--header-compact-height, 72px) + 16px);
             align-self: flex-start;
-            max-height: calc(100vh - 2rem);
+            max-height: calc(100vh - var(--header-compact-height, 72px) - 32px);
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--ate-hairline) transparent;
         }
 
         > #search-results,
@@ -298,12 +300,27 @@
     // ---- Results header (thin toolbar) ----
     #search-results {
         .search-results-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
             margin: 0 0 0.75rem;
             padding: 0.25rem 0 0.4rem;
             border-bottom: 1px solid $color__gray-93;
 
-            .search-results-count {
+            // Chips viven ahora dentro del header — sin margen propio
+            .active-filter-chips {
+                flex: 1;
+                min-width: 0;
                 margin: 0;
+
+                &:empty { display: none; } // colapsa sin ocupar espacio flex
+            }
+
+            .search-results-count {
+                flex-shrink: 0;
+                margin: 0;
+                margin-left: auto; // siempre pegado a la derecha
 
                 .pagination {
                     display: flex;
@@ -453,8 +470,19 @@
         }
     }
 
-    // ---- Active facet tags (breadcrumbs strip, inside aside.search-facets) ----
+    // ---- Active facet tags — hidden, replaced by #active-filter-chips above results ----
     .facets-active {
+        display: none !important;
+    }
+
+    // Hide the heading that precedes .facets-active
+    h3:has(+ .facets-active),
+    h4:has(+ .facets-active) {
+        display: none !important;
+    }
+
+    // Kept for reference but unused:
+    ._facets-active_disabled {
         list-style: none;
         margin: 0 0 0.75rem;
         padding: 0;
@@ -543,4 +571,102 @@
             }
         }
     }
+}
+
+// ---- Active filter chips bar ----
+// Base styles — cuando está dentro de .search-results-header el margen
+// lo gestiona el contenedor padre; cuando está standalone (else branch) se aplica.
+.active-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    min-height: 0;
+
+    // Standalone (fuera del header): mantiene su propio margen inferior
+    &:not(.search-results-header &) {
+        margin-bottom: 12px;
+
+        // Collapse completely when there are no chips — no gap before .noresults
+        &:empty {
+            display: none;
+            margin-bottom: 0;
+        }
+    }
+}
+
+// When the standalone chips bar has content and sits above .noresults, keep a
+// comfortable visual gap between the chips and the "no results" message.
+.active-filter-chips:not(:empty) + .noresults {
+    margin-top: 12px;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ate-surface-yellow);
+    border: 1.5px solid var(--ate-color-brand-yellow);
+    border-radius: var(--ate-radius-pill);
+    padding: 4px 10px 4px 12px;
+    font-family: var(--ate-font-heading);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ate-color-brand-blue-dark);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .15s ease;
+    animation: chip-in .2s ease forwards;
+
+    &:hover {
+        background: #FFE57F;
+        text-decoration: none;
+    }
+
+    .filter-chip__group {
+        opacity: 0.65;
+        font-weight: 500;
+    }
+
+    .filter-chip__remove {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: rgba(12, 44, 132, .12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: var(--ate-color-brand-blue-dark);
+        flex-shrink: 0;
+        transition: background .15s;
+
+        &:hover { background: rgba(12, 44, 132, .25); }
+    }
+}
+
+.chips-clear-all {
+    font-family: var(--ate-font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ate-text-muted);
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: color .15s, text-decoration-color .15s;
+
+    &:hover {
+        color: var(--ate-color-brand-blue-mid);
+        text-decoration-color: currentColor;
+    }
+}
+
+@keyframes chip-in {
+    from { opacity: 0; transform: scale(.85); }
+    to   { opacity: 1; transform: scale(1); }
 }

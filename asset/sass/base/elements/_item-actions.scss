@@ -74,7 +74,7 @@ a.item-actions.button {
     // Estilos para <a> con clases .button y .o-icon-add
     a.button {
         background-color: transparent;
-        color: #a91919;
+        color: var(--ate-error);
         margin: 0;
         padding: 10px 15px;
         min-height: 0;
@@ -88,7 +88,8 @@ a.item-actions.button {
         }
 
         &:hover {
-            color: #e11717;
+            color: var(--ate-error);
+            opacity: 0.8;
         }
     }
 
@@ -159,12 +160,12 @@ a.item-actions.button {
 
     &__content {
         position: relative;
-        background-color: $color__white;
-        border-radius: 6px;
+        background-color: var(--ate-surface-canvas);
+        border-radius: var(--ate-radius-lg);
         padding: 30px;
         max-width: 450px;
         width: 90%;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 20px rgba(12, 44, 132, 0.15);
 
         h3 {
             margin-top: 0;
@@ -188,11 +189,11 @@ a.item-actions.button {
         }
 
         #delete-confirm {
-            background-color: $color__error;
-            border-color: $color__error;
+            background-color: var(--ate-error);
+            border-color: var(--ate-error);
 
             &:hover {
-                background-color: darken(#ee001d, 10%);
+                opacity: 0.85;
             }
         }
     }

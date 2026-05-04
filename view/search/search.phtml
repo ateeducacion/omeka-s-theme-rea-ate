@@ -208,8 +208,11 @@ if ($showMapView) {
 
         <?php if ($displayPartsHeader): ?>
         <div class="search-results-part search-results-header">
+            <div id="active-filter-chips" class="active-filter-chips" aria-live="polite"></div>
             <?= $partial('search/results-header-footer', $variables + ['resultPart' => 'header']) ?>
         </div>
+        <?php else: ?>
+        <div id="active-filter-chips" class="active-filter-chips" aria-live="polite"></div>
         <?php endif; ?>
 
         <?php $this->trigger('view.browse.before'); ?>

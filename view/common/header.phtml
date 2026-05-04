@@ -6,15 +6,13 @@ $navDepth = (int) $this->themeSetting('nav_depth') ? (int) $this->themeSetting('
 <header class="main-header">
 
 	<div class="main-header__top-bar container">
-		<a class="main-header__advanced-search" href="<?php echo $site->url() . '/item/search'; ?>"><?php echo $translate('Advanced search'); ?></a>
-		<div class="main-header__actions-group">
+		<div class="main-header__search-area main-header__search-area--top">
+			<a class="main-header__advanced-search" href="<?php echo $site->url() . '/item/search'; ?>"><?php echo $translate('Advanced search'); ?></a>
 			<div class="main-header__search-form">
 				<?php echo $this->partial('common/search-form'); ?>
 			</div>
-			<?php if ($userBar): ?>
-				<?php echo $userBar ?>
-			<?php endif; ?>
 		</div>
+		<?php echo $this->partial('common/user-bar', ['user' => $this->identity()]); ?>
 	</div>
 	<hr class="alignfull">
 
@@ -52,6 +50,12 @@ $navDepth = (int) $this->themeSetting('nav_depth') ? (int) $this->themeSetting('
 
 		<?php echo $this->partial('common/menu-drawer'); ?>
 		<?php endif; ?>
+
+		<div class="main-header__search-area main-header__search-area--compact">
+			<div class="main-header__search-form">
+				<?php echo $this->partial('common/search-form'); ?>
+			</div>
+		</div>
 	</div>
 
 </header>

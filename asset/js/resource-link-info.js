@@ -53,6 +53,20 @@ const resourceLinkInfoScript = () => {
                 toggleBtn.textContent = '+';
                 wrapper.classList.remove('expanded');
             } else {
+                // Accordion: close any other open panel in the same property group
+                const group = wrapper.closest('.property');
+                if (group) {
+                    group.querySelectorAll('.resource-link-info.expanded').forEach(function (other) {
+                        if (other === wrapper) return;
+                        const otherBtn = other.querySelector('.resource-link-info__btn');
+                        const otherPanel = other.querySelector('.resource-link-info__panel');
+                        otherPanel.style.maxHeight = '0';
+                        otherBtn.setAttribute('aria-expanded', 'false');
+                        otherBtn.textContent = '+';
+                        other.classList.remove('expanded');
+                    });
+                }
+
                 panel.style.maxHeight = panel.scrollHeight + 'px';
                 toggleBtn.setAttribute('aria-expanded', 'true');
                 toggleBtn.textContent = '−';

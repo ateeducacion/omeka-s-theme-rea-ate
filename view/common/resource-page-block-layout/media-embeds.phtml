@@ -1,85 +1,50 @@
 <?php
 $resourceMedia = $resource->media();
 $decoration = $this->themeSetting('image_decoration');
-
-// Group media by type
-$mediaByType = [];
-foreach ($resourceMedia as $media) {
-    $mediaType = $media->renderer();
-    if (!isset($mediaByType[$mediaType])) {
-        $mediaByType[$mediaType] = [];
-    }
-    $mediaByType[$mediaType][] = $media;
-}
 ?>
 <?php if ($resourceMedia): ?>
-    <?php // Render HTML media first, outside media-embeds ?>
-    <?php if (isset($mediaByType['html'])): ?>
-    <div class="media-group <?php echo htmlspecialchars('html'); ?>">
-        <?php foreach ($mediaByType['html'] as $media): ?>
-        <?php echo $media->render(); ?>
-        <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
-
-    <?php // Render other media types inside media-embeds ?>
-    <?php
-    $otherMediaTypes = $mediaByType;
-    unset($otherMediaTypes['html']);
-    ?>
-    <?php if ($otherMediaTypes): ?>
-    <div class="media-embeds <?php echo is_array($decoration) && in_array('media', $decoration) ? 'decoration' : ''; ?>">
-        <?php
-        // Separate file type from other media types
-        $fileMedia = isset($otherMediaTypes['file']) ? $otherMediaTypes['file'] : [];
-        $otherMedia = $otherMediaTypes;
-        unset($otherMedia['file']);
-        ?>
-
-        <?php // File group with download cards ?>
-        <?php if ($fileMedia): ?>
-        <div class="media-group-section">
-            <h3 class="media-group-title"><?php echo $this->translate('Files'); ?></h3>
-            <div class="media-group file masonry-grid">
-                <?php foreach ($fileMedia as $media): ?>
-                <div class="media-card">
+<div class="media-embeds <?php echo is_array($decoration) && in_array('media', $decoration) ? 'decoration' : ''; ?>">
+    <h3 class="item-media-label"><?php echo $this->translate('Media'); ?></h3>
+    <div class="media-grid masonry-grid">
+        <?php foreach ($resourceMedia as $media): ?>
+            <?php
+            $type = $media->renderer();
+            if ($type === 'html'):
+            ?>
+                <div class="media-card media-card--html">
                     <div class="media-card-content">
                         <?php echo $media->render(); ?>
                     </div>
+                </div>
+            <?php elseif ($type === 'LearningObject'): ?>
+                <div class="scorm-card">
+                    <div class="scorm-card__header">
+                        <div class="scorm-card__icon">
+                            <span class="material-symbols-outlined" aria-hidden="true">interactive_space</span>
+                        </div>
+                        <div class="scorm-card__header-text">
+                            <div class="scorm-card__type">SCORM</div>
+                        </div>
+                    </div>
+                    <div class="scorm-card__body">
+                        <?php echo $media->render(); ?>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="media-card <?php echo ($type !== 'file') ? 'media-type-card' : ''; ?>">
+                    <div class="media-card-content">
+                        <?php echo $media->render(); ?>
+                    </div>
+                    <?php if ($type === 'file'): ?>
                     <div class="media-card-footer">
-                        <?php if ($media->displayTitle()): ?>
-                        <span class="media-title"><?php echo $media->displayTitle(); ?></span>
-                        <?php endif; ?>
                         <a href="<?php echo $this->escapeHtml($media->originalUrl()); ?>" download class="media-download" title="<?php echo $this->translate('Download'); ?>">
                             <span class="material-symbols-outlined">download</span>
                         </a>
                     </div>
+                    <?php endif; ?>
                 </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php endif; ?>
-
-        <?php // Other media types grouped together in masonry grid ?>
-        <?php if ($otherMedia): ?>
-        <div class="media-group-section">
-            <h3 class="media-group-title"><?php echo $this->translate('Other Media'); ?></h3>
-            <div class="media-group other-media masonry-grid">
-                <?php foreach ($otherMedia as $type => $mediaGroup): ?>
-                    <?php foreach ($mediaGroup as $media): ?>
-                    <div class="media-card media-type-card">
-                        <div class="media-card-content">
-                            <?php echo $media->render(); ?>
-                        </div>
-                        <div class="media-card-footer media-type-footer">
-                            <span class="resource-tag media-type-tag"><?php echo htmlspecialchars(ucfirst($type)); ?></span>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        <?php endforeach; ?>
     </div>
-    <?php endif; ?>
+</div>
 <?php endif; ?>

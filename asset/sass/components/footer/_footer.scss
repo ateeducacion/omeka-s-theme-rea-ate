@@ -2,6 +2,7 @@
     clear: both;
     color: $color__secondary-contrast;
     font-size: 0.875rem;
+    border-top: 4px solid var(--ate-color-brand-yellow);
 
     &__top {
         background-color: $color__secondary;
@@ -182,10 +183,16 @@
     a {
         color: $color__secondary-contrast;
         text-decoration: none;
-        font-family: 'Open Sans', sans-serif;
+        font-family: var(--ate-font-heading);
         font-size: 14px;
         line-height: 1.42857143;
         width: 100% !important;
+
+        &:hover,
+        &:focus {
+            color: var(--ate-color-brand-yellow);
+            text-decoration: none;
+        }
     }
 
     hr {

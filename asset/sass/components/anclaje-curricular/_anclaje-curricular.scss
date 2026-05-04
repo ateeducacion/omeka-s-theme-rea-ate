@@ -1,0 +1,138 @@
+// ═══════════════════════════════════════════════════════════
+// Anclaje Curricular — sidebar panel
+// Renderizado por view/common/resource-page-block-layout/block.phtml
+// Tokens --ate-* del sistema Canarias Educativa. BEM solo donde aplica.
+// ═══════════════════════════════════════════════════════════
+
+.anclaje-curricular {
+    background: var(--ate-surface-soft);
+    border-left: 4px solid var(--ate-color-brand-yellow);
+    border-radius: var(--ate-radius-lg);
+    padding: 20px;
+
+    &__title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        color: var(--ate-color-brand-blue-dark);
+        margin: 0 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .material-symbols-outlined {
+            font-size: 15px;
+            color: var(--ate-color-brand-yellow);
+        }
+    }
+
+    // Cada grupo de propiedad
+    .property {
+        margin-bottom: 0;
+        padding-bottom: 14px;
+
+        &::after { content: none; } // limpia clearfix de _metadata.scss
+
+        & + .property {
+            padding-top: 14px;
+            border-top: 1px solid var(--ate-hairline);
+        }
+
+        &:last-child { padding-bottom: 0; }
+    }
+
+    // Etiqueta — caption-uppercase
+    dt {
+        float: none !important;
+        width: auto !important;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        color: var(--ate-text-muted);
+        margin-bottom: 7px;
+    }
+
+    // Contenedor de valores
+    dd.value {
+        margin-left: 0 !important;
+        margin-bottom: 5px;
+        display: inline-block;
+
+        &:last-child { margin-bottom: 0; }
+    }
+
+    // ── Nivel educativo — pill azul sólido ──────────────────
+    .lrmi-educationalLevel dd.value,
+    .schema-educationalLevel dd.value {
+        background: var(--ate-color-brand-blue-dark);
+        color: var(--ate-text-on-dark);
+        border-radius: var(--ate-radius-pill);
+        font-size: 13px;
+        font-weight: 700;
+        padding: 5px 14px;
+        margin-right: 5px;
+
+        .metadata-search-link {
+            color: inherit;
+            text-decoration: none;
+            &:hover { text-decoration: underline; }
+        }
+    }
+
+    // ── Materia — pill amarillo ─────────────────────────────
+    .schema-about dd.value {
+        background: var(--ate-surface-yellow);
+        border: 1.5px solid var(--ate-color-brand-yellow);
+        color: var(--ate-text-on-yellow);
+        border-radius: var(--ate-radius-pill);
+        font-size: 13px;
+        font-weight: 700;
+        padding: 5px 14px;
+        margin-right: 5px;
+
+        .metadata-search-link {
+            color: inherit;
+            text-decoration: none;
+            &:hover { text-decoration: underline; }
+        }
+    }
+
+    // ── Criterios y Saberes — chip neutro ───────────────────
+    .lrmi-assesses dd.value,
+    .lrmi-teaches dd.value,
+    .schema-assesses dd.value,
+    .schema-teaches dd.value {
+        background: var(--ate-surface-card);
+        border: 1px solid var(--ate-hairline);
+        border-radius: var(--ate-radius-sm);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ate-color-brand-blue-mid);
+        padding: 4px 10px;
+        margin-right: 5px;
+        transition: background 0.15s, border-color 0.15s;
+
+        &:hover {
+            background: var(--ate-surface-yellow);
+            border-color: var(--ate-color-brand-yellow);
+        }
+
+        .metadata-search-link,
+        .resource-link-info a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .resource-link-info__btn {
+            border-color: var(--ate-color-brand-blue-mid);
+            color: var(--ate-color-brand-blue-mid);
+
+            &:hover {
+                background: var(--ate-color-brand-blue-mid);
+                color: var(--ate-text-on-dark);
+            }
+        }
+    }
+}
