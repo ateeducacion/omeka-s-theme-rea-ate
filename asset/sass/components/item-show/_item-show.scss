@@ -188,15 +188,24 @@ body.item.resource.show {
 
 
     // ── Two-column body ─────────────────────────────────────
+    // Modifier classes set in show.phtml based on which regions have blocks.
+    // Default (no sidebars): single column so main takes full width.
     .item-body {
         display: grid;
-        grid-template-columns: 1fr 300px;
+        grid-template-columns: 1fr;
         gap: 40px;
         align-items: start;
         margin-bottom: 60px;
 
+        // main + right sidebar (most common)
+        &.item-body--has-right                      { grid-template-columns: 1fr 300px; }
+        // left sidebar + main
+        &.item-body--has-left                       { grid-template-columns: 300px 1fr; }
+        // left sidebar + main + right sidebar
+        &.item-body--has-left.item-body--has-right  { grid-template-columns: 300px 1fr 300px; }
+
         @media (max-width: 900px) {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr !important; // stack all regions vertically
         }
     }
 

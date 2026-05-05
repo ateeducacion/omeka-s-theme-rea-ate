@@ -146,8 +146,12 @@ $breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : nul
 
 <?php $this->trigger('view.show.before'); ?>
 
-<?php if ($mainHasBlocks || $leftSidebarHasBlocks || $rightSidebarHasBlocks): ?>
-<div class="item-body">
+<?php if ($mainHasBlocks || $leftSidebarHasBlocks || $rightSidebarHasBlocks):
+    $bodyClass = 'item-body';
+    if ($leftSidebarHasBlocks)  $bodyClass .= ' item-body--has-left';
+    if ($rightSidebarHasBlocks) $bodyClass .= ' item-body--has-right';
+?>
+<div class="<?php echo $bodyClass; ?>">
 
     <?php if ($leftSidebarHasBlocks): ?>
     <aside class="item-sidebar item-sidebar--left">
