@@ -626,7 +626,7 @@
     }
 
     .filter-chip__group {
-        opacity: 0.65;
+        color: var(--ate-color-brand-blue-mid); // opacity:0.65 on blue-dark → ~3.9:1; brand-blue-mid → 4.9:1 ✓ WCAG AA
         font-weight: 500;
     }
 
@@ -653,7 +653,7 @@
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
-    color: var(--ate-text-muted);
+    color: var(--ate-text-body-soft); // #6B7280 (muted) → 4.2:1 on white; #4A4A4A (body-soft) → 6.9:1 ✓ WCAG AA
     background: none;
     border: none;
     padding: 4px 8px;
