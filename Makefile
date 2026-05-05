@@ -36,7 +36,7 @@ package:
 	echo "Updating version to $(VERSION) in theme.ini..."; \
 	$(SED_INPLACE) 's/^\([[:space:]]*version[[:space:]]*=[[:space:]]*\).*$$/\1"$(VERSION)"/' config/theme.ini; \
 	echo "Creating directory structure..."; \
-	rm -rf tmpzip && mkdir -p tmpzip/freedom-ate; \
+	rm -rf tmpzip && mkdir -p tmpzip/rea-ate; \
 	echo "Copying theme files..."; \
 	rsync -av \
 		--exclude='tmpzip' \
@@ -56,13 +56,13 @@ package:
 		--exclude='Makefile' \
 		--exclude='AGENTS.md' \
 		--exclude='DESIGN.md' \
-		./ tmpzip/freedom-ate/; \
-	echo "Creating ZIP archive: freedom-ate-$(VERSION).zip..."; \
-	cd tmpzip && zip -qr ../freedom-ate-$(VERSION).zip freedom-ate && cd ..; \
+		./ tmpzip/rea-ate/; \
+	echo "Creating ZIP archive: rea-ate-$(VERSION).zip..."; \
+	cd tmpzip && zip -qr ../rea-ate-$(VERSION).zip rea-ate && cd ..; \
 	rm -rf tmpzip; \
 	echo "Restoring version to $${ORIGINAL_VERSION} in theme.ini..."; \
 	$(SED_INPLACE) "s/^\([[:space:]]*version[[:space:]]*=[[:space:]]*\).*$$/\1\"$${ORIGINAL_VERSION}\"/" config/theme.ini; \
-	echo "Package created: freedom-ate-$(VERSION).zip"
+	echo "Package created: rea-ate-$(VERSION).zip"
 
 # Generate .pot template from translate() and // @translate
 generate-pot:

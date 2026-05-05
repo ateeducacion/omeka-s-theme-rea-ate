@@ -60,7 +60,7 @@ jobs:
       - name: Create Release and Upload ZIP
         uses: softprops/action-gh-release@v2
         with:
-          files: freedom-ate-${{ env.VERSION }}.zip
+          files: rea-ate-${{ env.VERSION }}.zip
           tag_name: ${{ env.RELEASE_TAG }}
           name: Release ${{ env.RELEASE_TAG }}
           body: |
