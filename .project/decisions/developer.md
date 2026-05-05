@@ -2,6 +2,120 @@
 
 ---
 
+## [2026-05-05] ACEPTADA — Ciclo 3 #7: item-set browse (colecciones)
+
+### Decisión
+Implementar la página de colecciones según D7 + D7b del Diseñador [2026-05-05] y el prompt de implementación revisado. Cuatro correcciones técnicas obligatorias sobre el prompt original antes de proceder.
+
+### Ficheros a crear / modificar
+
+| Acción | Fichero |
+|--------|---------|
+| Reescribir | `view/omeka/site/item-set/browse.phtml` |
+| Crear | `asset/sass/components/item-set-browse/_item-set-browse.scss` |
+| Importar en | `asset/sass/components/_components.scss` |
+| Crear helper | `helper/SlugifyValues.php` |
+| Registrar helper | `config/theme.ini` — añadir `helpers[] = "SlugifyValues"` |
+| Crear partial | `view/omeka/site/item-set/_browse-filter-script.phtml` |
+
+### Correcciones técnicas sobre el prompt de implementación
+
+**[C1] Eliminar el bloque `:root {}` del CSS propuesto**
+El prompt incluye un bloque `:root { --primary: ...; --blue-mid: ...; }` en `_collections.scss`. **No añadirlo.** Los tokens están definidos en `layout.phtml`. En el SCSS usar directamente `var(--ate-color-brand-blue-dark)`, `var(--ate-color-brand-yellow)`, etc.
+
+Mapa de sustitución (CSS propuesto → token ATE real):
+```
+var(--primary)       → var(--ate-color-brand-blue-dark)
+var(--blue-mid)      → var(--ate-color-brand-blue-mid)
+var(--yellow)        → var(--ate-color-brand-yellow)
+var(--canvas)        → var(--ate-surface-canvas)
+var(--surface-soft)  → var(--ate-surface-soft)
+var(--surface-card)  → var(--ate-surface-card)
+var(--body)          → var(--ate-text-body)
+var(--muted)         → var(--ate-text-muted)
+var(--hairline)      → var(--ate-hairline)
+```
+
+**[C2] Registrar el helper `SlugifyValues` en `theme.ini`**
+En `config/theme.ini`, dentro del bloque `[info]`, añadir la línea:
+```ini
+helpers[] = "SlugifyValues"
+```
+El helper sigue el patrón de `helper/ResourceTags.php`: namespace `OmekaTheme\Helper`, clase `SlugifyValues`, método `__invoke(array $values): array`. Implementación:
+```php
+public function __invoke(array $values): array
+{
+    $slugs = [];
+    foreach ($values as $value) {
+        if (!$value) continue;
+        $str = mb_strtolower((string) $value->value(), 'UTF-8');
+        $str = strtr($str, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n','ç'=>'c']);
+        $str = preg_replace('/[^a-z0-9]+/', '-', $str);
+        $slugs[] = trim($str, '-');
+    }
+    return array_filter($slugs);
+}
+```
+
+**[C3] Construir `$etapas`, `$niveles`, `$tematicas` en el template — no son view variables inyectadas**
+El prompt los usa como `foreach ($etapas as $slug => $label)` como si vinieran del controlador. No es así. Construirlos en el template antes del `foreach ($itemSets)`:
+```php
+$etapas = $niveles = $tematicas = [];
+foreach ($itemSets as $is) {
+    foreach ($is->value('dcterms:educationLevel', ['all' => true]) ?: [] as $v) {
+        $label = (string) $v->value();
+        $slug  = implode('', $this->SlugifyValues([$v]));
+        if ($slug && !isset($etapas[$slug])) $etapas[$slug] = $label;
+    }
+    foreach ($is->value('lom:educationalLevel', ['all' => true]) ?: [] as $v) {
+        $label = (string) $v->value();
+        $slug  = implode('', $this->SlugifyValues([$v]));
+        if ($slug && !isset($niveles[$slug])) $niveles[$slug] = $label;
+    }
+    foreach ($is->value('dcterms:subject', ['all' => true]) ?: [] as $v) {
+        $label = (string) $v->value();
+        $slug  = implode('', $this->SlugifyValues([$v]));
+        if ($slug && !isset($tematicas[$slug])) $tematicas[$slug] = $label;
+    }
+}
+```
+
+**[C4] Reemplazar `$itemSet->itemCount()` — método inexistente en Omeka-S 4.2**
+El método `itemCount()` no existe en `ItemSetRepresentation`. Usar el patrón del template original (pre-calcula el conteo por colección con la API, filtrando por `site_id` e `is_public`):
+```php
+// Al inicio del foreach de tarjetas:
+$api    = $this->api();
+$siteId = $this->currentSite()->id();
+
+foreach ($itemSets as $itemSet):
+    $itemCount = $api->search('items', [
+        'item_set_id' => $itemSet->id(),
+        'site_id'     => $siteId,
+        'is_public'   => true,
+        'limit'       => 1,
+    ])->getTotalResults();
+    if ($itemCount === 0) continue; // ocultar colecciones vacías
+    // …resto de la tarjeta, usar $itemCount en la pill
+```
+
+### Checklist de aceptación (backlog #7)
+
+- [x] Grid 3 cols (≥1025px) → 2 cols (601–1024px) → 1 col (≤600px)
+- [x] Tarjeta: imagen 16/9, fallback con icono `folder_open`, franja azul + pill amarilla, descripción line-clamp 2, "Ver colección →"
+- [x] Filtros: 3 selects poblados dinámicamente, filtrado client-side, botón "Limpiar" visible solo si hay filtro activo, `empty-state` si 0 resultados
+- [x] Contador del header actualiza al filtrar
+- [x] Sin bloque `:root` en el SCSS — tokens ATE de layout.phtml
+- [x] Helper `SlugifyValues` registrado en `theme.ini`
+- [x] `$itemSet->itemCount()` sustituido por `$api->search()` con site_id
+- [x] Colecciones sin ítems visibles en el sitio se excluyen (mismo criterio que el template original)
+- [x] `npm run build` pasa sin errores
+
+### Dependencias
+- Requiere: D7 + D7b del Diseñador [2026-05-05] ACEPTADAS.
+- No bloquea: QA (#4), Browse grid/list (#2/#6), Home (#1).
+
+---
+
 ## [2026-05-04] ACEPTADA — Ciclo 2 bugs #1, #2, #5
 
 ### Decisión

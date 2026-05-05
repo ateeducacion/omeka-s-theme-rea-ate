@@ -1,123 +1,171 @@
 <?php
 $translate = $this->plugin('translate');
-$escape = $this->plugin('escapeHtml');
-$this->inlineScript()->appendFile($this->assetUrl('js/minimasonry.min.js'));
-$this->inlineScript()->appendFile($this->assetUrl('js/browse.js'));
+$escape    = $this->plugin('escapeHtml');
+$escapeAttr = $this->plugin('escapeHtmlAttr');
 $this->htmlElement('body')->appendAttribute('class', 'item-set resource browse');
 
-$filterLocale = (bool) $this->siteSetting('filter_locale_values');
-$lang = $this->lang();
-$valueLang = $filterLocale ? [$lang, ''] : null;
+$api    = $this->api();
+$siteId = $this->currentSite()->id();
 
-$layoutSetting = $this->themeSetting('browse_layout', 'grid');
-$gridState = ($layoutSetting == 'togglegrid') ? 'disabled' : '';
-$listState = ($layoutSetting == 'togglelist') ? 'disabled': '';
-$isGrid = (strpos($layoutSetting, 'grid') !== false) ? true : false;
-$bodyTerm = $this->siteSetting('browse_body_property_term');
-$bodyTruncate = $this->themeSetting('truncate_body_property');
-
-if (isset($_GET['view'])) {
-	if ('list' === $_GET['view']) {
-		$gridState = '';
-		$listState = 'disabled';
-		$isGrid = false;
-	} else {
-		$gridState = 'disabled';
-		$listState = '';
-		$isGrid = true;
-	}
+// Pre-compute visible sets (with item count, skipping empty)
+$visibleSets = [];
+foreach ($itemSets as $itemSet) {
+    $count = $api->search('items', [
+        'item_set_id' => $itemSet->id(),
+        'site_id'     => $siteId,
+        'is_public'   => true,
+        'limit'       => 1,
+    ])->getTotalResults();
+    if ($count > 0) {
+        $visibleSets[] = ['itemSet' => $itemSet, 'count' => $count];
+    }
 }
 
-$decoration = $this->themeSetting('image_decoration');
-$decorationClass = '';
+// Build filter select options from visible sets
+$etapas = $niveles = $tematicas = [];
+foreach ($visibleSets as $entry) {
+    $is = $entry['itemSet'];
 
-if (is_array($decoration) && in_array('media', $decoration)) {
-    $decorationClass = $isGrid ? 'decoration' : 'decoration decoration--thumbnail';
+    foreach ($is->value('dcterms:educationLevel', ['all' => true]) ?: [] as $v) {
+        $label = (string) $v->value();
+        $slug  = implode('', $this->SlugifyValues([$v]));
+        if ($slug !== '' && !isset($etapas[$slug])) {
+            $etapas[$slug] = $label;
+        }
+    }
+
+    foreach ($is->value('lom:educationalLevel', ['all' => true]) ?: [] as $v) {
+        $label = (string) $v->value();
+        $slug  = implode('', $this->SlugifyValues([$v]));
+        if ($slug !== '' && !isset($niveles[$slug])) {
+            $niveles[$slug] = $label;
+        }
+    }
+
+    foreach ($is->value('dcterms:subject', ['all' => true]) ?: [] as $v) {
+        $label = (string) $v->value();
+        $slug  = implode('', $this->SlugifyValues([$v]));
+        if ($slug !== '' && !isset($tematicas[$slug])) {
+            $tematicas[$slug] = $label;
+        }
+    }
 }
 ?>
 
-<?php echo $this->pageTitle($translate('Item sets'), 2); ?>
-
-<?php echo $this->searchFilters(); ?>
-
-<div class="browse-controls">
-    <?php if (strpos($layoutSetting, 'toggle') !== false): ?>
-        <div class="layout-toggle">
-            <button type="button" aria-label="<?php echo $translate('Grid'); ?>" title="<?php echo $translate('Grid'); ?>" class="grid icon-btn o-icon-grid" <?php echo $gridState; ?>></button>
-            <button type="button" aria-label="<?php echo $translate('List'); ?>" title="<?php echo $translate('List'); ?>" class="list icon-btn o-icon-list" <?php echo $listState; ?>></button>
-        </div>
-    <?php endif; ?>
-    <?php echo $this->browse()->renderSortSelector('item_sets'); ?>
-    <div class="advanced-search-container">
-        <?php echo $this->hyperlink($translate('Advanced search'), $this->url(null, ['action' => 'search'], true), ['class' => 'advanced-search']); ?>
+<!-- PAGE HEADER -->
+<header class="item-set-browse-header">
+    <div class="item-set-browse-header__text">
+        <h1 class="item-set-browse-header__title"><?= $escape($translate('Colecciones')) ?></h1>
+        <p class="item-set-browse-header__subtitle"><?= $escape($translate('Recursos agrupados por colección temática.')) ?></p>
     </div>
+    <div class="item-set-browse-header__count">
+        <strong><?= count($visibleSets) ?></strong> <?= $escape($translate('colecciones')) ?>
+    </div>
+</header>
+
+<!-- FILTER BAR -->
+<div class="collection-filter-bar" role="region" aria-label="<?= $escapeAttr($translate('Filtrar colecciones')) ?>">
+    <span class="collection-filter-bar__label">
+        <span class="material-symbols-outlined" aria-hidden="true">tune</span>
+        <?= $escape($translate('Filtrar')) ?>
+    </span>
+
+    <div class="collection-filter-select">
+        <select id="filter-etapa" aria-label="<?= $escapeAttr($translate('Filtrar por etapa')) ?>">
+            <option value=""><?= $escape($translate('Etapa')) ?></option>
+            <?php foreach ($etapas as $slug => $label): ?>
+                <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div class="collection-filter-select">
+        <select id="filter-nivel" aria-label="<?= $escapeAttr($translate('Filtrar por nivel')) ?>">
+            <option value=""><?= $escape($translate('Nivel')) ?></option>
+            <?php foreach ($niveles as $slug => $label): ?>
+                <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div class="collection-filter-select">
+        <select id="filter-tematica" aria-label="<?= $escapeAttr($translate('Filtrar por temática')) ?>">
+            <option value=""><?= $escape($translate('Temática')) ?></option>
+            <?php foreach ($tematicas as $slug => $label): ?>
+                <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <button type="button" class="collection-filter-clear" id="collection-filter-clear">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        <?= $escape($translate('Limpiar')) ?>
+    </button>
 </div>
 
 <?php $this->trigger('view.browse.before'); ?>
 
-<ul class="resources <?php echo ($isGrid) ? 'resource-grid' : 'resource-list'; ?>">
+<!-- COLLECTIONS GRID -->
+<div class="collections-grid" id="collections-grid">
 
-    <?php
-    foreach ($itemSets as $itemSet):
-        // Check if item-set has visible items assigned to the site
-        $api = $this->api();
-        $siteId = $this->currentSite()->id();
-        $itemCount = $api->search('items', [
-            'item_set_id' => $itemSet->id(),
-            'site_id' => $siteId,
-            'is_public' => true,
-            'limit' => 1
-        ])->getTotalResults();
+    <?php foreach ($visibleSets as $entry):
+        $itemSet  = $entry['itemSet'];
+        $itemCount = $entry['count'];
 
-        // Skip this item-set if it has no visible items
-        if ($itemCount === 0) {
-            continue;
-        }
+        $coverUrl = $itemSet->thumbnailDisplayUrl('large');
 
-        $body = $bodyTerm ? $itemSet->value($bodyTerm, ['lang' => ($valueLang)]) : $itemSet->displayDescription(null, ($valueLang));
-        $thumbnail = $this->thumbnail($itemSet, 'large');
-        ?>
-        <li class="item-set resource <?php echo ($isGrid) ? '' : 'media-object'; ?>">
-            <!-- Thumbnail -->
-            <?php if ($thumbnail): ?>
-                <div class="resource__thumbnail <?php echo $decorationClass; ?>">
-                    <?php echo $itemSet->linkRaw($thumbnail); ?>
-                </div>
-            <?php endif; ?>
+        $etapaSlugs   = implode(' ', $this->SlugifyValues($itemSet->value('dcterms:educationLevel', ['all' => true]) ?: []));
+        $nivelSlugs   = implode(' ', $this->SlugifyValues($itemSet->value('lom:educationalLevel',   ['all' => true]) ?: []));
+        $temaSlugs    = implode(' ', $this->SlugifyValues($itemSet->value('dcterms:subject',         ['all' => true]) ?: []));
 
-            <!-- Content -->
-            <div class="resource__content">
-                <!-- Metadata -->
-                <div class="resource__meta <?php echo ($isGrid) ? '' : 'media-object-section'; ?>">
-                    <?php echo $itemSet->link($itemSet->displayTitle(null, $valueLang)); ?>
-                    <?php if ($body): ?>
-                        <div class="description <?php echo ($bodyTruncate) ? $bodyTruncate : ''; ?>"><?php echo $escape($body); ?></div>
-                    <?php endif; ?>
-                </div>
-                <?php
-                // Get resource tags output
-                $resourceTagsHtml = $this->ResourceTags($itemSet);
+        $description  = $itemSet->displayDescription();
+    ?>
+    <a href="<?= $escapeAttr($itemSet->siteUrl()) ?>" class="collection-card"
+       data-etapa="<?= $escapeAttr($etapaSlugs) ?>"
+       data-nivel="<?= $escapeAttr($nivelSlugs) ?>"
+       data-tematica="<?= $escapeAttr($temaSlugs) ?>">
 
-                // Create item count tag
-                $itemCountTag = '<div class="resource-tag item-count-tag" style="background-color: hsl(120, 50%, 85%); margin-left: auto;">'
-                    . $escape($itemCount) . ' ' . $escape($translate($itemCount === 1 ? 'item' : 'items'))
-                    . '</div>';
-
-                // If resource tags exist, inject our tag inside; otherwise create wrapper
-                if (!empty($resourceTagsHtml)) {
-                    // Remove the closing </div> and add our tag before closing
-                    echo substr($resourceTagsHtml, 0, -6) . $itemCountTag . '</div>';
-                } else {
-                    // Create our own resource-tags wrapper
-                    echo '<div class="resource-tags">' . $itemCountTag . '</div>';
-                }
-                ?>
+        <?php if ($coverUrl): ?>
+            <div class="collection-card__cover">
+                <img src="<?= $escapeAttr($coverUrl) ?>"
+                     alt="<?= $escapeAttr($itemSet->displayTitle()) ?>">
             </div>
-        </li>
+        <?php else: ?>
+            <div class="collection-card__cover collection-card__cover--fallback">
+                <span class="material-symbols-outlined" aria-hidden="true">folder_open</span>
+            </div>
+        <?php endif; ?>
+
+        <div class="collection-card__title-strip">
+            <h2 class="collection-card__title"><?= $escape($itemSet->displayTitle()) ?></h2>
+            <span class="collection-card__count-pill">
+                <?= (int) $itemCount ?> <?= $escape($translate('recursos')) ?>
+            </span>
+        </div>
+
+        <div class="collection-card__body">
+            <?php if ($description): ?>
+                <p class="collection-card__description"><?= $escape($description) ?></p>
+            <?php endif; ?>
+            <span class="collection-card__cta">
+                <?= $escape($translate('Ver colección')) ?>
+                <span class="collection-card__cta-arrow">
+                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                </span>
+            </span>
+        </div>
+    </a>
     <?php endforeach; ?>
 
-</ul>
+    <div class="collections-grid__empty-state" id="collections-empty-state" hidden>
+        <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+        <?= $escape($translate('No hay colecciones que coincidan con los filtros seleccionados.')) ?>
+    </div>
+
+</div>
 
 <?php $this->trigger('view.browse.after'); ?>
 
-<?php echo $this->pagination(); ?>
+<?= $this->pagination() ?>
+
+<?= $this->partial('omeka/site/item-set/_browse-filter-script') ?>

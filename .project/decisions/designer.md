@@ -320,4 +320,171 @@ La vista de ítem (`show.phtml`) agrupaba los medios por tipo ("Archivos", "Otro
 ### Dependencias
 - Desbloquea: implementación en `media-embeds.phtml` y `media-list.phtml`.
 
+---
+
+## [2026-05-05] ACEPTADA — Especificación item-set browse (colecciones)
+
+### Decisión
+Galería de colecciones como página de destino editorial: grid de tarjetas grandes con imagen de portada a sangre, franja azul institucional con título y contador, y descripción sobre fondo suave. Diseño generado con Claude Design antes de implementar.
+
+### Contexto
+La página `item-set/browse.phtml` actual usa el mismo `resource-grid` que los ítems individuales — tarjeta de 320px de alto, thumbnail 200px, título y tags. Las colecciones (item-sets) son el punto de entrada principal al repositorio; merecen un tratamiento más editorial y diferenciado que transmita la riqueza de cada colección antes de entrar en ella.
+
+**Principios de diseño para esta página:**
+- Las colecciones son pocas (estimación: 5–15) — el grid no necesita paginación en la mayoría de los casos.
+- Cada colección debe sentirse como una "puerta de entrada" con identidad propia.
+- La imagen de portada es el elemento visual dominante; el título y el contador de ítems son los datos más relevantes.
+- La descripción es opcional y se muestra truncada.
+- El sistema de tokens ATE debe ser la fuente de verdad para colores, tipografía y radios.
+
+### Especificación visual
+
+**Layout:**
+- Grid de **2 columnas** en desktop (≥ 900px), **1 columna** en mobile (< 600px), **2 columnas** intermedias (600–899px) con cards más compactas.
+- Gap entre tarjetas: `32px` desktop, `20px` mobile.
+- La primera tarjeta puede ocupar las 2 columnas si es "featured" (aplazado para ciclo futuro — por ahora todas las tarjetas son iguales).
+
+**Anatomía de la tarjeta (`collection-card`):**
+
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│          IMAGEN DE PORTADA                  │  ← aspect-ratio 16/9, object-fit: cover
+│          (fondo surface-card si no hay img) │     sin imagen: icono folder_open centrado
+│                                             │
+├─────────────────────────────────────────────┤
+│  ██  TÍTULO DE LA COLECCIÓN          [N]    │  ← franja brand-blue-dark, texto on-dark
+│      Subtítulo / eyebrow opcional    ítems  │     contador como pill brand-yellow/on-yellow
+├─────────────────────────────────────────────┤
+│  Descripción truncada a 2 líneas...         │  ← surface-canvas, text-body, font-size 14px
+│                                 Ver todo →  │  ← link brand-blue-mid, esquina inferior dcha
+└─────────────────────────────────────────────┘
+```
+
+**Tokens por zona:**
+
+| Zona | Token | Valor |
+|------|-------|-------|
+| Card background | `--ate-surface-canvas` | `#FFFFFF` |
+| Card border | `--ate-hairline` | `#DDE3EC` |
+| Card radius | `--ate-radius-xl` | `20px` |
+| Card shadow | `0 2px 8px rgba(12,44,132,0.07)` | — |
+| Card shadow hover | `0 10px 28px rgba(12,44,132,0.14)` | — |
+| Card hover transform | `translateY(-4px)` | — |
+| Imagen placeholder bg | `--ate-surface-card` | `#EEF2F8` |
+| Imagen placeholder icon | `--ate-color-brand-blue-mid` | `#0768AC` |
+| Franja título bg | `--ate-color-brand-blue-dark` | `#0C2C84` |
+| Franja título texto | `--ate-text-on-dark` | `#FFFFFF` |
+| Contador pill bg | `--ate-color-brand-yellow` | `#FFB300` |
+| Contador pill texto | `--ate-text-on-yellow` | `#0C2C84` |
+| Descripción bg | `--ate-surface-canvas` | `#FFFFFF` |
+| Descripción texto | `--ate-text-body` | `#2C2C2C` |
+| Link "Ver todo" | `--ate-color-brand-blue-mid` | `#0768AC` |
+
+**Tipografía:**
+- Título: `Inter` · 18px · weight 700 · color `--ate-text-on-dark` · 2 líneas máx con `line-clamp: 2`
+- Contador label "ítems": 11px · weight 600 · uppercase · `--ate-text-on-yellow`
+- Descripción: `Inter` · 14px · weight 400 · `--ate-text-body` · `line-clamp: 2`
+- Link: 13px · weight 700 · `--ate-color-brand-blue-mid`
+
+**Estado sin imagen de portada:**
+- Fondo del área de imagen: `--ate-surface-card` (`#EEF2F8`)
+- Icono `folder_open` de Material Symbols, 48px, `--ate-color-brand-blue-mid`, centrado.
+- Mismo aspect-ratio 16/9.
+
+**Estados interactivos:**
+- Hover sobre la card: `box-shadow` elevado + `translateY(-4px)` (igual que `media-card`).
+- El enlace "Ver todo →" es el CTA explícito; el título en la franja también es enlace (`color: inherit; text-decoration: none`).
+- Focus visible con `outline: 2px solid var(--ate-color-brand-blue-mid); outline-offset: 2px`.
+
+**Sección de encabezado de página:**
+- Título de página: `h1` con texto "Colecciones" (via `pageTitle()`), `font-size: clamp(1.4rem, 3vw, 2rem)`, `font-weight: 800`, `color: --ate-color-brand-blue-dark`.
+- Subtítulo opcional: `font-size: 15px`, `color: --ate-text-muted`, `margin-bottom: 32px`.
+- Sin `browse-controls` de layout toggle (las colecciones siempre en grid — no tiene sentido el toggle list para este contexto de alta jerarquía visual).
+
+### Prompt para Claude Design
+
+> **Diseña la página "Colecciones" de un repositorio educativo institucional del Gobierno de Canarias (España).**
+>
+> **Sistema de diseño:**
+> - Tipografía: Inter (única fuente). Titulares en weight 800/700, body en 400/500.
+> - Paleta: azul institucional `#0C2C84`, azul atlántico `#0768AC`, amarillo solar `#FFB300`, blanco `#FFFFFF`, gris suave `#EEF2F8`.
+> - Canvas blanco limpio, acentos en amarillo y azul. Estilo sobrio e institucional pero accesible y moderno.
+>
+> **Página a diseñar — "Colecciones" (`/colecciones`):**
+>
+> Muestra un grid de 2 columnas con tarjetas de colección. Cada tarjeta tiene:
+> 1. **Imagen de portada** (aspecto 16:9, `object-fit: cover`). Si no hay imagen, fondo gris pálido `#EEF2F8` con icono carpeta centrado en `#0768AC`.
+> 2. **Franja de título** — fondo `#0C2C84`, texto blanco, peso 700, 18px, máx 2 líneas. A la derecha de la franja: pill amarillo `#FFB300` con el número de recursos en azul `#0C2C84` (ej. "34 recursos"), texto 11px uppercase.
+> 3. **Área de descripción** — fondo blanco, texto `#2C2C2C`, 14px, 2 líneas máx con ellipsis. Esquina inferior derecha: enlace "Ver colección →" en `#0768AC`, 13px, bold.
+>
+> **Tarjeta:** radio `20px`, sombra suave `0 2px 8px rgba(12,44,132,0.07)`. Hover: sombra `0 10px 28px rgba(12,44,132,0.14)` + `translateY(-4px)`.
+>
+> **Encabezado de la página:** título "Colecciones" en `#0C2C84`, 32px, weight 800. Subtítulo "Explora los recursos por colección temática" en `#6B7280`, 15px.
+>
+> **Layout:** grid 2 columnas, gap 32px. En mobile (< 600px): 1 columna. El header sticky del sitio ya existe (azul oscuro con borde amarillo inferior) — no lo diseñes, asume que está presente.
+>
+> **Muestra 4 tarjetas de ejemplo** con colecciones reales de un repositorio educativo canario:
+> - "Recursos para Matemáticas" — 48 recursos — con imagen de aula
+> - "Ciencias Naturales" — 23 recursos — con imagen de naturaleza
+> - "Lengua y Literatura" — 61 recursos — con imagen de libros
+> - "Historia de Canarias" — 17 recursos — sin imagen de portada (muestra el fallback)
+
+### Alternativas consideradas
+- **Masonry grid como el item-browse**: descartado. Las colecciones necesitan consistencia visual entre tarjetas; el masonry variable resta jerarquía. Grid regular con ratio fijo.
+- **Hero de colección destacada + grid de las demás**: atractivo pero añade complejidad editorial (¿quién decide cuál es la destacada?). Aplazado para ciclo futuro cuando haya un campo de metadatos para ello.
+- **Vista list solamente**: las colecciones se benefician de la imagen de portada como identificador visual. El grid es el modo principal; no se implementa toggle list para esta página.
+
+### Consecuencias
+- El Desarrollador crea `asset/sass/components/item-set-browse/_item-set-browse.scss` nuevo.
+- El template `view/omeka/site/item-set/browse.phtml` se reescribe: elimina `resource-grid` / `resource-list` genéricos y usa la estructura `.collection-card` específica.
+- El `browse-controls` (layout toggle, sort) se simplifica: se mantiene el sort, se elimina el toggle de layout.
+- El campo `item_count_tag` inline actual (con `style="background-color: hsl(120, 50%, 85%)"`) se elimina; el contador pasa al componente `.collection-card__counter` con tokens ATE.
+
+### Proceso de implementación
+1. ~~El usuario genera el diseño visual con Claude Design usando el prompt de esta decisión.~~ ✅ [2026-05-05]
+2. ~~El diseño resultante se revisa y se ajusta el prompt si es necesario.~~ ✅ [2026-05-05] — ver D7b
+3. El Diseñador actualiza esta decisión con cualquier ajuste derivado del output visual. → completado en D7b.
+4. El Desarrollador implementa basándose en la especificación y el diseño visual aprobado. → desbloqueado.
+
+### Dependencias
+- Requiere: D1 (tokens `--ate-*`), D2c (Inter).
+- ~~Bloquea: implementación del Desarrollador hasta que el output de Claude Design esté aprobado.~~ → DESBLOQUEADO [2026-05-05]
+- Desbloquea: backlog Ciclo 3 #7.
+
+---
+
+## [2026-05-05] ACEPTADA — D7b: Validación Claude Design + ajustes a spec item-set browse
+
+**Complementa y ajusta: D7 [2026-05-05]**
+
+### Decisión
+El output de Claude Design queda aprobado. Se introducen cuatro ajustes sobre la spec D7 derivados del diseño visual generado. El Desarrollador queda desbloqueado para implementar.
+
+### Ajustes sobre D7
+
+**1. Grid: 3 columnas en desktop (era 2)**
+- El diseño renderiza 3 columnas a ancho completo. Visualmente resulta más rico y aprovecha mejor el espacio en colecciones de 5–15 ítems.
+- **Nuevo breakpoint:** 3 cols (≥ 1025px) → 2 cols (601–1024px) → 1 col (≤ 600px).
+- Gap: `24px` (en lugar de `32px` de D7 — ajustado al css generado).
+
+**2. CTA: "Ver colección →" (era "Ver todo →")**
+- Más específico y coherente con la entidad que representa la tarjeta.
+- El HTML usa `.collection-card__cta` con texto `$translate('Ver colección')`.
+
+**3. Barra de filtros Etapa/Nivel/Temática: validada como adición**
+- No estaba en D7. El diseño la incluye como una barra pill sobre `--ate-surface-soft` con icono `tune` de Material Symbols.
+- Tres `<select>` para Etapa (`dcterms:educationLevel`), Nivel (`lom:educationalLevel`), Temática (`dcterms:subject`).
+- El filtrado es 100% client-side (JS inline en partial `_browse-filter-script.phtml`).
+- Los `<select>` se pueblan dinámicamente desde los valores únicos de `$itemSets` en PHP — **no hardcoded**.
+
+**4. Subtítulo del encabezado**
+- D7 proponía "Explora los recursos por colección temática". El diseño usa "Recursos agrupados por colección temática." — más conciso y descriptivo. ✅ Aceptado.
+
+### Consecuencias
+- La spec D7 queda actualizada con los puntos 1–4 de esta entrada.
+- El Desarrollador usa este D7b como fuente de verdad para implementación, junto con las correcciones técnicas registradas en developer.md.
+
+### Dependencias
+- Desbloquea: implementación del Desarrollador (backlog Ciclo 3 #7).
 

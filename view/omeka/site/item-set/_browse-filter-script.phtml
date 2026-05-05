@@ -1,0 +1,53 @@
+<script>
+(function () {
+    var filters = {
+        etapa:    document.getElementById('filter-etapa'),
+        nivel:    document.getElementById('filter-nivel'),
+        tematica: document.getElementById('filter-tematica')
+    };
+    var clearBtn    = document.getElementById('collection-filter-clear');
+    var cards       = document.querySelectorAll('.collection-card');
+    var emptyState  = document.getElementById('collections-empty-state');
+    var countEl     = document.querySelector('.item-set-browse-header__count strong');
+
+    function applyFilters() {
+        var visible = 0;
+        var anyActive = false;
+
+        Object.values(filters).forEach(function (sel) {
+            sel.classList.toggle('has-value', !!sel.value);
+            if (sel.value) anyActive = true;
+        });
+
+        clearBtn.classList.toggle('visible', anyActive);
+
+        cards.forEach(function (card) {
+            var ok = Object.entries(filters).every(function (pair) {
+                var key = pair[0];
+                var sel = pair[1];
+                if (!sel.value) return true;
+                var data = (card.dataset[key] || '').split(/\s+/);
+                return data.indexOf(sel.value) !== -1;
+            });
+            card.style.display = ok ? '' : 'none';
+            if (ok) visible++;
+        });
+
+        if (emptyState) emptyState.hidden = visible > 0;
+        if (countEl) countEl.textContent = visible;
+    }
+
+    Object.values(filters).forEach(function (sel) {
+        if (sel) sel.addEventListener('change', applyFilters);
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            Object.values(filters).forEach(function (sel) {
+                if (sel) sel.value = '';
+            });
+            applyFilters();
+        });
+    }
+})();
+</script>

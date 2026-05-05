@@ -224,28 +224,82 @@ consolida lo ejecutado y abre el backlog del próximo ciclo.
 
 ---
 
+---
+
+## [2026-05-05] CIERRE CICLO 2 / BRIEFING CICLO 3
+
+### Ciclo 2 — Entregado
+
+Todos los ítems del backlog de ciclo 2 cerrados (8/8):
+
+| # | Área | Descripción | Resultado |
+|---|------|-------------|-----------|
+| 1 | Search | Breadcrumb item/show | ✅ Usa `breadcrumbs()` helper nativo de Omeka-S |
+| 2 | Item Show | Panel `resource-link-info` recortado | ✅ `position:absolute` + `max-height:none` + `overflow:visible` |
+| 5 | Search | Chips standalone desplazan "sin resultados" | ✅ Selector `~` + `display:none` en `:empty` |
+| 6 | Release | Pipeline GitHub Actions | ✅ Renombrado a `rea-ate`, tags legacy eliminados, v0.1.0 publicado |
+| 8 | Tipografía | Inter como fuente única | ✅ Ya implementado; eliminada doble carga de Material Symbols |
+| 4 | Item Show | Badge `lrmi:learningResourceType` valor bruto | ✅ URI cleanup, mapa de iconos, truncado a 35 chars |
+| 7 | A11y | Contrastes WCAG AA | ✅ 3 elementos corregidos: `days-ago-tag`, `filter-chip__group`, `chips-clear-all` |
+| 3 | Item Show | Left sidebar activo | ✅ Clases modificadoras + 4 variantes CSS del grid |
+
+**Release entregada:** `v0.1.0` — primer tag del tema `rea-ate` con pipeline completo.
+
+---
+
+### Backlog — Ciclo 3
+
+| # | Área | Descripción | Impacto | Esfuerzo |
+|---|------|-------------|---------|----------|
+| 1 | Home | Tarjetas de audiencia: Profesorado, Alumnado, Familias. Sección en la home que permita al administrador dirigir a cada perfil a su colección o búsqueda. | UX / Producto | M |
+| 2 | Browse (grid) | Estilo de tarjetas en `item/browse.phtml` — grid de recursos con imagen, título, tipo de recurso y nivel educativo. Coherente con el sistema ATE. | Visual | M |
+| 3 | Mobile | Auditoría de responsividad: header (top-bar + main-bar), facetas, item show y browse en pantallas < 768px. | Estabilidad | M |
+| 4 | QA | QA sobre instancia real del ciclo 2 completo. Verificar breadcrumb, chips, badge, grid sidebars, contrastes. | Calidad | S |
+| 5 | Release | Publicar `v0.2.0` tras QA y correcciones del ciclo 3. | DevOps | S |
+| 6 | Browse (list) | Estilo de lista en `item/browse.phtml` cuando el layout es list — fila compacta con imagen thumbnail, título, tipo de recurso y nivel educativo. Coherente con el sistema ATE y complementario al grid (#2). | Visual | M |
+| 7 | Item-set browse | Rediseño atractivo de `item-set/browse.phtml` para destacar colecciones: hero visual por colección, imagen de portada, contador de items, descripción. Diseño generado con Claude Design. | Visual / Producto | L | ✅ Diseño aprobado [2026-05-05] — Developer desbloqueado |
+
+**Prioridad sugerida:** QA (#4) primero para detectar regresiones, luego Browse grid (#2) y list (#6) en paralelo con Home (#1) si el Diseñador libera las specs, después Mobile (#3), Item-set browse (#7) y cerrar con release v0.2.0 (#5).
+
+**Decisiones pendientes antes de abordar #1, #2 y #6:**
+- El Diseñador debe especificar el layout y tokens de las tarjetas de audiencia (home).
+- El Diseñador debe especificar el diseño de las tarjetas de recurso en browse (grid y list).
+
+**Proceso para #7 (item-set browse):**
+- Generar el diseño visual con Claude Design antes de que el Desarrollador implemente.
+- El Diseñador registra decisión ACEPTADA con las especificaciones resultantes de Claude Design.
+- La implementación queda bloqueada hasta esa decisión.
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | CIERRE CICLO 1 / INICIO CICLO 2 |
+| Fase | INICIO CICLO 3 |
 | Dependencias cliente | ✅ Todas confirmadas |
 | Decisiones Arquitecto | ✅ 5 decisiones ACEPTADAS |
 | Decisiones Diseñador | ✅ D1–D6 + 4 iteraciones ACEPTADAS |
 | Implementación ciclo 1 | ✅ Completado |
-| QA sobre instancia real | ⏳ Pendiente |
+| Implementación ciclo 2 | ✅ Completado (8/8 ítems) |
+| Release pipeline | ✅ Operativo — v0.1.0 publicado |
+| QA sobre instancia real | ⏳ Pendiente (ciclo 3) |
 
-## Próximos pasos
+## Estado de implementación
 
 | Área | Estado |
 |------|--------|
-| Tokens CSS (`--ate-*`) + defaults de color | ✅ Implementado |
-| Tipografía (Inter fuente única) | ⚠️ Decisión D2c ACEPTADA, pendiente implementar (backlog #8) |
-| Header sticky (top-bar + main-bar con búsqueda) | ✅ Implementado |
-| Footer (border amarillo + hover yellow) | ✅ Implementado |
-| Sidebar de facetas (estilos ATE) | ✅ Implementado |
-| Pipeline de release (GitHub Actions + Makefile) | ⚠️ Parcial — tag `v*.*.*` pendiente (backlog #6) |
-| Ficha de recurso (`item/show.phtml`) | ✅ Implementado (ciclo 1) |
-| Search results — chips + contador | ✅ Implementado (ciclo 1) |
-| Tarjetas de audiencia en home | ⏳ Siguiente iteración |
-| QA + correcciones backlog ciclo 2 | ⏳ Próximo ciclo |
+| Tokens CSS (`--ate-*`) + defaults de color | ✅ |
+| Tipografía Inter (fuente única) | ✅ |
+| Header sticky (top-bar + main-bar con búsqueda) | ✅ |
+| Footer (border amarillo + hover yellow) | ✅ |
+| Sidebar de facetas (estilos ATE) | ✅ |
+| Pipeline de release (GitHub Actions + Makefile) | ✅ v0.1.0 publicado |
+| Ficha de recurso (`item/show.phtml`) | ✅ |
+| Search results — chips + contador + A11y | ✅ |
+| Anclaje curricular (sidebar derecho) | ✅ |
+| Tarjetas de audiencia en home | ⏳ Ciclo 3 |
+| Browse de recursos — grid (`item/browse.phtml`) | ⏳ Ciclo 3 |
+| Browse de recursos — list (`item/browse.phtml`) | ⏳ Ciclo 3 |
+| Browse de colecciones (`item-set/browse.phtml`) | ✅ Implementado — pendiente QA sobre instancia real |
+| Mobile responsiveness (auditoría) | ⏳ Ciclo 3 |
