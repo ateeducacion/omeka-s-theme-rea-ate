@@ -41,7 +41,7 @@ $breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : nul
                 $rawType = (string) $resourceTypeValue;
 
                 // If the value is a URI, extract the last path/hash segment.
-                $typeLabel = preg_match('#[/#]([^/#]+)\/?$#', $rawType, $m) ? $m[1] : $rawType;
+                $typeLabel = preg_match('~[/#]([^/#]+)/?$~', $rawType, $m) ? $m[1] : $rawType;
                 // camelCase → space-separated words (e.g. "learningActivity" → "Learning Activity").
                 $typeLabel = preg_replace('/([a-z])([A-Z])/', '$1 $2', $typeLabel);
                 $typeLabel = ucfirst($typeLabel);
