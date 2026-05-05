@@ -36,12 +36,58 @@ $breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : nul
 
         <div class="item-hero__eyebrow">
             <?php
-            $resourceType = $item->value('lrmi:learningResourceType');
-            if ($resourceType):
+            $resourceTypeValue = $item->value('lrmi:learningResourceType');
+            if ($resourceTypeValue):
+                $rawType = (string) $resourceTypeValue;
+
+                // If the value is a URI, extract the last path/hash segment.
+                $typeLabel = preg_match('#[/#]([^/#]+)\/?$#', $rawType, $m) ? $m[1] : $rawType;
+                // camelCase → space-separated words (e.g. "learningActivity" → "Learning Activity").
+                $typeLabel = preg_replace('/([a-z])([A-Z])/', '$1 $2', $typeLabel);
+                $typeLabel = ucfirst($typeLabel);
+
+                // Truncate to 35 chars; keep full label for the title attribute.
+                $truncated    = mb_strlen($typeLabel) > 35;
+                $displayLabel = $truncated ? mb_substr($typeLabel, 0, 34) . '…' : $typeLabel;
+
+                // Map common resource-type keywords to contextual Material Symbols icons.
+                $typeLower = mb_strtolower($typeLabel);
+                $icon      = 'school'; // default
+                foreach ([
+                    'vídeo'        => 'smart_display',
+                    'video'        => 'smart_display',
+                    'audio'        => 'headphones',
+                    'podcast'      => 'headphones',
+                    'documento'    => 'article',
+                    'document'     => 'article',
+                    'interactiv'   => 'touch_app',
+                    'juego'        => 'sports_esports',
+                    'game'         => 'sports_esports',
+                    'cuestionario' => 'quiz',
+                    'quiz'         => 'quiz',
+                    'evaluaci'     => 'quiz',
+                    'assessment'   => 'quiz',
+                    'presentaci'   => 'slideshow',
+                    'presentation' => 'slideshow',
+                    'lección'      => 'menu_book',
+                    'lesson'       => 'menu_book',
+                    'lectur'       => 'menu_book',
+                    'unidad'       => 'folder_open',
+                    'unit'         => 'folder_open',
+                    'simulaci'     => 'model_training',
+                    'simulation'   => 'model_training',
+                    'actividad'    => 'assignment',
+                    'activity'     => 'assignment',
+                ] as $keyword => $mappedIcon) {
+                    if (str_contains($typeLower, $keyword)) {
+                        $icon = $mappedIcon;
+                        break;
+                    }
+                }
             ?>
-            <span class="resource-type-badge">
-                <span class="material-symbols-outlined" aria-hidden="true">school</span>
-                <?php echo $escape($resourceType); ?>
+            <span class="resource-type-badge"<?php if ($truncated): ?> title="<?php echo $escape($typeLabel); ?>"<?php endif; ?>>
+                <span class="material-symbols-outlined" aria-hidden="true"><?php echo $icon; ?></span>
+                <?php echo $escape($displayLabel); ?>
             </span>
             <?php endif; ?>
 
