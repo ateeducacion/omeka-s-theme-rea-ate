@@ -15,6 +15,7 @@
         var anyActive = false;
 
         Object.values(filters).forEach(function (sel) {
+            if (!sel) return;
             sel.classList.toggle('has-value', !!sel.value);
             if (sel.value) anyActive = true;
         });
@@ -25,7 +26,7 @@
             var ok = Object.entries(filters).every(function (pair) {
                 var key = pair[0];
                 var sel = pair[1];
-                if (!sel.value) return true;
+                if (!sel || !sel.value) return true;
                 var data = (card.dataset[key] || '').split(/\s+/);
                 return data.indexOf(sel.value) !== -1;
             });

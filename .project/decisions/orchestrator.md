@@ -272,18 +272,218 @@ Todos los ítems del backlog de ciclo 2 cerrados (8/8):
 
 ---
 
+## [2026-05-05] ACEPTADA
+
+### Decisión
+Se arranca formalmente el QA del ciclo 3 sobre la instancia real. El objetivo inmediato es validar en contexto real lo ya entregado en ciclo 2 y el nuevo `item-set/browse` implementado el 2026-05-05.
+
+### Contexto
+El estado global registrado en esta fecha ya no corresponde a un arranque genérico de ciclo 3: la base visual y funcional del tema está implementada, el pipeline de release está operativo y el Desarrollador ha cerrado también la implementación de `item-set/browse` (colecciones). Antes de abrir nuevas implementaciones en Home y Browse, conviene consolidar la base con una pasada de QA sobre la instancia real para detectar regresiones, problemas de integración con Omeka-S y ajustes de responsividad o accesibilidad que no se aprecian solo en desarrollo local.
+
+Ámbito del QA que se abre:
+- Header sticky: transición top-bar/main-bar, búsqueda visible y navegación.
+- Search results: facetas, chips activos, contador, estados sin resultados.
+- Item show: breadcrumb, badge de tipo de recurso, sidebar derecho/left sidebar, panel `resource-link-info`, bloque de medios.
+- Item-set browse: grid editorial de colecciones, filtros client-side, contadores, estado sin imagen, responsive básico.
+- Contrastes y focus states en los componentes ajustados en ciclo 2.
+
+### Alternativas consideradas
+- **Abrir primero Home y Browse de recursos**: descartado. Aumenta superficie de cambio antes de validar que la base entregada está estable en la instancia real.
+- **Posponer QA hasta cerrar todo el ciclo 3**: descartado. Mezclaría defectos heredados con defectos nuevos y degradaría la trazabilidad de las correcciones.
+
+### Consecuencias
+- El proyecto pasa a estado **QA EN CURSO**.
+- El siguiente entregable esperado es un registro de hallazgos priorizados (bloqueantes, importantes, menores) para decidir si hacen falta correcciones antes de continuar con Home y Browse.
+- El Diseñador sigue pendiente de definir las specs de Home (`#1`) y Browse (`#2`, `#6`), pero esas líneas no bloquean el inicio del QA.
+- No se abre aún la release `v0.2.0`; queda supeditada al cierre del QA y a las correcciones que salgan de esa revisión.
+
+### Dependencias
+- Requiere: decisiones ACEPTADAS de Arquitecto, Diseñador y Desarrollador vigentes hasta 2026-05-05.
+- Desbloquea: ejecución del QA sobre instancia real y posterior priorización de correcciones.
+- Mantiene bloqueado: release `v0.2.0` hasta cierre de QA.
+
+---
+
+## [2026-05-05] ACEPTADA
+
+### Decisión
+Se abre el registro operativo de hallazgos de QA en `.project/docs/qa-findings.md` como soporte único para severidad, reproducción mínima y estado de cada incidencia detectada en la instancia real.
+
+### Contexto
+La decisión anterior arrancó formalmente el QA, pero el proyecto aún no tenía un soporte documental específico para capturar incidencias de forma homogénea. Registrar hallazgos directamente en conversaciones o repartirlos entre varios archivos degradaría la priorización y la trazabilidad. Se necesita un registro corto, operativo y estable para poder clasificar incidencias, asignarlas y decidir qué corrige el Desarrollador antes de seguir con Home y Browse.
+
+El registro queda abierto con:
+- escala de severidad común;
+- estados de seguimiento;
+- formato mínimo por hallazgo;
+- entrada inicial plantilla (`QA-001`) para normalizar el modo de captura.
+
+### Alternativas consideradas
+- **Registrar hallazgos solo en `orchestrator.md`**: descartado. Mezcla estado global con detalle operativo y vuelve más difícil revisar incidencias abiertas.
+- **Crear un archivo ad hoc fuera de `.project/`**: descartado. La coordinación del proyecto ya vive en `.project/` y debe permanecer centralizada ahí.
+
+### Consecuencias
+- `qa-findings.md` pasa a ser el registro operativo oficial del QA del ciclo 3.
+- El Orquestador seguirá usando `orchestrator.md` para decisiones de estado global y `qa-findings.md` para el detalle de incidencias.
+- El siguiente paso esperado es sustituir la entrada plantilla por hallazgos reales priorizados y asignables.
+
+### Dependencias
+- Requiere: decisión del Orquestador [2026-05-05] que arranca QA en instancia real.
+- Desbloquea: captura estructurada de hallazgos, priorización y asignación.
+
+---
+
+## [2026-05-05] ACEPTADA
+
+### Decisión
+Se deriva al Arquitecto la resolución conceptual de `QA-001` para fijar la fuente de verdad del filtro de `item-set/browse` y su alineación con el modelo de metadatos del proyecto.
+
+### Contexto
+El hallazgo `QA-001` detectado en `.project/docs/qa-findings.md` no es solo un bug aislado de implementación: expone una ambigüedad de arquitectura entre el modelo de datos esperado por el filtro de colecciones y el modelo de metadatos documentado para los recursos del proyecto. La implementación actual de `item-set/browse` lee metadatos del propio `item set` con las propiedades `dcterms:educationLevel`, `lom:educationalLevel` y `dcterms:subject`, mientras que el modelo general del proyecto y otras vistas del tema pivotan sobre `lrmi:educationalLevel` y `schema:about`.
+
+Antes de asignar una corrección al Desarrollador, el Arquitecto debe dejar cerrada una decisión ACEPTADA sobre:
+- si el filtro de colecciones debe leer metadatos del `item set`;
+- o si debe agregarlos desde los ítems de cada colección;
+- y qué propiedades concretas son la fuente de verdad en producción.
+
+### Alternativas consideradas
+- **Enviar `QA-001` directamente al Desarrollador**: descartado. Riesgo alto de corregir con una premisa de datos equivocada y consolidar una desalineación con el modelo del proyecto.
+- **Resolverlo solo como decisión de Diseño**: descartado. El problema es de contrato de datos y responsabilidad arquitectónica.
+
+### Consecuencias
+- El Arquitecto queda desbloqueado para registrar una decisión específica sobre el filtro de colecciones.
+- El Desarrollador no debe corregir `QA-001` hasta que exista esa decisión ACEPTADA.
+- `QA-004` puede corregirse en el mismo lote posterior si no entra en conflicto con la decisión arquitectónica, pero no altera esta derivación.
+
+### Dependencias
+- Requiere: `QA-001` abierto en `.project/docs/qa-findings.md`.
+- Desbloquea: lote de corrección técnica de `item-set/browse` por el Desarrollador.
+- Mantiene bloqueado: corrección de `QA-001` hasta decisión del Arquitecto.
+
+---
+
+## [2026-05-05] ACEPTADA
+
+### Decisión
+Se deriva al Diseñador la definición de cierre para `QA-002` y `QA-003`: componente coherente para `lrmi:learningResourceType` entre vistas y nueva jerarquía visual de la cabecera de `item-set/browse`.
+
+### Contexto
+Los hallazgos `QA-002` y `QA-003` abiertos en `.project/docs/qa-findings.md` afectan a consistencia visual y jerarquía de interfaz, no a la estructura de datos. `QA-002` requiere decidir si el badge de tipo de recurso debe converger hacia el componente de `item/show`, hacia una variante común nueva, o hacia otro patrón explícitamente aceptado. `QA-003` requiere redefinir cómo se integran filtro, cabecera y contador en `item-set/browse` para reducir el peso visual del bloque de filtrado y recolocar `item-set-browse-header__count`.
+
+Antes de pasar estas correcciones al Desarrollador, el Diseñador debe registrar una decisión ACEPTADA que deje cerrados:
+- el componente visual único o regla de convergencia para `lrmi:learningResourceType`;
+- la posición y jerarquía del filtro en `item-set/browse`;
+- la posición del contador de colecciones sobre el grid.
+
+### Alternativas consideradas
+- **Dejar que el Desarrollador decida caso a caso**: descartado. Son decisiones de sistema visual y pueden introducir más divergencia.
+- **Tratar `QA-002` y `QA-003` como ajustes menores sin decisión formal**: descartado. Ambos afectan consistencia del diseño y deben tener una fuente de verdad explícita.
+
+### Consecuencias
+- El Diseñador queda desbloqueado para registrar la spec de corrección de `QA-002` y `QA-003`.
+- El Desarrollador queda a la espera de esa spec antes de corregir ambos hallazgos.
+- Si el Diseñador lo considera oportuno, puede agrupar ambos ajustes en una única decisión de sistema visual.
+
+### Dependencias
+- Requiere: `QA-002` y `QA-003` abiertos en `.project/docs/qa-findings.md`.
+- Desbloquea: lote de corrección visual de search results, item show e item-set browse.
+- Mantiene bloqueado: corrección de `QA-002` y `QA-003` hasta decisión del Diseñador.
+
+---
+
+## [2026-05-05] ACEPTADA
+
+### Decisión
+Se valida la propuesta del Arquitecto [2026-05-05] sobre el filtro de `item-set/browse` derivada de `QA-001`.
+
+### Contexto
+La propuesta del Arquitecto resuelve la ambigüedad principal detectada en QA entre el modelo de metadatos del proyecto y la implementación actual del filtro de colecciones. La opción elegida mantiene el `item set` como entidad editorial y evita una agregación dinámica desde ítems hijos en tiempo de render, que habría introducido complejidad y dependencia del contenido interno de cada colección. Además, al fijar `lrmi:educationalLevel` y `schema:about` como propiedades preferentes con fallback legacy, la propuesta alinea el browse de colecciones con el modelo de metadatos documentado sin romper la compatibilidad mínima con la implementación existente.
+
+### Alternativas consideradas
+- **Mantener la propuesta en revisión**: descartado. La decisión es suficientemente concreta para desbloquear implementación y no depende de información adicional del cliente.
+- **Rechazar el uso de metadatos en el propio `item set`**: descartado. Eso empujaría la solución hacia agregación en runtime o lógica más compleja sin beneficio claro para este ciclo.
+
+### Consecuencias
+- La decisión del Arquitecto [2026-05-05] pasa a considerarse **ACEPTADA** por el Orquestador.
+- El Desarrollador queda desbloqueado para corregir `QA-001` siguiendo esa convención.
+- `QA-004` puede entrar en el mismo lote de corrección de `item-set/browse`.
+
+### Dependencias
+- Requiere: propuesta del Arquitecto [2026-05-05] registrada en `.project/decisions/architect.md`.
+- Desbloquea: corrección de `QA-001` y lote técnico asociado en `item-set/browse`.
+
+---
+
+## [2026-05-05] ACEPTADA
+
+### Decisión
+Se validan las decisiones del Diseñador [2026-05-05] para cerrar `QA-002` y `QA-003`.
+
+### Contexto
+El Diseñador ha registrado dos decisiones coherentes con el sistema visual ya aprobado: unificación del badge de `lrmi:learningResourceType` entre search results e item show, y reducción del peso visual del filtro en `item-set/browse` con recolocación del contador sobre el grid. Ambas decisiones responden directamente a hallazgos de QA, son consistentes con la dirección visual del tema y dejan una instrucción suficientemente concreta para implementación sin abrir ambigüedades adicionales.
+
+### Alternativas consideradas
+- **Solicitar más iteración visual antes de validar**: descartado. La definición actual es suficientemente precisa para corrección de QA.
+- **Separar la validación de `QA-002` y `QA-003` en ciclos distintos**: descartado. Ambos ajustes forman un mismo lote visual y conviene corregirlos de forma conjunta.
+
+### Consecuencias
+- Las decisiones del Diseñador [2026-05-05] para `QA-002` y `QA-003` se consideran **validadas** por el Orquestador.
+- El Desarrollador queda desbloqueado para corregir `QA-002` y `QA-003`.
+- Queda formado un lote QA-1 listo para Desarrollo: `QA-001`, `QA-002`, `QA-003` y `QA-004`.
+
+### Dependencias
+- Requiere: decisiones del Diseñador [2026-05-05] registradas en `.project/decisions/designer.md`.
+- Desbloquea: lote de corrección visual y semántica de search results, item show e item-set browse.
+
+---
+
+## [2026-05-06] ACEPTADA
+
+### Decisión
+Lote QA-1 cerrado. `QA-004` diferido al siguiente ciclo de QA. La fase QA de `item-set/browse` queda cerrada.
+
+### Contexto
+El lote QA-1 (`QA-001` → `QA-007`) ha quedado con 6 hallazgos resueltos y 1 (`QA-004`) en análisis. `QA-004` describe un posible error en el contador del footer de paginación (`$this->pagination()`) que podría mostrar el número de ítems en lugar del número de `item sets`. La causa más probable es que las llamadas a `$api->search('items', ...)` en `browse.phtml` contaminen el estado del paginador de Omeka-S.
+
+Sin embargo, el contador correcto de colecciones ya se muestra de forma prominente en el elemento `item-set-browse-results-info` sobre el grid. El footer de paginación solo aparece cuando hay más de 25 colecciones, escenario improbable en la instancia ATE en este ciclo. Resolver `QA-004` requiere verificación en instancia real y posiblemente acceso a los internos del paginador de Omeka-S, lo que excede el alcance de este lote.
+
+Adicionalmente, `architecture.md` ha sido actualizado para reflejar el mapeo de propiedades corregido en `QA-006` (`Etapa` → `lrmi:educationalAlignment`, `Nivel` → `lrmi:educationalLevel`).
+
+### Alternativas consideradas
+- **Resolver `QA-004` antes de cerrar el lote**: descartado. La corrección requiere verificación en instancia real que bloquearía innecesariamente el avance hacia los siguientes ítems del backlog.
+- **Rechazar `QA-004` definitivamente**: descartado. El problema es real y debe seguirse en el próximo ciclo.
+
+### Consecuencias
+- `QA-004` pasa a estado **Diferido** en `qa-findings.md`; se reabre en el siguiente ciclo de QA.
+- La fase QA del ciclo 3 sobre `item-set/browse` queda **cerrada**.
+- El proyecto puede avanzar hacia los siguientes ítems del backlog del ciclo 3.
+- El bloqueo sobre `v0.2.0` se levanta: la release puede prepararse en cuanto se decida.
+- Los ítems **#1 (Home)**, **#2 (Browse grid)** y **#6 (Browse list)** siguen bloqueados por specs del Diseñador.
+
+### Dependencias
+- Requiere: lote QA-1 completado con 6/7 resueltos.
+- Desbloquea: siguientes ítems del backlog del ciclo 3 y preparación de `v0.2.0`.
+- Reabre: `QA-004` en el siguiente ciclo de QA.
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | INICIO CICLO 3 |
+| Fase | CICLO 3 — QA CERRADO / BACKLOG ABIERTO |
 | Dependencias cliente | ✅ Todas confirmadas |
-| Decisiones Arquitecto | ✅ 5 decisiones ACEPTADAS |
-| Decisiones Diseñador | ✅ D1–D6 + 4 iteraciones ACEPTADAS |
+| Decisiones Arquitecto | ✅ `architecture.md` actualizado con mapeo QA-006 |
+| Decisiones Diseñador | ✅ Incluyen las directrices validadas para `QA-002` y `QA-003` |
 | Implementación ciclo 1 | ✅ Completado |
 | Implementación ciclo 2 | ✅ Completado (8/8 ítems) |
+| Implementación ciclo 3 | 🟡 Parcial — `item-set/browse` completado; Home/Browse pendientes |
 | Release pipeline | ✅ Operativo — v0.1.0 publicado |
-| QA sobre instancia real | ⏳ Pendiente (ciclo 3) |
+| QA sobre instancia real | ✅ Cerrado — 6/7 resueltos; QA-004 diferido |
+| Registro de hallazgos QA | ✅ `.project/docs/qa-findings.md` actualizado |
+| Lote QA-1 | ✅ Cerrado |
+| Próxima release | ⏳ `v0.2.0` — desbloqueda, pendiente de decisión |
+| Backlog ciclo 3 | 🟡 #1/#2/#6 bloqueados por specs Diseñador; #3/#5 disponibles |
 
 ## Estado de implementación
 
@@ -301,5 +501,5 @@ Todos los ítems del backlog de ciclo 2 cerrados (8/8):
 | Tarjetas de audiencia en home | ⏳ Ciclo 3 |
 | Browse de recursos — grid (`item/browse.phtml`) | ⏳ Ciclo 3 |
 | Browse de recursos — list (`item/browse.phtml`) | ⏳ Ciclo 3 |
-| Browse de colecciones (`item-set/browse.phtml`) | ✅ Implementado — pendiente QA sobre instancia real |
+| Browse de colecciones (`item-set/browse.phtml`) | 🟡 Implementado — en QA sobre instancia real |
 | Mobile responsiveness (auditoría) | ⏳ Ciclo 3 |

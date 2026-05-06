@@ -1,0 +1,27 @@
+// ── Resource Type Badge (LRMI) ──────────────────────────────────
+.resource-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--ate-surface-card);
+    border: 1px solid var(--ate-hairline);
+    border-radius: var(--ate-radius-pill);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--ate-color-brand-blue-dark);
+    padding: 3px 10px 3px 7px;
+    white-space: nowrap;
+    text-decoration: none;
+
+    .material-symbols-outlined {
+        font-size: 14px;
+        color: var(--ate-color-brand-blue-mid);
+    }
+
+    &:hover {
+        text-decoration: none;
+        color: var(--ate-color-brand-blue-dark);
+    }
+}

@@ -1,11 +1,11 @@
 // Enhances the AdvancedSearch results list (ul.search-result-list.list):
 //  - Tags every .property div with data-term="vocab:localName" so the CSS
 //    grid/flex layout can place it in the right "column".
-//  - Converts lrmi:learningResourceType values into a coloured pill (lrt-badge),
-//    with a deterministic pastel hue derived from the value text.
 //  - Groups each metadata-search-link + sibling resource-link-info as a single
 //    nowrap unit so the "+" info button never breaks away from its label.
 //  - Uses a MutationObserver to keep working after AJAX facet reloads.
+// Note: lrmi:learningResourceType is rendered server-side as .resource-type-badge
+//  via common/resource-type-badge.phtml — no client-side transformation needed.
 
 (function () {
     const LIST_SELECTOR = 'ul.search-result-list.list, ul.resource-list.search-result-list';
@@ -47,20 +47,80 @@
         return Math.abs(h) % 360;
     }
 
-    function decorateLearningResourceTypeBadge(property) {
-        // When the value is rendered as a metadata-search-link, style the
-        // link itself. When it's plain text inside .value-content (no link),
-        // style the .value-content span directly.
-        property.querySelectorAll('.value-content').forEach(function (vc) {
-            const link = vc.querySelector('a.metadata-search-link');
-            const target = link || vc;
-            if (target.classList.contains('lrt-badge')) return;
-            const text = (target.textContent || '').trim();
-            if (!text) return;
-            const hue = hueFromString(text.toLowerCase());
-            target.classList.add('lrt-badge');
-            target.style.setProperty('--lrt-bg', 'hsl(' + hue + ', 65%, 88%)');
-            target.style.setProperty('--lrt-bg-hover', 'hsl(' + hue + ', 65%, 80%)');
+    // ---- lrmi:learningResourceType badge (client-side) ----
+    // AdvancedSearch renders property values as plain text, bypassing
+    // resource-values.phtml. We replicate the PHP badge logic here so search
+    // results stay consistent with item/show.
+
+    var LRT_ICON_MAP = [
+        ['vídeo',        'smart_display'],
+        ['video',        'smart_display'],
+        ['audio',        'headphones'],
+        ['podcast',      'headphones'],
+        ['documento',    'article'],
+        ['document',     'article'],
+        ['interactiv',   'touch_app'],
+        ['juego',        'sports_esports'],
+        ['game',         'sports_esports'],
+        ['cuestionario', 'quiz'],
+        ['quiz',         'quiz'],
+        ['evaluaci',     'quiz'],
+        ['assessment',   'quiz'],
+        ['presentaci',   'slideshow'],
+        ['presentation', 'slideshow'],
+        ['lección',      'menu_book'],
+        ['lesson',       'menu_book'],
+        ['lectur',       'menu_book'],
+        ['unidad',       'folder_open'],
+        ['unit',         'folder_open'],
+        ['simulaci',     'model_training'],
+        ['simulation',   'model_training'],
+        ['actividad',    'assignment'],
+        ['activity',     'assignment'],
+    ];
+
+    function lrtNormalize(raw) {
+        var m = raw.match(/[/#]([^/#]+)\/?$/);
+        var label = m ? m[1] : raw;
+        label = label.replace(/([a-z])([A-Z])/g, '$1 $2');
+        return label.charAt(0).toUpperCase() + label.slice(1);
+    }
+
+    function lrtIcon(lower) {
+        for (var i = 0; i < LRT_ICON_MAP.length; i++) {
+            if (lower.indexOf(LRT_ICON_MAP[i][0]) !== -1) return LRT_ICON_MAP[i][1];
+        }
+        return 'school';
+    }
+
+    function buildLrtBadge(rawText) {
+        var label   = lrtNormalize(rawText.trim());
+        var MAX     = 35;
+        var clipped = label.length > MAX;
+        var display = clipped ? label.substring(0, 34) + '…' : label;
+        var icon    = lrtIcon(label.toLowerCase());
+
+        var badge = document.createElement('span');
+        badge.className = 'resource-type-badge';
+        if (clipped) badge.title = label;
+
+        var iconEl = document.createElement('span');
+        iconEl.className = 'material-symbols-outlined';
+        iconEl.setAttribute('aria-hidden', 'true');
+        iconEl.textContent = icon;
+
+        badge.appendChild(iconEl);
+        badge.appendChild(document.createTextNode(' ' + display));
+        return badge;
+    }
+
+    function upgradeLrtProperty(property) {
+        property.querySelectorAll('dd.value .value-content').forEach(function (vc) {
+            if (vc.querySelector('.resource-type-badge')) return; // already a badge
+            var raw = vc.textContent.trim();
+            if (!raw) return;
+            vc.textContent = '';
+            vc.appendChild(buildLrtBadge(raw));
         });
     }
 
@@ -93,7 +153,7 @@
             }
 
             if (prop.dataset.term === 'lrmi:learningResourceType') {
-                decorateLearningResourceTypeBadge(prop);
+                upgradeLrtProperty(prop);
             }
 
             if (prop.dataset.term === 'lrmi:teaches' || prop.dataset.term === 'dcterms:relation') {

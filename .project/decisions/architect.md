@@ -393,3 +393,36 @@ El archivo del workflow: `.github/workflows/release.yml`.
 
 ### Dependencias
 - Desbloquea: automatización del ciclo de release.
+
+---
+
+## [2026-05-05] PROPUESTA
+
+### Decisión
+Filtro de `item-set/browse`: la fuente de verdad serán los metadatos del propio `item set`, no una agregación dinámica desde sus ítems. El tema debe alinearse con el modelo del proyecto usando propiedades preferentes `lrmi:` / `schema:` y mantener compatibilidad de lectura con los nombres usados en la implementación actual solo como fallback.
+
+### Contexto
+El hallazgo `QA-001` abierto por el Orquestador detecta que el filtro de colecciones no funciona en la instancia real. La causa no es solo un bug de interfaz: la implementación actual en `view/omeka/site/item-set/browse.phtml` asume que cada colección expone `dcterms:educationLevel`, `lom:educationalLevel` y `dcterms:subject`, mientras que el modelo de metadatos del proyecto documenta `lrmi:educationalLevel` y `schema:about` como propiedades de referencia para los recursos educativos.
+
+Desde arquitectura, la decisión relevante no es solo qué propiedades leer, sino también dónde vive esa información. Para una página de browse de colecciones, agregar metadatos desde todos los ítems hijos en tiempo de render complica el template, añade coste de API por colección y hace el filtro dependiente del contenido interno en lugar de la curación editorial de la colección. En cambio, tratar el `item set` como entidad editorial con sus propios metadatos mantiene el browse de colecciones estable, predecible y barato de renderizar.
+
+### Alternativas consideradas
+- **Agregar valores desde los ítems de cada colección en tiempo de render**: descartado. Aumenta complejidad, coste de consultas y ambigüedad cuando una colección contiene ítems con taxonomías heterogéneas.
+- **Mantener solo `dcterms:educationLevel`, `lom:educationalLevel` y `dcterms:subject`**: descartado. Consolida una desalineación con el modelo de metadatos documentado del proyecto y con otras vistas del tema.
+- **Hacer el filtro totalmente configurable desde `theme.ini`**: descartado para este ciclo. Flexible, pero introduce complejidad administrativa innecesaria para un caso que puede resolverse con una convención arquitectónica clara.
+
+### Consecuencias
+- El `item set` pasa a ser la entidad fuente de verdad del filtro de colecciones.
+- El Desarrollador debe actualizar `view/omeka/site/item-set/browse.phtml` para leer propiedades con este orden de preferencia:
+  - `Etapa`: `lrmi:educationalLevel`, fallback `dcterms:educationLevel`.
+  - `Nivel`: `lom:educationalLevel` solo como fallback legacy o si la instancia lo usa realmente; si no hay valores en ninguna colección, el select no debe renderizarse.
+  - `Temática`: `schema:about`, fallback `dcterms:subject`.
+- El filtrado client-side sigue siendo válido: solo cambia la extracción de valores y la visibilidad de selects vacíos.
+- El Desarrollador debe ajustar también los `data-*` de cada tarjeta y la construcción de opciones para que usen la misma jerarquía de propiedades.
+- La carga editorial mínima para que el filtro funcione queda explícita: las colecciones deben rellenar esos metadatos en el propio `item set`.
+- Si el equipo quiere que el filtro refleje automáticamente taxonomías agregadas de los ítems, eso requerirá una decisión posterior distinta, probablemente fuera del template y más próxima a un módulo o proceso de sincronización.
+
+### Dependencias
+- Requiere: hallazgo `QA-001` documentado en `.project/docs/qa-findings.md`.
+- Requiere: validación del Orquestador para pasar de `PROPUESTA` a `ACEPTADA`.
+- Desbloquea: corrección del filtro de `item-set/browse` por el Desarrollador una vez validada.

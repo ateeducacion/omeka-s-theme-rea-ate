@@ -225,3 +225,25 @@ Basado en las directrices del Diseñador [2026-05-04] para mejorar la visualizac
 
 ### Dependencias
 - Basado en: decisión Diseñador [2026-05-04] (Rediseño medios) y petición directa de optimización de UX (panel transition).
+
+---
+
+## [2026-05-06] ACEPTADA — Corrección de mapeo de metadatos en filtros de colecciones (QA-006)
+
+### Decisión
+Corregir las propiedades de metadatos utilizadas para los filtros de "Etapa" y "Nivel" en la vista `item-set/browse` para alinearlas con el modelo de datos real de Canarias Educativa.
+
+### Contexto
+Se detectó que el filtro "Etapa" estaba leyendo `lrmi:educationalLevel` (que es el nivel), mientras que "Etapa" debe mapearse a `lrmi:educationalAlignment`. Además, el filtro "Nivel" no priorizaba el estándar LRMI.
+
+### Cambios realizados
+- **Mapeo de Etapa:** Cambiado a `lrmi:educationalAlignment`. Se eliminó el fallback a `dcterms:educationLevel` por inconsistencia semántica.
+- **Mapeo de Nivel:** Priorizado `lrmi:educationalLevel` con fallback a `lom:educationalLevel`.
+- **Sincronización:** Se actualizaron tanto los selectores de filtrado como los atributos `data-*` de las tarjetas de colección en el servidor (`browse.phtml`).
+
+### Consecuencias
+- Los usuarios pueden filtrar colecciones con datos semánticamente correctos.
+- Mejora la precisión de la navegación por facetas en la página de colecciones.
+
+### Dependencias
+- QA-006.

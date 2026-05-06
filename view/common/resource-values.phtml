@@ -42,7 +42,7 @@ foreach ($values as $term => $propertyData):
         $propertyTerm = null;
     }
     ?>
-    <div class="property">
+    <div class="property"<?php if ($this->status()->isSiteRequest()): ?> data-term="<?php echo $escape($term); ?>"<?php endif; ?>>
         <dt>
         <?php echo $escape($propertyLabel); ?>
         <?php if ($propertyTerm !== null) : ?>
@@ -70,7 +70,13 @@ foreach ($values as $term => $propertyData):
                 <?php if ($showLocale && $valueLang) : ?>
                     <span class="language"><?php echo $valueLang; ?></span>
                 <?php endif; ?>
-                <span class="value-content"><?php echo $filterLocale ? $value->asHtml($lang) : $value->asHtml(); ?></span>
+                <span class="value-content">
+                    <?php if ($term === 'lrmi:learningResourceType'): ?>
+                        <?php echo $this->partial('common/resource-type-badge', ['resourceTypeValue' => $value, 'term' => $term]); ?>
+                    <?php else: ?>
+                        <?php echo $filterLocale ? $value->asHtml($lang) : $value->asHtml(); ?>
+                    <?php endif; ?>
+                </span>
                 <?php if(!$value->isPublic()) : ?>
                     <span class="o-icon-private" aria-role="tooltip" title="<?php echo $this->escapeHtml($translate('Private')); ?>" aria-label="<?php echo $this->escapeHtml($translate('Private')); ?>"></span>
                 <?php endif; ?>

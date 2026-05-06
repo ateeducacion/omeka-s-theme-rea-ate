@@ -17,3 +17,16 @@ Arquitecto registra decisiones en `.project/decisions/architect.md`._
 - Gestión de assets: carga, orden de dependencias.
 - Jerarquía de plantillas del header.
 - Mecanismo de release del tema.
+
+---
+
+## Notas vigentes
+
+### `item-set/browse` — filtro de colecciones
+
+- El filtro de colecciones se resuelve sobre metadatos del propio `item set`, no agregando valores desde los ítems hijos en tiempo de render.
+- Orden de preferencia acordado para lectura (corregido en QA-006, 2026-05-06):
+  - `Etapa`: `lrmi:educationalAlignment` (sin fallback; semánticamente distinto de nivel)
+  - `Nivel`: `lrmi:educationalLevel` (preferido), fallback `lom:educationalLevel`
+  - `Temática`: `schema:about` (preferido), fallback `dcterms:subject`
+- Motivo arquitectónico: mantener browse barato de renderizar, estable y alineado con el modelo de metadatos del proyecto.

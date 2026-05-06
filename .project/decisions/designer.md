@@ -488,3 +488,105 @@ El output de Claude Design queda aprobado. Se introducen cuatro ajustes sobre la
 ### Dependencias
 - Desbloquea: implementación del Desarrollador (backlog Ciclo 3 #7).
 
+---
+
+## [2026-05-05] ACEPTADA — Consistencia de badges de tipo de recurso (QA-002)
+
+### Decisión
+Unificar el tratamiento visual de `lrmi:learningResourceType` en todas las vistas (search results e item show) utilizando el componente `.resource-type-badge`. Se elimina el estilo simplificado `.lrt-badge` de los resultados de búsqueda.
+
+### Contexto
+Existía una inconsistencia entre la vista de búsqueda (badge plano, sin icono) y la vista de ítem (badge con icono contextual y normalización de etiqueta). Unificar el componente mejora la coherencia semántica y el reconocimiento visual del tipo de recurso.
+
+**Especificación:**
+- **Componente único:** `.resource-type-badge`.
+- **Iconografía:** Se mantiene la lógica de mapeo de iconos por tipo de recurso definida en `item/show.phtml`.
+- **Tratamiento textual:** Normalización de casing (Sentence case) y limpieza de etiquetas.
+- **Tokens ATE:**
+    - Background: `--ate-surface-card` (`#EEF2F8`).
+    - Texto e Icono: `--ate-color-brand-blue-mid` (`#0768AC`).
+    - Radio: `--ate-radius-pill` (`9999px`).
+
+### Consecuencias
+- El Desarrollador debe extraer la lógica de renderizado del badge a un partial o helper para su reutilización.
+- Se actualiza `search/search.phtml` para usar el nuevo componente.
+
+### Dependencias
+- Requiere: D1 (tokens ATE).
+
+---
+
+## [2026-05-05] ACEPTADA — Ajuste jerárquico del filtro en item-set browse (QA-003)
+
+### Decisión
+Reducir el peso visual del bloque de filtros en `item-set/browse` y reposicionar el contador de resultados para mejorar la jerarquía de la página.
+
+### Contexto
+El bloque de filtros actual (añadido en D7b) compite en exceso con el título de la página y las colecciones. Además, el contador de resultados (`item-set-browse-header__count`) debe alinearse con el grid de colecciones para actuar como metadato del listado y no de la cabecera.
+
+**Cambios:**
+- **Integración del filtro:** El contenedor del filtro pasa de un bloque destacado a una barra más discreta integrada en `item-set-browse-header`. Se reduce el padding vertical y se usa `--ate-surface-soft` como fondo sutil.
+- **Reposicionamiento del contador:** `.item-set-browse-header__count` se mueve fuera del bloque de cabecera y se coloca inmediatamente encima del `collections-grid`, alineado a la derecha (`text-align: right` o `margin-left: auto`).
+- **Estilo del contador:** `font-size: 13px`, `color: var(--ate-text-muted)`, `font-weight: 500`.
+
+### Consecuencias
+- Mejora la "limpieza" visual al entrar en la página de colecciones.
+- El usuario identifica rápidamente cuántas colecciones hay disponibles justo antes de empezar a explorarlas.
+
+### Dependencias
+- Complementa: D7 y D7b.
+
+---
+
+## [2026-05-06] ACEPTADA — Ajuste visual de los selects de filtro (QA-009)
+
+### Decisión
+Refinar las proporciones y alinear correctamente el indicador desplegable (chevron) de los selects de filtro en la página de colecciones.
+
+### Contexto
+Se reportaron dos problemas visuales en QA-009: el chevron del `<select>` estaba desalineado verticalmente (desplazado hacia arriba) y las proporciones del clip de texto (padding, altura, font-size) no se percibían armoniosas.
+
+**Cambios definidos:**
+- **Proporciones del Select:**
+  - Incrementar `font-size` de 12px a 13px para mejorar legibilidad.
+  - Aumentar el padding a `6px 32px 6px 14px` para darle un aspecto de pastilla más equilibrado.
+- **Alineación y Estandarización del Chevron:**
+  - Sustituir el triángulo CSS por el glifo `\f107` de Font Awesome 5 Free, para mantener coherencia con las facetas de búsqueda.
+  - Posicionarlo a `right: 12px` y centrarlo con `translateY(-50%)`.
+  - Ajustar su tamaño a `13px`.
+
+### Consecuencias
+- Mejora la percepción de calidad ("fit and finish") de la interfaz.
+- Los selects se sienten más coherentes con otros controles interactivos del diseño (como los botones secundarios).
+
+### Dependencias
+- QA-009: Implementar estos estilos en `_item-set-browse.scss`.
+
+---
+
+## [2026-05-06] ACEPTADA — Refactorización del contador y cabecera de colecciones (QA-005)
+
+### Decisión
+Transformar el contador de resultados en un componente de tipo "clip" y unificar la cabecera de la página para mejorar la compacidad y alineación visual.
+
+### Contexto
+El contador de resultados ocupaba demasiado espacio y carecía de separación respecto al grid. Además, la barra de filtros causaba saltos de línea innecesarios en la cabecera.
+
+### Cambios definidos
+- **Contador (QA-005):**
+  - Rediseñado como pastilla compacta con fondo `var(--ate-surface-soft)` y borde suave.
+  - Padding ajustado a `4px 14px` y fuente a `12px`.
+  - Incremento del margen inferior a `24px` para separar claramente la información del grid de contenidos.
+- **Cabecera (Regresión):**
+  - Implementación de Flexbox en `.item-set-browse-header` para alinear el título a la izquierda y los filtros a la derecha en la misma línea.
+  - Eliminación de bordes internos redundantes para una integración más limpia.
+  - Adaptabilidad: Salto a columna a los `800px` para evitar colisiones en pantallas pequeñas.
+
+### Consecuencias
+- Interfaz más moderna y equilibrada.
+- El usuario percibe el contador como un dato de estado y no como un titular secundario.
+- Mayor aprovechamiento del espacio vertical ("above the fold").
+
+### Dependencias
+- QA-005.
+

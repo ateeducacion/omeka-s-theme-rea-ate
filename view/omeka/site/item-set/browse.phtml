@@ -26,7 +26,9 @@ $etapas = $niveles = $tematicas = [];
 foreach ($visibleSets as $entry) {
     $is = $entry['itemSet'];
 
-    foreach ($is->value('dcterms:educationLevel', ['all' => true]) ?: [] as $v) {
+    // Etapa: lrmi:educationalAlignment
+    $etapaValues = $is->value('lrmi:educationalAlignment', ['all' => true]) ?: [];
+    foreach ($etapaValues as $v) {
         $label = (string) $v->value();
         $slug  = implode('', $this->SlugifyValues([$v]));
         if ($slug !== '' && !isset($etapas[$slug])) {
@@ -34,7 +36,9 @@ foreach ($visibleSets as $entry) {
         }
     }
 
-    foreach ($is->value('lom:educationalLevel', ['all' => true]) ?: [] as $v) {
+    // Nivel: lrmi:educationalLevel (preferred) or lom:educationalLevel (fallback)
+    $nivelValues = $is->value('lrmi:educationalLevel', ['all' => true]) ?: $is->value('lom:educationalLevel', ['all' => true]) ?: [];
+    foreach ($nivelValues as $v) {
         $label = (string) $v->value();
         $slug  = implode('', $this->SlugifyValues([$v]));
         if ($slug !== '' && !isset($niveles[$slug])) {
@@ -42,7 +46,9 @@ foreach ($visibleSets as $entry) {
         }
     }
 
-    foreach ($is->value('dcterms:subject', ['all' => true]) ?: [] as $v) {
+    // Temática: schema:about (preferred) or dcterms:subject (fallback)
+    $temaValues = $is->value('schema:about', ['all' => true]) ?: $is->value('dcterms:subject', ['all' => true]) ?: [];
+    foreach ($temaValues as $v) {
         $label = (string) $v->value();
         $slug  = implode('', $this->SlugifyValues([$v]));
         if ($slug !== '' && !isset($tematicas[$slug])) {
@@ -58,52 +64,61 @@ foreach ($visibleSets as $entry) {
         <h1 class="item-set-browse-header__title"><?= $escape($translate('Colecciones')) ?></h1>
         <p class="item-set-browse-header__subtitle"><?= $escape($translate('Recursos agrupados por colección temática.')) ?></p>
     </div>
-    <div class="item-set-browse-header__count">
-        <strong><?= count($visibleSets) ?></strong> <?= $escape($translate('colecciones')) ?>
+
+    <!-- FILTER BAR (Integrated) -->
+    <div class="collection-filter-bar" role="region" aria-label="<?= $escapeAttr($translate('Filtrar colecciones')) ?>">
+        <span class="collection-filter-bar__label">
+            <span class="material-symbols-outlined" aria-hidden="true">tune</span>
+            <?= $escape($translate('Filtrar')) ?>
+        </span>
+
+        <?php if ($etapas): ?>
+        <div class="collection-filter-select">
+            <select id="filter-etapa" aria-label="<?= $escapeAttr($translate('Filtrar por etapa')) ?>">
+                <option value=""><?= $escape($translate('Etapa')) ?></option>
+                <?php foreach ($etapas as $slug => $label): ?>
+                    <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($niveles): ?>
+        <div class="collection-filter-select">
+            <select id="filter-nivel" aria-label="<?= $escapeAttr($translate('Filtrar por nivel')) ?>">
+                <option value=""><?= $escape($translate('Nivel')) ?></option>
+                <?php foreach ($niveles as $slug => $label): ?>
+                    <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($tematicas): ?>
+        <div class="collection-filter-select">
+            <select id="filter-tematica" aria-label="<?= $escapeAttr($translate('Filtrar por temática')) ?>">
+                <option value=""><?= $escape($translate('Temática')) ?></option>
+                <?php foreach ($tematicas as $slug => $label): ?>
+                    <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
+
+        <button type="button" class="collection-filter-clear" id="collection-filter-clear">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+            <?= $escape($translate('Limpiar')) ?>
+        </button>
     </div>
 </header>
 
-<!-- FILTER BAR -->
-<div class="collection-filter-bar" role="region" aria-label="<?= $escapeAttr($translate('Filtrar colecciones')) ?>">
-    <span class="collection-filter-bar__label">
-        <span class="material-symbols-outlined" aria-hidden="true">tune</span>
-        <?= $escape($translate('Filtrar')) ?>
-    </span>
-
-    <div class="collection-filter-select">
-        <select id="filter-etapa" aria-label="<?= $escapeAttr($translate('Filtrar por etapa')) ?>">
-            <option value=""><?= $escape($translate('Etapa')) ?></option>
-            <?php foreach ($etapas as $slug => $label): ?>
-                <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
-    <div class="collection-filter-select">
-        <select id="filter-nivel" aria-label="<?= $escapeAttr($translate('Filtrar por nivel')) ?>">
-            <option value=""><?= $escape($translate('Nivel')) ?></option>
-            <?php foreach ($niveles as $slug => $label): ?>
-                <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
-    <div class="collection-filter-select">
-        <select id="filter-tematica" aria-label="<?= $escapeAttr($translate('Filtrar por temática')) ?>">
-            <option value=""><?= $escape($translate('Temática')) ?></option>
-            <?php foreach ($tematicas as $slug => $label): ?>
-                <option value="<?= $escapeAttr($slug) ?>"><?= $escape($label) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
-    <button type="button" class="collection-filter-clear" id="collection-filter-clear">
-        <span class="material-symbols-outlined" aria-hidden="true">close</span>
-        <?= $escape($translate('Limpiar')) ?>
-    </button>
-</div>
-
 <?php $this->trigger('view.browse.before'); ?>
+
+<div class="item-set-browse-results-info">
+    <div class="item-set-browse-header__count">
+        <strong><?= count($visibleSets) ?></strong> <?= $escape($translate('colecciones')) ?>
+    </div>
+</div>
 
 <!-- COLLECTIONS GRID -->
 <div class="collections-grid" id="collections-grid">
@@ -114,9 +129,9 @@ foreach ($visibleSets as $entry) {
 
         $coverUrl = $itemSet->thumbnailDisplayUrl('large');
 
-        $etapaSlugs   = implode(' ', $this->SlugifyValues($itemSet->value('dcterms:educationLevel', ['all' => true]) ?: []));
-        $nivelSlugs   = implode(' ', $this->SlugifyValues($itemSet->value('lom:educationalLevel',   ['all' => true]) ?: []));
-        $temaSlugs    = implode(' ', $this->SlugifyValues($itemSet->value('dcterms:subject',         ['all' => true]) ?: []));
+        $etapaSlugs   = implode(' ', $this->SlugifyValues($itemSet->value('lrmi:educationalAlignment', ['all' => true]) ?: []));
+        $nivelSlugs   = implode(' ', $this->SlugifyValues($itemSet->value('lrmi:educationalLevel',     ['all' => true]) ?: $itemSet->value('lom:educationalLevel', ['all' => true]) ?: []));
+        $temaSlugs    = implode(' ', $this->SlugifyValues($itemSet->value('schema:about',           ['all' => true]) ?: $itemSet->value('dcterms:subject',         ['all' => true]) ?: []));
 
         $description  = $itemSet->displayDescription();
     ?>
