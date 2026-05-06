@@ -247,3 +247,86 @@ Se detectó que el filtro "Etapa" estaba leyendo `lrmi:educationalLevel` (que es
 
 ### Dependencias
 - QA-006.
+
+---
+
+## [2026-05-06] ACEPTADA — Corrección del contador de paginación en colecciones (QA-004)
+
+### Decisión
+Forzar el renderizado del paginador en `item-set/browse` mediante parámetros explícitos para evitar la contaminación del estado global de la API producida por consultas internas.
+
+### Contexto
+El hallazgo QA-004 reportó que el paginador del footer mostraba el número de ítems de la última colección procesada en lugar del número total de colecciones. Esto ocurría porque las llamadas `$api->search('items', ...)` dentro del bucle de colecciones (usadas para filtrar sets vacíos) sobreescribían el estado interno del helper de paginación de Omeka S.
+
+### Cambios realizados
+- **Pre-renderizado y Explicitud:** En lugar de llamar a `$this->pagination()` sin argumentos, se ha implementado una llamada con parámetros manuales calculados antes de las interferencias.
+- **Cálculo de valores:**
+  - `totalCount`: Obtenido mediante `count($visibleSets)` para reflejar solo las colecciones que realmente se renderizan.
+  - `page`: Extraído directamente de la query string via `$this->params()->fromQuery('page', 1)`.
+  - `perPage`: Fijado a 15 (estándar de Omeka S) para asegurar la coherencia del rango.
+- **Seguridad:** El HTML resultante se almacena en una variable y se imprime al final de la vista, evitando errores de tipo (`TypeError`) al pasar objetos complejos al helper.
+
+### Consecuencias
+- El paginador muestra siempre información coherente con la lista de colecciones.
+- Se elimina la dependencia del estado global volátil de la API durante el renderizado de la vista.
+
+### Dependencias
+- QA-004.
+
+---
+
+## [2026-05-06] ACEPTADA — Ajustes QA de `item/browse` sobre ordenación y contador (QA-010 / QA-011)
+
+### Decisión
+Reintegrar el selector de ordenación de `item/browse` dentro del header de catálogo y recolocar el chip de recuento de recursos en una banda independiente sobre el listado, para alinear la vista con el patrón visual ya consolidado en `item-set/browse`.
+
+### Contexto
+Tras la primera implementación del nuevo catálogo de recursos, el selector de ordenación quedaba demasiado protagonista dentro del toolbar y podía romper la composición en varias filas. Además, el contador de recursos estaba dentro del header principal, mientras que en `item-set/browse` ese metadato ya se había consolidado como una pieza separada colocada justo encima del grid.
+
+### Cambios realizados
+- `view/omeka/site/item/browse.phtml`
+  - `renderSortSelector('items')` movido al bloque `.resource-browse-header__sort`.
+  - Nuevo bloque `.resource-browse-results-info` añadido encima del listado para alojar `.resource-browse-header__count`.
+- `asset/sass/components/resources/_browse-controls.scss`
+  - Añadidos estilos compactos para `.resource-browse-header__controls` y `.resource-browse-header__sort`.
+  - La etiqueta visible del selector se oculta visualmente para reducir ruido sin perder semántica.
+  - Añadidos estilos para `.resource-browse-results-info` y ajuste del padding del contador para replicar el patrón de `item-set/browse`.
+- `asset/css/style.css`
+  - Regenerado con `npm run build`.
+
+### Consecuencias
+- `item/browse` mantiene el selector de orden visible, pero ahora integrado en la misma barra que el título `Recursos`.
+- El chip de recuento de recursos queda alineado con el patrón de `item-set/browse`.
+- Se reduce la probabilidad de rotura visual del header en anchos intermedios.
+
+### Dependencias
+- QA-010.
+- QA-011.
+
+---
+
+## [2026-05-06] ACEPTADA — Reubicación del contador de recursos en la toolbar de `item/browse` (QA-012)
+
+### Decisión
+Mover el chip de número total de recursos desde una banda independiente sobre el listado a la propia `.resource-browse-toolbar`, para consolidar en un solo bloque los elementos operativos del catálogo.
+
+### Contexto
+El ajuste anterior resolvió la salida del contador del header principal, pero dejó el recuento en una línea separada. En esta iteración de QA se pide expresamente integrarlo dentro del bloque de toolbar, junto al buscador y las acciones secundarias, priorizando compactación visual frente a la simetría estricta con `item-set/browse`.
+
+### Cambios realizados
+- `view/omeka/site/item/browse.phtml`
+  - Eliminado el bloque `.resource-browse-results-info`.
+  - Añadido el chip al bloque `.resource-browse-toolbar__secondary` como `.resource-browse-toolbar__count`.
+- `asset/sass/components/resources/_browse-controls.scss`
+  - Añadidos estilos de `.resource-browse-toolbar__count`.
+  - Eliminados los estilos ya innecesarios de `.resource-browse-results-info`.
+- `asset/css/style.css`
+  - Regenerado con `npm run build`.
+
+### Consecuencias
+- El contador de recursos queda visualmente asociado a la barra de herramientas del catálogo.
+- Se reduce una fila adicional entre los controles y el grid/listado.
+- `QA-011` se mantiene como historial de la iteración anterior; esta entrada registra el criterio actualizado de ubicación.
+
+### Dependencias
+- QA-012.

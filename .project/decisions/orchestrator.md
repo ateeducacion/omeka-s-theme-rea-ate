@@ -467,6 +467,39 @@ Adicionalmente, `architecture.md` ha sido actualizado para reflejar el mapeo de 
 
 ---
 
+## [2026-05-06] ACEPTADA — Normalización documental del cierre QA del ciclo 3
+
+**Contexto:** Tras las correcciones de Desarrollo del 2026-05-06 y la publicación de `v0.2.0`, el proyecto ya estaba operando como "QA cerrado". Sin embargo, `.project/docs/qa-findings.md` seguía mostrando los hallazgos `QA-001` → `QA-009` en estado `Resuelto`, mantenía notas de "pendiente de revalidación" y conservaba en `QA-001` un mapeo anterior a la corrección semántica de `QA-006`. Había dos fuentes de verdad contradictorias sobre el mismo ciclo.
+
+**Decisión:** Normalizar el cierre documental del lote QA del ciclo 3. `qa-findings.md` pasa a reflejar el estado final del proyecto: `QA-001` → `QA-009` en `Cerrado`, sin notas pendientes incompatibles con la publicación de `v0.2.0`, y con el mapeo final de filtros (`Etapa` → `lrmi:educationalAlignment`, `Nivel` → `lrmi:educationalLevel` con fallback `lom:educationalLevel`, `Temática` → `schema:about` con fallback `dcterms:subject`).
+
+**Alternativas descartadas:** Mantener `qa-findings.md` como histórico literal del flujo intermedio — descartado porque obliga a reconstruir manualmente el estado final; reabrir una ronda formal de QA solo para justificar la actualización documental — descartado porque el cierre ya estaba implícito en la release `v0.2.0` y en el snapshot operativo del proyecto.
+
+**Consecuencias:** `.project/docs/qa-findings.md` queda alineado con el diario del Orquestador y con el estado real del proyecto. `QA-004` deja de figurar como diferido en el snapshot actual. El siguiente foco operativo vuelve a ser el backlog abierto del ciclo 3: specs de Diseñador para Home/Browse (#1/#2/#6) y auditoría mobile (#3).
+
+**Agente:** orchestrator
+
+---
+
+## [2026-05-06] ACEPTADA — Reestructuración a arquitectura multiagente
+
+**Contexto:** El directorio `.project/skills/` mezclaba instrucciones de sistema de los agentes (prompts de rol, responsabilidades, protocolos) con procedimientos técnicos reutilizables. Esto dificultaba distinguir qué era un rol y qué era una herramienta, y limitaba la composición flexible de contexto al iniciar una conversación con un agente.
+
+**Decisión:** Separar en tres capas distintas:
+- `agents/` — prompts de sistema por rol (orchestrator, architect, designer, developer, qa). Cada archivo define el rol, responsabilidades, protocolo de trabajo y skills que invoca.
+- `skills/` — procedimientos técnicos sin estado, agrupados por dominio: `omeka-s-core/`, `metadata/`, `frontend/`, `features/`, `process/`. Cualquier agente puede leer cualquier skill.
+- `decisions/` — se mantiene como diario de auditoría por agente, sin cambios.
+
+Los archivos de la estructura antigua de `skills/` (orchestrator.md, architect.md, designer.md, developer.md, omeka-integration.md, theme-creator.md, decision-logging.md) quedan reemplazados por la nueva estructura y se eliminan.
+
+**Alternativas descartadas:** Mantener todo en `skills/` con prefijos de nombre — no resuelve la confusión conceptual y dificulta la invocación selectiva de skills por parte de cada agente.
+
+**Consecuencias:** Cada conversación nueva con un agente debe cargar: (1) su archivo de `agents/`, (2) las skills relevantes para la tarea, (3) el `decisions/` de ese agente. El orquestador carga todos los `agents/` para coordinar. El archivo `AGENTS.md` en la raíz debe actualizarse para reflejar la nueva estructura y el patrón de inicialización de sesión.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
@@ -478,12 +511,13 @@ Adicionalmente, `architecture.md` ha sido actualizado para reflejar el mapeo de 
 | Implementación ciclo 1 | ✅ Completado |
 | Implementación ciclo 2 | ✅ Completado (8/8 ítems) |
 | Implementación ciclo 3 | 🟡 Parcial — `item-set/browse` completado; Home/Browse pendientes |
-| Release pipeline | ✅ Operativo — v0.1.0 publicado |
-| QA sobre instancia real | ✅ Cerrado — 6/7 resueltos; QA-004 diferido |
-| Registro de hallazgos QA | ✅ `.project/docs/qa-findings.md` actualizado |
-| Lote QA-1 | ✅ Cerrado |
-| Próxima release | ⏳ `v0.2.0` — desbloqueda, pendiente de decisión |
-| Backlog ciclo 3 | 🟡 #1/#2/#6 bloqueados por specs Diseñador; #3/#5 disponibles |
+| Release pipeline | ✅ Operativo |
+| QA sobre instancia real | ✅ Cerrado — hallazgos `QA-001` → `QA-009` normalizados y cerrados |
+| Registro de hallazgos QA | ✅ `.project/docs/qa-findings.md` alineado con el cierre del lote |
+| Lote QA-1 | ✅ Cerrado y documentado |
+| Release v0.1.0 | ✅ Publicada |
+| Release v0.2.0 | ✅ Publicada [2026-05-06] |
+| Backlog ciclo 3 | 🟡 #1/#2/#6 bloqueados por specs Diseñador; #3 disponible |
 
 ## Estado de implementación
 
@@ -494,12 +528,33 @@ Adicionalmente, `architecture.md` ha sido actualizado para reflejar el mapeo de 
 | Header sticky (top-bar + main-bar con búsqueda) | ✅ |
 | Footer (border amarillo + hover yellow) | ✅ |
 | Sidebar de facetas (estilos ATE) | ✅ |
-| Pipeline de release (GitHub Actions + Makefile) | ✅ v0.1.0 publicado |
+| Pipeline de release (GitHub Actions + Makefile) | ✅ Operativo — `v0.2.0` publicada |
 | Ficha de recurso (`item/show.phtml`) | ✅ |
 | Search results — chips + contador + A11y | ✅ |
 | Anclaje curricular (sidebar derecho) | ✅ |
 | Tarjetas de audiencia en home | ⏳ Ciclo 3 |
 | Browse de recursos — grid (`item/browse.phtml`) | ⏳ Ciclo 3 |
 | Browse de recursos — list (`item/browse.phtml`) | ⏳ Ciclo 3 |
-| Browse de colecciones (`item-set/browse.phtml`) | 🟡 Implementado — en QA sobre instancia real |
+| Browse de colecciones (`item-set/browse.phtml`) | ✅ QA cerrado — corregidos filtros, contador, paginación y estados de filtro |
 | Mobile responsiveness (auditoría) | ⏳ Ciclo 3 |
+
+---
+
+## [2026-05-06] ACEPTADA — Apertura del siguiente lote operativo del ciclo 3
+
+**Contexto:** El cierre documental de QA y la publicación de `v0.2.0` dejan resuelta la base del tema en header, search results, item show e `item-set/browse`. El backlog abierto del ciclo 3 mantiene cuatro líneas relevantes: Home (#1), Browse de recursos grid (#2), Browse de recursos list (#6) y auditoría mobile (#3). En el estado actual, `#1/#2/#6` siguen bloqueados por falta de especificación visual del Diseñador, mientras que `#3` ya puede empezar con el material y las vistas existentes (`view/omeka/site/item/browse.phtml`, `view/omeka/site/index/search.phtml`, `view/omeka/site/item-set/browse.phtml`).
+
+**Decisión:** Abrir el siguiente lote operativo del ciclo 3 en dos carriles paralelos:
+- **Carril Diseño:** el Diseñador debe registrar decisiones ACEPTADAS para `#1 Home`, `#2 Browse grid` y `#6 Browse list`. Debe definir estructura esperada, clases/componentes, jerarquía visual y tokens ATE, usando como base la plantilla actual de `item/browse.phtml`.
+- **Carril Desarrollo:** el Desarrollador puede iniciar ya `#3 Mobile` como auditoría e implementación correctiva sobre header, facetas, `item/show`, `item/browse` e `item-set/browse` en `< 768px`, sin esperar a las specs nuevas de Home/Browse.
+- **Carril Arquitectura:** no se abre decisión nueva por defecto. El Arquitecto solo interviene si durante Diseño o Desarrollo aparece una ambigüedad real de rutas, helpers de Omeka-S o mapeo de metadatos.
+
+**Alternativas descartadas:** Esperar a que el Diseñador cierre primero `#1/#2/#6` y bloquear también `#3` — descartado porque inmoviliza al Desarrollador sin necesidad; abrir Home y Browse directamente al Desarrollador sin spec previa — descartado porque repetiría el patrón que ya obligó a varias iteraciones de QA en `item-set/browse`; abrir un lote único con QA incluido desde ahora — descartado porque QA depende de que este lote tenga primero entregables implementados.
+
+**Consecuencias:** El proyecto entra en un lote mixto de ciclo 3:
+- Desbloqueado para Diseñador: specs de Home y Browse de recursos.
+- Desbloqueado para Desarrollador: auditoría mobile y correcciones de responsividad sobre vistas existentes.
+- Bloqueado todavía para implementación de Home/Browse de recursos hasta que existan decisiones ACEPTADAS del Diseñador.
+- QA queda pendiente para un lote posterior que valide conjuntamente mobile + Home/Browse una vez implementados.
+
+**Agente:** orchestrator

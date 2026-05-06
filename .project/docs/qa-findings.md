@@ -2,7 +2,7 @@
 
 _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-05
+Última actualización: 2026-05-06
 
 ---
 
@@ -36,6 +36,7 @@ _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias d
 | En curso | Asignado para corrección. |
 | Resuelto | Corregido, pendiente de revalidación en QA. |
 | Cerrado | Revalidado en instancia real. |
+| Diferido | Problema confirmado que se pospone a un ciclo posterior. |
 | Rechazado | No se corrige en este ciclo; debe indicarse el motivo. |
 
 ---
@@ -66,16 +67,16 @@ Cada entrada debe incluir, como mínimo:
   1. Abrir la página de colecciones (`item-set/browse`) en la instancia real.
   2. Intentar filtrar por `Etapa`, `Nivel` o `Temática`.
   3. Ver que el filtrado no devuelve el comportamiento esperado o no ofrece opciones útiles porque las colecciones no tienen los metadatos esperados en esos campos.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
 **Resolución:**
-El código de `view/omeka/site/item-set/browse.phtml` fue actualizado para leer las propiedades preferidas del modelo real:
-- `Etapa`: `lrmi:educationalLevel` (preferido) o `dcterms:educationLevel` (fallback)
-- `Nivel`: `lom:educationalLevel`
+El cierre definitivo del hallazgo queda normalizado con el mapeo final validado en el ciclo:
+- `Etapa`: `lrmi:educationalAlignment`
+- `Nivel`: `lrmi:educationalLevel` (preferido) o `lom:educationalLevel` (fallback)
 - `Temática`: `schema:about` (preferido) o `dcterms:subject` (fallback)
 
-Pendiente de revalidación: confirmar en la instancia real que las colecciones tienen `lrmi:educationalLevel` y/o `schema:about` informados. Si los datos no existen, los selects no aparecerán (comportamiento correcto). La corrección de datos es responsabilidad del equipo de contenidos.
+Los filtros se alimentan desde metadatos del propio `item set`; si una dimensión no tiene datos reales, su `<select>` no se renderiza. La completitud de contenido sigue siendo responsabilidad del equipo de contenidos.
 
 ---
 
@@ -89,13 +90,14 @@ Pendiente de revalidación: confirmar en la instancia real que las colecciones t
   1. Abrir un resultado de búsqueda que muestre `lrmi:learningResourceType`.
   2. Abrir la ficha del mismo recurso en `item/show`.
   3. Comparar ambos clips y ver que diferían en icono, casing/normalización y lenguaje visual.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
 **Resolución:**
-`view/common/resource-values.phtml` fue actualizado para detectar el término `lrmi:learningResourceType` y delegar el renderizado al partial `common/resource-type-badge` (mismo partial que usa `item/show.phtml`). El componente `.lrt-badge` fue eliminado. Ambas vistas usan ahora el mismo partial con icono contextual, normalización de label y clase `.resource-type-badge`.
-
-Pendiente de revalidación en instancia real.
+El cierre definitivo unifica el badge `lrmi:learningResourceType` entre vistas:
+- `item/show` mantiene el partial `common/resource-type-badge`.
+- Search results usa `asset/js/advanced-search-list.js` para transformar el texto plano renderizado por AdvancedSearch en el mismo componente `.resource-type-badge`.
+- PHP conserva un fallback defensivo en `resource-type-badge.phtml` y `resource-values.phtml` para contextos donde el valor sí llegue por partial.
 
 ---
 
@@ -109,7 +111,7 @@ Pendiente de revalidación en instancia real.
   1. Abrir la página `item-set/browse`.
   2. Observar la jerarquía visual inicial entre cabecera, contador y barra de filtros.
   3. Ver que el filtro destacaba demasiado y que el contador no ocupaba la posición esperada sobre `collections-grid`, a la derecha.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
 **Resolución:**
@@ -118,8 +120,6 @@ Pendiente de revalidación en instancia real.
   - `.collection-filter-bar__label`: `font-weight` 700→500, `letter-spacing` 1.4px→0.4px, icono reducido a 14px con color `text-muted`.
   - `.collection-filter-select select`: `font-size` 13→12px, `font-weight` 600→500, `border` 1.5px→1px, `padding` reducido, color `text-body`.
   - Flecha chevron: borde 2px→1.5px con color `text-muted`.
-
-Pendiente de revalidación en instancia real.
 
 ---
 
@@ -133,17 +133,13 @@ Pendiente de revalidación en instancia real.
   1. Abrir la página `item-set/browse`.
   2. Ir al footer o zona inferior donde aparece el contador de resultados.
   3. Ver que el texto o el contexto visual indica `item sets` / colecciones, pero la cifra corresponde a ítems.
-- **Estado:** Diferido
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
-**Análisis:**
-El contador correcto (`count($visibleSets)`) ya se muestra en `item-set-browse-results-info`, encima del grid. El problema está en el paginador del footer (`$this->pagination()`), cuyo `$totalCount` puede estar siendo sobreescrito por las llamadas `$api->search('items', [...])` que el propio `browse.phtml` realiza para filtrar colecciones vacías. En algunos contextos de Omeka-S, las llamadas de API desde la vista actualizan el estado compartido del paginador, de modo que el último resultado (un conteo de ítems de la última colección) reemplaza el conteo original de `item sets`.
+**Resolución:**
+En `view/omeka/site/item-set/browse.phtml`, se ha implementado una llamada al helper de paginación con parámetros explícitos para evitar la contaminación del estado global de la API.
 
-**Criterio esperado:**
-En una vista de `item-set/browse`, cualquier contador de resultados debe referirse a `item sets` / colecciones, no a ítems.
-
-**Próximo paso:**
-Verificar en instancia real si el `$totalCount` del paginador coincide con el número de ítems de la última colección procesada en el bucle. Si se confirma, la corrección consistirá en mover el cálculo de conteo de ítems por colección a un contexto que no altere el estado del paginador (p. ej. usando `$api->read` con un campo calculado, o reseteando el paginador tras el bucle con el conteo correcto de `item sets`).
+Se calcula el total de resultados basándose en `count($visibleSets)` (colecciones no vacías) y se obtienen la página actual y el límite de forma manual. El HTML de la paginación se genera al inicio del archivo y se almacena en la variable `$pagination` para ser impreso al final, evitando así tanto el conteo incorrecto como errores de tipo (`TypeError`) al manipular objetos de respuesta en la vista.
 
 ---
 
@@ -157,7 +153,7 @@ Verificar en instancia real si el `$totalCount` del paginador coincide con el n�
   1. Navegar a `/:site/item-set`.
   2. Observar la zona entre la cabecera de filtros y el grid de colecciones.
   3. Ver que el div del contador ocupa todo el ancho disponible y que el grid arranca sin margen o separador visibles.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
 **Resolución:**
@@ -178,7 +174,7 @@ Compilación de CSS ejecutada con éxito.
   1. Navegar a `/:site/item-set`.
   2. Inspeccionar los valores que ofrece el select `Etapa`: contendrán valores de nivel educativo, no de etapa/alineación curricular.
   3. Confirmar en los metadatos de una colección que `lrmi:educationalLevel` almacena el nivel y que `lrmi:educationalAlignment` almacena la etapa.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
 **Resolución:**
@@ -200,7 +196,7 @@ Se han actualizado tanto los bloques de generación de opciones para los selects
   1. Navegar a `/:site/item-set` en una instancia donde al menos uno de los tres filtros no tenga datos (p. ej. sin colecciones con `lom:educationalLevel` informado).
   2. Abrir la consola del navegador.
   3. Ver el error: `Uncaught TypeError: Cannot read properties of null (reading 'classList') at applyFilters`.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
 **Resolución:**
@@ -224,8 +220,6 @@ El error al limpiar (`clear` no restauraba todas las colecciones) era consecuenc
 
 **Nota sobre el origen de los datos:** el filtro lee los atributos `data-etapa`, `data-nivel` y `data-tematica` de cada `.collection-card`, que se generan en PHP a partir de los metadatos del **propio item-set**, no de los ítems contenidos en él.
 
-Pendiente de revalidación en instancia real.
-
 ---
 
 ### QA-008 — El clip de tipo de recurso ha desaparecido en search results
@@ -238,7 +232,7 @@ Pendiente de revalidación en instancia real.
   1. Navegar a la búsqueda y obtener resultados con ítems que tengan `lrmi:learningResourceType` informado.
   2. Comprobar que la columna de tipo de recurso en el card de cada resultado está vacía.
   3. Comparar con `item/show` del mismo recurso, donde el badge sí aparece.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
 **Resolución (revisada tras análisis del HTML real):**
@@ -252,8 +246,6 @@ La solución definitiva es client-side, en `asset/js/advanced-search-list.js`:
 Cambios defensivos conservados en PHP:
 - `resource-type-badge.phtml`: acepta `$resourceTypeValue` como alternativa a `$resource->value()`. Evita fatal error si `$resource` es null.
 - `resource-values.phtml`: pasa `$value` como `resourceTypeValue` al partial. Útil si en el futuro AdvancedSearch adopta `resource-values.phtml`.
-
-Pendiente de revalidación en instancia real.
 
 ---
 
@@ -269,7 +261,7 @@ Pendiente de revalidación en instancia real.
   1. Navegar a `/:site/item-set`.
   2. Observar los selects `Nivel` y `Temática` en la barra de filtros.
   3. Ver que el icono chevron no queda visualmente centrado respecto al texto, y que las proporciones del clip son mejorables.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Diseñador + Desarrollador
 
 **Resolución:**
@@ -281,6 +273,75 @@ Compilado correctamente.
 
 ---
 
+### QA-010 — El selector de orden en `item/browse` ocupa demasiado espacio y rompe el header en varias filas
+
+- **Fecha:** 2026-05-06
+- **Severidad:** Media
+- **Área:** Browse
+- **Hallazgo:** El formulario de ordenación en `item/browse` ocupaba demasiado espacio horizontal y acababa rompiendo la composición del encabezado en varias filas. Visualmente competía con el título de página y con el resto de controles, en lugar de comportarse como un control secundario y discreto.
+- **Reproducción mínima:**
+  1. Navegar a `/:site/item`.
+  2. Observar el header y el toolbar superior del catálogo.
+  3. Ver que el selector de orden ocupa demasiado ancho y se distribuye en varias líneas, rompiendo la jerarquía visual.
+- **Estado:** Resuelto
+- **Responsable:** Desarrollador
+
+**Resolución:**
+Se ha recolocado el selector de orden en la misma barra del título `Recursos`, siguiendo el patrón de `item-set/browse`. Ajustes aplicados:
+- `view/omeka/site/item/browse.phtml`: el `renderSortSelector('items')` sale del toolbar y pasa al bloque `.resource-browse-header__sort`.
+- `asset/sass/components/resources/_browse-controls.scss`: el selector se compacta como control discreto, con altura fija alineada al header, sin romper en varias filas y con la etiqueta visualmente oculta para no cargar el layout.
+- `asset/css/style.css`: recompilado con `npm run build`.
+
+Pendiente de revalidación en instancia real.
+
+---
+
+### QA-011 — El chip de número de recursos en `item/browse` no sigue el patrón de `item-set/browse`
+
+- **Fecha:** 2026-05-06
+- **Severidad:** Baja
+- **Área:** Browse
+- **Hallazgo:** El chip con el número total de recursos en `item/browse` estaba colocado dentro del header principal, mientras que en `item-set/browse` ese metadato aparece en una banda independiente justo encima del grid. La inconsistencia rompe el patrón visual entre ambas vistas de catálogo.
+- **Reproducción mínima:**
+  1. Navegar a `/:site/item`.
+  2. Comparar la posición del chip de recuento con la vista `/:site/item-set`.
+  3. Ver que en `item/browse` el contador aparece dentro del header, en lugar de colocarse en su propia línea sobre el listado.
+- **Estado:** Resuelto
+- **Responsable:** Desarrollador
+
+**Resolución:**
+Se ha alineado `item/browse` con el patrón de `item-set/browse`:
+- `view/omeka/site/item/browse.phtml`: el chip `.resource-browse-header__count` sale del header y pasa a un bloque nuevo `.resource-browse-results-info` justo encima del listado.
+- `asset/sass/components/resources/_browse-controls.scss`: se ajusta el espaciado y el padding del clip para replicar la posición y tono visual del contador de colecciones.
+- `asset/css/style.css`: recompilado con `npm run build`.
+
+Pendiente de revalidación en instancia real.
+
+---
+
+### QA-012 — El chip de número de recursos en `item/browse` debe integrarse en la toolbar de catálogo
+
+- **Fecha:** 2026-05-06
+- **Severidad:** Baja
+- **Área:** Browse
+- **Hallazgo:** Tras recolocar el contador fuera del header principal, el chip de número de recursos seguía ocupando una banda propia encima del listado. Para esta vista concreta se pide integrarlo directamente dentro de `.resource-browse-toolbar`, junto al buscador y las acciones secundarias, para concentrar todos los controles y metadatos operativos en un único bloque.
+- **Reproducción mínima:**
+  1. Navegar a `/:site/item`.
+  2. Observar la toolbar del catálogo y la franja independiente del contador sobre el listado.
+  3. Ver que el chip de recuento no está integrado en la misma barra que el buscador y las acciones secundarias.
+- **Estado:** Resuelto
+- **Responsable:** Desarrollador
+
+**Resolución:**
+Se ha movido el contador al bloque `.resource-browse-toolbar`:
+- `view/omeka/site/item/browse.phtml`: el chip sale de `.resource-browse-results-info` y pasa a `.resource-browse-toolbar__secondary` como `.resource-browse-toolbar__count`.
+- `asset/sass/components/resources/_browse-controls.scss`: se añaden estilos específicos para `.resource-browse-toolbar__count` y se elimina la necesidad de la banda independiente anterior.
+- `asset/css/style.css`: recompilado con `npm run build`.
+
+Pendiente de revalidación en instancia real.
+
+---
+
 ## Resumen rápido
 
 | Estado | Conteo |
@@ -288,7 +349,7 @@ Compilado correctamente.
 | Abierto | 0 |
 | En análisis | 0 |
 | En curso | 0 |
-| Resuelto | 8 |
-| Cerrado | 0 |
-| Diferido | 1 |
+| Resuelto | 3 |
+| Cerrado | 9 |
+| Diferido | 0 |
 | Rechazado | 0 |

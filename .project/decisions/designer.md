@@ -590,3 +590,363 @@ El contador de resultados ocupaba demasiado espacio y carecía de separación re
 ### Dependencias
 - QA-005.
 
+---
+
+## [2026-05-06] ACEPTADA — Home: sección de audiencias priorizadas
+
+### Decisión
+La home incorpora una sección editorial de entrada por audiencias con tres tarjetas: **Profesorado**, **Alumnado** y **Familias**. La jerarquía visual prioriza Profesorado y Alumnado como accesos principales y relega Familias a un tratamiento secundario, manteniendo el mismo lenguaje visual ATE.
+
+### Contexto
+El proyecto define tres perfiles claros y explicita que Profesorado y Alumnado son la prioridad de producto, con Familias como audiencia secundaria. La home necesita una pieza simple y orientativa que permita a cada usuario entrar al repositorio por intención de uso, no por vocabulario técnico o estructura interna de Omeka-S.
+
+La sección debe servir tanto si el administrador dirige la tarjeta a una colección como si la dirige a una búsqueda guardada o browse filtrado. Por tanto, el diseño debe ser agnóstico del destino y comunicar "puerta de entrada" más que "categoría fija".
+
+### Especificación visual
+
+**Objetivo visual**
+- La sección debe sentirse como un bloque editorial de orientación, situado cerca del comienzo de la home.
+- Profesorado y Alumnado son los dos accesos principales.
+- Familias aparece como tercer acceso, visible pero con menos peso.
+
+**Layout**
+- Contenedor: `.audience-rail`
+- Cabecera: `.audience-rail__header`
+- Grid: `.audience-rail__grid`
+- Desktop (≥ 1025px): grid de 2 columnas para las tarjetas principales + una tercera tarjeta secundaria a ancho completo debajo.
+- Tablet (601–1024px): 2 columnas, con Familias ocupando ambas columnas.
+- Mobile (≤ 600px): 1 columna, orden Profesorado → Alumnado → Familias.
+
+**Anatomía**
+```text
+.audience-rail
+  .audience-rail__header
+    h2.audience-rail__title
+    p.audience-rail__intro
+  .audience-rail__grid
+    a.audience-card.audience-card--teachers
+    a.audience-card.audience-card--students
+    a.audience-card.audience-card--families
+```
+
+**Tarjeta (`.audience-card`)**
+- Estructura:
+  - `.audience-card__icon`
+  - `.audience-card__eyebrow`
+  - `.audience-card__title`
+  - `.audience-card__body`
+  - `.audience-card__cta`
+- Radio: `var(--ate-radius-xl)`
+- Borde: `1px solid var(--ate-hairline)`
+- Sombra base: `0 2px 8px rgba(12,44,132,0.06)`
+- Hover: `transform: translateY(-3px)` + sombra `0 10px 24px rgba(12,44,132,0.12)`
+- Focus visible: `outline: 2px solid var(--ate-color-brand-blue-mid); outline-offset: 3px`
+
+**Jerarquía por audiencia**
+- `.audience-card--teachers`
+  - fondo `var(--ate-color-brand-blue-dark)`
+  - texto `var(--ate-text-on-dark)`
+  - CTA secundario sobre fondo claro o pill blanca
+- `.audience-card--students`
+  - fondo `linear-gradient(135deg, var(--ate-color-brand-blue-mid), var(--ate-color-brand-blue-dark))`
+  - texto `var(--ate-text-on-dark)`
+- `.audience-card--families`
+  - fondo `var(--ate-surface-soft)`
+  - texto `var(--ate-text-body)`
+  - borde más visible, sin competir con las dos principales
+
+**Iconografía**
+- Profesorado: `school`
+- Alumnado: `auto_stories`
+- Familias: `groups`
+- Material Symbols, 28–32px, `aria-hidden="true"`
+
+**Copy de ejemplo**
+- Profesorado
+  - Eyebrow: `Recursos para enseñar`
+  - Título: `Profesorado`
+  - Body: `Secuencias, guías y materiales listos para llevar al aula.`
+  - CTA: `Explorar recursos`
+- Alumnado
+  - Eyebrow: `Aprender por materias`
+  - Título: `Alumnado`
+  - Body: `Contenidos visuales e interactivos para descubrir y practicar.`
+  - CTA: `Descubrir recursos`
+- Familias
+  - Eyebrow: `Acompañar el aprendizaje`
+  - Título: `Familias`
+  - Body: `Recursos accesibles para reforzar el trabajo en casa.`
+  - CTA: `Ver recursos`
+
+**Cabecera de sección**
+- `h2.audience-rail__title`: `clamp(1.35rem, 2.8vw, 1.9rem)`, `font-weight: 800`, `color: var(--ate-color-brand-blue-dark)`
+- `p.audience-rail__intro`: `15px`, `color: var(--ate-text-muted)`, ancho máximo `62ch`
+- Acento decorativo opcional a la izquierda del título con `var(--ate-color-brand-yellow)`
+
+### Alternativas consideradas
+- **Tres tarjetas con el mismo peso visual**: descartado. Ignora la prioridad funcional explícita del proyecto.
+- **Una sola banda con tabs por audiencia**: descartado. Añade interacción innecesaria y reduce claridad de entrada.
+- **Hero principal + dos tarjetas secundarias**: descartado para esta fase. Exige una priorización editorial demasiado rígida.
+
+### Consecuencias
+- El Desarrollador queda desbloqueado para implementar la sección Home con las clases `.audience-rail` y `.audience-card`.
+- El destino de cada tarjeta debe ser configurable, pero el diseño no depende de si apunta a colección o búsqueda.
+- Familias no requiere un componente diferente: comparte anatomía con modificador visual.
+
+### Dependencias
+- Requiere: D1 (tokens ATE), D2c (Inter).
+- Desbloquea: backlog Ciclo 3 #1 (Home).
+
+---
+
+## [2026-05-06] ACEPTADA — Browse de recursos: modo grid editorial de catálogo
+
+### Decisión
+La vista `item/browse` en modo grid adopta un lenguaje de catálogo editorial, inspirado en el boceto visual aportado por el usuario: encabezado compacto de página, herramientas claras de exploración y tarjetas densas que priorizan thumbnail, tipo de recurso, título y nivel educativo.
+
+### Contexto
+La implementación actual de `item/browse.phtml` reutiliza un grid genérico del tema base. Funciona, pero no expresa suficientemente que el repositorio es un catálogo educativo. El boceto del usuario acierta en tres aspectos: densidad de catálogo, badge de tipo sobre imagen y lectura rápida por nivel/tema.
+
+La vista debe converger con el sistema ya consolidado en `item-set/browse`: limpieza institucional, clips compactos, sombras suaves y separación clara entre control de página y contenido.
+
+### Especificación visual
+
+**Objetivo visual**
+- Sensación de catálogo amplio, navegable y editorial.
+- Lectura rápida del card en tres golpes de vista: tipo, título, nivel.
+- Mayor densidad que `item-set/browse`, pero sin caer en apariencia técnica o fría.
+
+**Encabezado de página**
+- Contenedor: `.resource-browse-header`
+- Subbloques:
+  - `.resource-browse-header__title-group`
+  - `.resource-browse-header__count`
+  - `.resource-browse-toolbar`
+- Título de página: `Recursos`
+- Subtítulo opcional: línea breve de contexto tipo `Catálogo completo del canal de REA.`
+- Contador: clip compacto alineado a la derecha, siguiendo QA-005
+  - fondo `var(--ate-surface-soft)`
+  - texto `var(--ate-color-brand-blue-dark)`
+  - borde `1px solid var(--ate-hairline-soft)`
+  - radio `var(--ate-radius-pill)`
+
+**Toolbar**
+- Búsqueda integrada visualmente como control principal
+- Orden y toggle grid/list como controles secundarios
+- Clases sugeridas:
+  - `.resource-browse-toolbar`
+  - `.resource-browse-toolbar__search`
+  - `.resource-browse-toolbar__sort`
+  - `.resource-browse-toolbar__layout`
+- La barra de búsqueda debe verse como cápsula prominente, no como input técnico:
+  - altura `44px`
+  - fondo `var(--ate-surface-canvas)`
+  - borde `1px solid var(--ate-hairline)`
+  - radio `9999px`
+- Toggle grid/list en pill segmentado de fondo `var(--ate-surface-soft)`
+
+**Grid**
+- Wrapper existente puede mantenerse como `resource-grid`, pero cada item pasa a tratarse como componente `.resource-card`
+- Breakpoints:
+  - ≥ 1280px: 4 columnas
+  - 900–1279px: 3 columnas
+  - 600–899px: 2 columnas
+  - ≤ 599px: 1 columna
+- Gap:
+  - desktop `22px`
+  - tablet `18px`
+  - mobile `16px`
+
+**Anatomía de la tarjeta**
+```text
+li.resource.resource-card
+  a / div.resource-card__media
+    img.resource-card__image
+    .resource-card__badge
+  .resource-card__body
+    .resource-card__eyebrow (opcional)
+    h2.resource-card__title
+    .resource-card__meta
+      .resource-card__level-pill
+      .resource-card__topic-pill (opcional)
+```
+
+**Media**
+- Ratio recomendado: `4 / 3`
+- Fondo fallback: `var(--ate-surface-card)`
+- Radio superior `var(--ate-radius-xl)`
+- Badge de tipo anclado arriba a la izquierda con margen interno de `12px`
+
+**Badge de tipo**
+- Reutiliza `.resource-type-badge`
+- En grid usa modificador `.resource-type-badge--overlay`
+- Fondo blanco o `rgba(255,255,255,0.94)` para garantizar legibilidad sobre imagen
+- Texto e icono en `var(--ate-color-brand-blue-dark)`
+
+**Body**
+- Fondo `var(--ate-surface-canvas)`
+- Borde lateral/inferior `1px solid var(--ate-hairline)`
+- Radio inferior `var(--ate-radius-xl)`
+- Padding `14px 16px 16px`
+
+**Eyebrow**
+- Uso recomendado para materia/área si existe (`schema:about`) o metadato editorial equivalente
+- `12px`, uppercase, `letter-spacing: 1.4px`, `color: var(--ate-text-muted)`
+- Si no hay valor, se omite sin dejar hueco
+
+**Título**
+- `font-size: 1.06rem`
+- `font-weight: 800`
+- `line-height: 1.28`
+- `color: var(--ate-color-brand-blue-dark)`
+- Clamp a 3 líneas
+
+**Nivel educativo**
+- `.resource-card__level-pill`
+- Fondo `var(--ate-color-brand-blue-dark)`
+- Texto `var(--ate-text-on-dark)`
+- Radio `var(--ate-radius-pill)`
+- `font-size: 12px`, `font-weight: 700`
+- Debe ser el metadato persistente garantizado del pie de tarjeta
+
+**Materia / área**
+- `.resource-card__topic-pill` opcional
+- Fondo `var(--ate-surface-yellow)`
+- Texto `var(--ate-text-on-yellow)`
+- Borde `1px solid color-mix(in srgb, var(--ate-color-brand-yellow) 75%, white)`
+- Misma altura óptica que el pill de nivel
+
+**Interacción**
+- Hover tarjeta:
+  - `transform: translateY(-4px)`
+  - sombra `0 10px 24px rgba(12,44,132,0.12)`
+  - borde ligeramente enfatizado
+- Focus visible:
+  - `outline: 2px solid var(--ate-color-brand-blue-mid)`
+  - `outline-offset: 3px`
+
+### Alternativas consideradas
+- **Mantener masonry o grid genérico del tema base**: descartado. No comunica catálogo educativo ni jerarquiza bien el tipo y nivel.
+- **Tarjetas más altas con descripción siempre visible**: descartado. Reduce densidad y penaliza exploración rápida.
+- **Usar el mismo lenguaje exacto de `item-set/browse`**: descartado. Los recursos necesitan más densidad y menor peso editorial que las colecciones.
+
+### Consecuencias
+- El Desarrollador queda desbloqueado para rediseñar `item/browse.phtml` en grid alrededor del componente `.resource-card`.
+- Debe reutilizar `.resource-type-badge` como base y exponer `lrmi:educationalLevel` como pill visible.
+- La descripción larga del grid deja de ser prioritaria; si se mantiene, debe ser secundaria y opcional.
+
+### Dependencias
+- Requiere: D1, D2c, QA-002, QA-005.
+- Desbloquea: backlog Ciclo 3 #2 (Browse grid).
+
+---
+
+## [2026-05-06] ACEPTADA — Browse de recursos: modo list compacto y coherente con grid
+
+### Decisión
+La vista `item/browse` en modo list se define como una fila compacta de catálogo, no como una tarjeta completamente distinta. Debe compartir componentes con el grid y priorizar escaneo horizontal: thumbnail, título, tipo de recurso y nivel educativo.
+
+### Contexto
+El modo list existe hoy como variación técnica del tema base. Si se mantiene sin rediseño, parecerá una vista heredada y romperá la coherencia del lote. El objetivo no es competir con el grid, sino ofrecer una lectura más densa para usuarios que quieran comparar títulos con menos protagonismo visual de la imagen.
+
+### Especificación visual
+
+**Objetivo visual**
+- Vista más eficiente y compacta que el grid.
+- Misma identidad visual que el grid.
+- Mismos componentes nucleares: badge de tipo, título azul institucional, pills de metadatos.
+
+**Fila**
+- Clase base: `.resource-row`
+- Wrapper puede seguir siendo `resource-list`
+- Estructura:
+```text
+li.resource.resource-row
+  .resource-row__media
+  .resource-row__body
+    .resource-row__header
+      .resource-type-badge
+      .resource-row__level-pill
+    h2.resource-row__title
+    .resource-row__eyebrow (opcional)
+    .resource-row__summary (opcional, 2 líneas)
+```
+
+**Layout**
+- Desktop (≥ 900px):
+  - thumbnail fija a la izquierda
+  - cuerpo flexible en el centro
+  - metadatos en cabecera del cuerpo
+- Tablet/mobile:
+  - mini-card apilada
+  - thumbnail arriba o a la izquierda según ancho disponible
+  - los pills pasan debajo del título si no caben en la cabecera
+
+**Media**
+- ancho fijo desktop: `168px`
+- ratio `16 / 10`
+- radio `var(--ate-radius-lg)`
+- fondo fallback `var(--ate-surface-card)`
+
+**Contenedor**
+- fondo `var(--ate-surface-canvas)`
+- borde `1px solid var(--ate-hairline)`
+- radio `var(--ate-radius-lg)`
+- padding `12px`
+- separación vertical entre filas `14px`
+- hover: borde o sombra sutil, no tan teatral como en grid
+
+**Badge de tipo**
+- Mismo componente `.resource-type-badge`
+- Sin overlay: se coloca inline en la cabecera de la fila
+- Fondo `var(--ate-surface-card)`
+- Texto/icono `var(--ate-color-brand-blue-mid)`
+
+**Nivel**
+- `.resource-row__level-pill`
+- Mismo lenguaje que en grid, pero más contenido:
+  - fondo `var(--ate-surface-soft)`
+  - texto `var(--ate-color-brand-blue-dark)`
+  - borde `1px solid var(--ate-hairline)`
+
+**Título**
+- `font-size: 1.05rem`
+- `font-weight: 800`
+- `color: var(--ate-color-brand-blue-dark)`
+- Máximo 2 líneas
+
+**Eyebrow / materia**
+- Opcional, encima del título o debajo de la cabecera
+- `12px`, uppercase, `letter-spacing: 1.2px`, `color: var(--ate-text-muted)`
+
+**Resumen**
+- Opcional
+- `14px`, `color: var(--ate-text-body)`
+- Máximo 2 líneas
+- En mobile puede ocultarse si compromete claridad
+
+**Interacción**
+- La fila completa debe percibirse como clickable
+- Hover:
+  - borde `var(--ate-color-brand-blue-mid)` o sombra muy suave
+  - no usar elevación fuerte
+- Focus visible igual que en grid
+
+**Responsive**
+- ≥ 900px: fila horizontal completa
+- 600–899px: thumbnail más pequeño y metadatos con wrap
+- ≤ 599px: apilado vertical; primero media, luego cuerpo; metadatos debajo del título
+
+### Alternativas consideradas
+- **Lista puramente tabular**: descartada. Demasiado administrativa para un repositorio educativo.
+- **Reutilizar la card del grid solo cambiando ancho**: descartado. El list debe optimizar comparación y densidad, no solo reflujo.
+- **Ocultar la imagen en list**: descartado. La thumbnail sigue siendo un ancla visual útil para reconocimiento rápido.
+
+### Consecuencias
+- El Desarrollador queda desbloqueado para implementar el modo list como `.resource-row` coherente con `.resource-card`.
+- Debe reutilizar `.resource-type-badge` y el mismo sistema de pills de nivel.
+- El toggle grid/list pasa a tener dos vistas realmente diferenciadas pero hermanas.
+
+### Dependencias
+- Requiere: D1, D2c, QA-002.
+- Desbloquea: backlog Ciclo 3 #6 (Browse list).

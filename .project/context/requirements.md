@@ -80,5 +80,5 @@ _Documento vivo. Se actualiza conforme se confirman o refinan requisitos._
 | Facetas exactas de Advanced Search | ✅ Confirmadas — 5 campos LRMI/Schema | — |
 | Versión exacta de Omeka-S en producción | ✅ 4.2 | — |
 | Versión del módulo Advanced Search | ✅ 3.4.60 | — |
-| Mecanismo de release del tema | ⏳ Pendiente de diseñar | Arquitecto |
+| Mecanismo de release del tema | ✅ Operativo — GitHub Actions + Makefile | Arquitecto |
 | Audiencias y prioridades | ✅ Profesorado y Alumnado (principales), Familias (secundario) | — |
