@@ -4,6 +4,7 @@
  * @var string $term The metadata term to look for (default: lrmi:learningResourceType)
  */
 $escape = $this->plugin('escapeHtml');
+$escapeAttr = $this->plugin('escapeHtmlAttr');
 $term = $term ?? 'lrmi:learningResourceType';
 
 // Accept a pre-fetched value (e.g. from resource-values.phtml loop) or fetch from resource.
@@ -60,7 +61,10 @@ if ($resourceTypeValue):
         }
     }
 ?>
-<span class="resource-type-badge"<?php if ($truncated): ?> title="<?php echo $escape($typeLabel); ?>"<?php endif; ?>>
+<?php
+$badgeClass = trim('resource-type-badge ' . ($class ?? ''));
+?>
+<span class="<?php echo $escapeAttr($badgeClass); ?>"<?php if ($truncated): ?> title="<?php echo $escapeAttr($typeLabel); ?>"<?php endif; ?>>
     <span class="material-symbols-outlined" aria-hidden="true"><?php echo $icon; ?></span>
     <?php echo $escape($displayLabel); ?>
 </span>

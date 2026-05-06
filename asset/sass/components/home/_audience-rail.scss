@@ -1,0 +1,176 @@
+.audience-rail {
+    margin: 32px 0 40px;
+    padding: 24px;
+    border: 1px solid var(--ate-hairline-soft);
+    border-radius: var(--ate-radius-2xl);
+    background:
+        radial-gradient(
+            circle at top right,
+            color-mix(in srgb, var(--ate-color-brand-yellow) 16%, transparent),
+            transparent 34%
+        ),
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--ate-surface-soft) 72%, var(--ate-surface-canvas)),
+            var(--ate-surface-canvas)
+        );
+
+    @media (max-width: 600px) {
+        padding: 20px 16px;
+        margin-top: 24px;
+    }
+}
+
+.audience-rail__header {
+    margin-bottom: 20px;
+}
+
+.audience-rail__title {
+    position: relative;
+    margin: 0 0 8px;
+    padding-left: 16px;
+    font-size: clamp(1.35rem, 2.8vw, 1.9rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--ate-color-brand-blue-dark);
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        left: 0;
+        width: 4px;
+        border-radius: var(--ate-radius-pill);
+        background: var(--ate-color-brand-yellow);
+    }
+}
+
+.audience-rail__intro {
+    max-width: 62ch;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ate-text-muted);
+}
+
+.audience-rail__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+.audience-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 100%;
+    padding: 22px;
+    border: 1px solid var(--ate-hairline);
+    border-radius: var(--ate-radius-xl);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ate-color-brand-blue-dark) 6%, transparent);
+    text-decoration: none;
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+
+    &:hover,
+    &:focus-visible {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px color-mix(in srgb, var(--ate-color-brand-blue-dark) 12%, transparent);
+        text-decoration: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--ate-color-brand-blue-mid);
+        outline-offset: 3px;
+    }
+}
+
+.audience-card--teachers {
+    background: var(--ate-color-brand-blue-dark);
+    color: var(--ate-text-on-dark);
+    border-color: color-mix(in srgb, var(--ate-color-brand-blue-dark) 65%, var(--ate-surface-canvas));
+}
+
+.audience-card--students {
+    background: linear-gradient(
+        135deg,
+        var(--ate-color-brand-blue-mid),
+        var(--ate-color-brand-blue-dark)
+    );
+    color: var(--ate-text-on-dark);
+    border-color: color-mix(in srgb, var(--ate-color-brand-blue-mid) 45%, var(--ate-color-brand-blue-dark));
+}
+
+.audience-card--families {
+    grid-column: 1 / -1;
+    background: var(--ate-surface-soft);
+    color: var(--ate-text-body);
+    border-color: var(--ate-hairline);
+
+    @media (max-width: 600px) {
+        grid-column: auto;
+    }
+}
+
+.audience-card__icon {
+    font-size: 30px;
+}
+
+.audience-card__eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: currentColor;
+    opacity: 0.8;
+}
+
+.audience-card__title {
+    margin: 0;
+    font-size: clamp(1.3rem, 2vw, 1.65rem);
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.audience-card__body {
+    margin: 0;
+    max-width: 32ch;
+    font-size: 15px;
+    line-height: 1.6;
+    color: currentColor;
+    opacity: 0.92;
+}
+
+.audience-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    width: fit-content;
+    padding: 8px 14px;
+    border-radius: var(--ate-radius-pill);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+.audience-card--teachers .audience-card__cta,
+.audience-card--students .audience-card__cta {
+    background: color-mix(in srgb, var(--ate-surface-canvas) 92%, transparent);
+    color: var(--ate-color-brand-blue-dark);
+}
+
+.audience-card--families .audience-card__cta {
+    background: var(--ate-surface-canvas);
+    color: var(--ate-color-brand-blue-dark);
+    border: 1px solid var(--ate-hairline);
+}
+
+.audience-card__cta .material-symbols-outlined {
+    font-size: 16px;
+}

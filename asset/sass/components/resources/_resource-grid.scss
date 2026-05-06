@@ -1,3 +1,169 @@
+body.item.resource.browse {
+    .resource-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 22px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        position: static;
+
+        @media (max-width: 1279px) {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        @media (max-width: 899px) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        @media (max-width: 599px) {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+
+    .resource-card {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        height: auto;
+        width: auto;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--ate-hairline);
+        border-radius: var(--ate-radius-xl);
+        background: var(--ate-surface-canvas);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--ate-color-brand-blue-dark) 8%, transparent);
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+
+        &::before {
+            content: none !important;
+        }
+
+        &:hover,
+        &:focus-within {
+            transform: translateY(-4px);
+            border-color: color-mix(in srgb, var(--ate-color-brand-blue-mid) 45%, var(--ate-hairline));
+            box-shadow: 0 10px 24px color-mix(in srgb, var(--ate-color-brand-blue-dark) 14%, transparent);
+        }
+    }
+
+    .resource-card__media {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        background: var(--ate-surface-card);
+        overflow: hidden;
+    }
+
+    .resource-card__media-link {
+        display: block;
+        width: 100%;
+        height: 100%;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .resource-card__media img,
+    .resource-card__media-link img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .resource-card__media-fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            135deg,
+            var(--ate-surface-card),
+            color-mix(in srgb, var(--ate-surface-card) 72%, var(--ate-surface-soft))
+        );
+        color: var(--ate-color-brand-blue-mid);
+
+        .material-symbols-outlined {
+            font-size: 44px;
+        }
+    }
+
+    .resource-card__badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 1;
+    }
+
+    .resource-card__body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 16px 16px;
+        background: var(--ate-surface-canvas);
+    }
+
+    .resource-card__eyebrow {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        color: var(--ate-text-muted);
+    }
+
+    .resource-card__title {
+        margin: 0;
+        font-size: 1.06rem;
+        font-weight: 800;
+        line-height: 1.28;
+        color: var(--ate-color-brand-blue-dark);
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+
+    .resource-card__title a {
+        color: inherit;
+        text-decoration: none;
+
+        &:hover,
+        &:focus-visible {
+            color: var(--ate-color-brand-blue-mid);
+            text-decoration: underline;
+        }
+    }
+
+    .resource-card__meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .resource-card__summary {
+        margin: 0;
+        color: var(--ate-text-body);
+        font-size: 14px;
+        line-height: 1.5;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+
+    .resource-card a:focus-visible {
+        outline: 2px solid var(--ate-color-brand-blue-mid);
+        outline-offset: 3px;
+    }
+}
+
 .resource-grid {
 	list-style: none;
     padding-left: 0;

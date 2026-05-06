@@ -21,6 +21,13 @@ foreach ($itemSets as $itemSet) {
     }
 }
 
+// Build pagination explicitly using visible sets count
+// This avoids pollution from the internal $api->search calls
+$totalCount = count($visibleSets);
+$page = $this->params()->fromQuery('page', 1);
+$perPage = 15; // Omeka S default or configured limit
+$pagination = $this->pagination(null, $totalCount, $page, $perPage);
+
 // Build filter select options from visible sets
 $etapas = $niveles = $tematicas = [];
 foreach ($visibleSets as $entry) {
@@ -181,6 +188,6 @@ foreach ($visibleSets as $entry) {
 
 <?php $this->trigger('view.browse.after'); ?>
 
-<?= $this->pagination() ?>
+<?= $pagination ?>
 
 <?= $this->partial('omeka/site/item-set/_browse-filter-script') ?>

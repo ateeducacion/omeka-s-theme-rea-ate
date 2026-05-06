@@ -1,0 +1,79 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$escapeAttr = $this->plugin('escapeHtmlAttr');
+$site = $site ?? $this->currentSite();
+
+$defaultBrowseUrl = $this->url(
+    'site/resource',
+    ['site-slug' => $site->slug(), 'controller' => 'item', 'action' => 'browse'],
+    true
+);
+
+$resolveAudienceUrl = function (string $settingName) use ($site, $defaultBrowseUrl): string {
+    $value = trim((string) $this->themeSetting($settingName));
+    if ($value === '') {
+        return $defaultBrowseUrl;
+    }
+
+    if (preg_match('~^(https?:)?//~', $value) || str_starts_with($value, '/')) {
+        return $value;
+    }
+
+    return rtrim($site->siteUrl(), '/') . '/' . ltrim($value, '/');
+};
+
+$cards = [
+    [
+        'modifier' => 'teachers',
+        'icon' => 'school',
+        'eyebrow' => $translate('Recursos para enseñar'),
+        'title' => $translate('Profesorado'),
+        'body' => $translate('Secuencias, guías y materiales listos para llevar al aula.'),
+        'cta' => $translate('Explorar recursos'),
+        'url' => $resolveAudienceUrl('home_audience_teachers_url'),
+    ],
+    [
+        'modifier' => 'students',
+        'icon' => 'auto_stories',
+        'eyebrow' => $translate('Aprender por materias'),
+        'title' => $translate('Alumnado'),
+        'body' => $translate('Contenidos visuales e interactivos para descubrir y practicar.'),
+        'cta' => $translate('Descubrir recursos'),
+        'url' => $resolveAudienceUrl('home_audience_students_url'),
+    ],
+    [
+        'modifier' => 'families',
+        'icon' => 'groups',
+        'eyebrow' => $translate('Acompañar el aprendizaje'),
+        'title' => $translate('Familias'),
+        'body' => $translate('Recursos accesibles para reforzar el trabajo en casa.'),
+        'cta' => $translate('Ver recursos'),
+        'url' => $resolveAudienceUrl('home_audience_families_url'),
+    ],
+];
+?>
+
+<section class="audience-rail" aria-labelledby="audience-rail-title">
+    <div class="audience-rail__header">
+        <h2 id="audience-rail-title" class="audience-rail__title"><?php echo $escape($translate('Explora el repositorio según tu perfil')); ?></h2>
+        <p class="audience-rail__intro">
+            <?php echo $escape($translate('Accesos directos para encontrar recursos, colecciones o búsquedas adaptadas a cada audiencia.')); ?>
+        </p>
+    </div>
+
+    <div class="audience-rail__grid">
+        <?php foreach ($cards as $card): ?>
+            <a class="audience-card audience-card--<?php echo $escapeAttr($card['modifier']); ?>" href="<?php echo $escapeAttr($card['url']); ?>">
+                <span class="audience-card__icon material-symbols-outlined" aria-hidden="true"><?php echo $escape($card['icon']); ?></span>
+                <span class="audience-card__eyebrow"><?php echo $escape($card['eyebrow']); ?></span>
+                <h3 class="audience-card__title"><?php echo $escape($card['title']); ?></h3>
+                <p class="audience-card__body"><?php echo $escape($card['body']); ?></p>
+                <span class="audience-card__cta">
+                    <?php echo $escape($card['cta']); ?>
+                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                </span>
+            </a>
+        <?php endforeach; ?>
+    </div>
+</section>

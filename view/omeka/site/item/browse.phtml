@@ -1,7 +1,7 @@
 <?php
 $translate = $this->plugin('translate');
 $escape = $this->plugin('escapeHtml');
-$this->inlineScript()->appendFile($this->assetUrl('js/minimasonry.min.js'));
+$escapeAttr = $this->plugin('escapeHtmlAttr');
 $this->inlineScript()->appendFile($this->assetUrl('js/browse.js'));
 $this->htmlElement('body')->appendAttribute('class', 'item resource browse');
 
@@ -13,12 +13,13 @@ $filterLocale = (bool) $this->siteSetting('filter_locale_values');
 $lang = $this->lang();
 $valueLang = $filterLocale ? [$lang, ''] : null;
 
+$api = $this->api();
+$site = $this->currentSite();
 $query = $this->params()->fromQuery();
 $itemSetShow = isset($itemSet);
 if ($itemSetShow) {
     $this->headLink()->appendStylesheet($this->assetUrl('css/resource-page-blocks.css', 'Omeka'));
 
-    // Regions
     $mainBlockContent = $this->resourcePageBlocks($itemSet);
     $mainHasBlocks = $mainBlockContent->hasBlocks();
     $leftSidebarBlockContent = $this->resourcePageBlocks($itemSet, 'left');
@@ -32,44 +33,72 @@ if ($itemSetShow) {
 
 $layoutSetting = $this->themeSetting('browse_layout', 'grid');
 $gridState = ($layoutSetting == 'togglegrid') ? 'disabled' : '';
-$listState = ($layoutSetting == 'togglelist') ? 'disabled': '';
-$isGrid = (strpos($layoutSetting, 'grid') !== false) ? true : false;
+$listState = ($layoutSetting == 'togglelist') ? 'disabled' : '';
+$isGrid = strpos($layoutSetting, 'grid') !== false;
 $bodyTerm = $this->siteSetting('browse_body_property_term');
-$bodyTruncate = $this->themeSetting('truncate_body_property');
+$currentView = $isGrid ? 'grid' : 'list';
 
 if (isset($_GET['view'])) {
-	if ('list' === $_GET['view']) {
-		$gridState = '';
-		$listState = 'disabled';
-		$isGrid = false;
-	} else {
-		$gridState = 'disabled';
-		$listState = '';
-		$isGrid = true;
-	}
+    if ($_GET['view'] === 'list') {
+        $gridState = '';
+        $listState = 'disabled';
+        $isGrid = false;
+        $currentView = 'list';
+    } else {
+        $gridState = 'disabled';
+        $listState = '';
+        $isGrid = true;
+        $currentView = 'grid';
+    }
 }
 
-$decoration = $this->themeSetting('image_decoration');
-$decorationClass = '';
+$countQuery = $query;
+unset($countQuery['view'], $countQuery['page']);
+$countQuery['site_id'] = $site->id();
+$countQuery['is_public'] = true;
+$totalResults = $api->search('items', $countQuery)->getTotalResults();
+$activeFilters = $this->searchFilters();
 
-if (is_array($decoration) && in_array('media', $decoration)) {
-    $decorationClass = $isGrid ? 'decoration' : 'decoration decoration--thumbnail';
-}
+$searchAction = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: $this->url(
+    'site/resource',
+    ['site-slug' => $site->slug(), 'controller' => 'item', 'action' => 'browse'],
+    true
+);
+$fulltextSearch = (string) ($query['fulltext_search'] ?? '');
+$sortSelector = $this->browse()->renderSortSelector('items');
 
+$renderHiddenInputs = function (string $name, $value) use (&$renderHiddenInputs, $escapeAttr): string {
+    if (is_array($value)) {
+        $html = '';
+        foreach ($value as $key => $nestedValue) {
+            $html .= $renderHiddenInputs(sprintf('%s[%s]', $name, $key), $nestedValue);
+        }
+        return $html;
+    }
+
+    if ($value === null || $value === '') {
+        return '';
+    }
+
+    return sprintf(
+        '<input type="hidden" name="%s" value="%s">',
+        $escapeAttr($name),
+        $escapeAttr((string) $value)
+    );
+};
+
+$getFirstValue = function ($resource, array $terms) {
+    foreach ($terms as $term) {
+        $value = $resource->value($term);
+        if ($value) {
+            return $value;
+        }
+    }
+    return null;
+};
 ?>
 
-
 <?php if ($itemSetShow): ?>
-   
-    <!--<div class="item-header-container">
-        <div class="item-title">
-            <?php /*echo $this->pageTitle($itemSet->displayTitle(null, $valueLang), 1); */?>
-        </div>
-        <div class="item-tags">
-            <?php /*echo $this->ResourceTags($itemSet);*/ ?>
-        </div>
-    </div>-->
-
     <?php if (($mainHasBlocks && $blockContent = $mainBlockContent->getBlocks())
         || ($leftSidebarHasBlocks && $blockContent = $leftSidebarBlockContent->getBlocks())
         || ($rightSidebarHasBlocks && $blockContent = $rightSidebarBlockContent->getBlocks())): ?>
@@ -80,7 +109,7 @@ if (is_array($decoration) && in_array('media', $decoration)) {
             $additionalContainerClasses = 'regions-container--all';
         }
         ?>
-        
+
         <div class="regions-container <?php echo $additionalContainerClasses; ?>">
             <?php if ($leftSidebarHasBlocks && $blockContent = $leftSidebarBlockContent->getBlocks()): ?>
                 <div class="sidebar-region sidebar-region--left">
@@ -106,109 +135,240 @@ if (is_array($decoration) && in_array('media', $decoration)) {
                 </div>
             <?php endif; ?>
         </div>
-
     <?php endif; ?>
-
-    <!--<div class="item-set-items">
-    <?php /*echo '<h3>' . $escape($translate('Items')) . '</h3>';*/ ?>-->
-<?php else: ?>
-    <?php /*echo $this->pageTitle($translate('Items'), 2); */?>
 <?php endif; ?>
 
-<?php echo $this->searchFilters(); ?>
+<section class="resource-browse-page">
+    <header class="resource-browse-header">
+        <div class="resource-browse-header__title-group">
+            <h1 class="resource-browse-header__title"><?php echo $escape($translate('Recursos')); ?></h1>
+            <p class="resource-browse-header__subtitle">
+                <?php echo $escape($itemSetShow
+                    ? $translate('Explora los recursos de esta colección.')
+                    : $translate('Catálogo completo del canal REA.')); ?>
+            </p>
+        </div>
+        <div class="resource-browse-header__controls">
+            <div class="resource-browse-header__sort">
+                <?php echo $sortSelector; ?>
+            </div>
+        </div>
+    </header>
 
-<div class="browse-controls">
-    <?php if (strpos($layoutSetting, 'toggle') !== false): ?>
-        <div class="layout-toggle">
-            <button type="button" aria-label="<?php echo $translate('Grid'); ?>" title="<?php echo $translate('Grid'); ?>" class="grid icon-btn o-icon-grid" <?php echo $gridState; ?>></button>
-            <button type="button" aria-label="<?php echo $translate('List'); ?>" title="<?php echo $translate('List'); ?>" class="list icon-btn o-icon-list" <?php echo $listState; ?>></button>
+    <?php if ($activeFilters): ?>
+        <div class="resource-browse-filters">
+            <?php echo $activeFilters; ?>
         </div>
     <?php endif; ?>
-    <?php echo $this->browse()->renderSortSelector('items'); ?>
-    <div class="advanced-search-container">
-        <?php /*echo $this->hyperlink($translate('Advanced search'), $this->url('site/resource', ['controller' => 'item', 'action' => 'search'], ['query' => $query], true), ['class' => 'advanced-search']);*/ ?>
-        <?php if ($user && $showToolboxForUser): ?>
-            <a class="item-actions button" title="<?php echo $escape($translate('Add new item')); ?>" href="<?php echo $escape($adminBasePath . '/item/add'); ?>" aria-label="<?php echo $escape($translate('Add new item')); ?>" target="_self"><?php echo $escape($translate('Add new item')); ?></a>
-        <?php endif; ?>
-    </div>
-</div>
 
-<?php $this->trigger('view.browse.before'); ?>
+    <div class="resource-browse-toolbar">
+        <div class="resource-browse-toolbar__search">
+            <form action="<?php echo $escapeAttr($searchAction); ?>" method="get" role="search" aria-label="<?php echo $escapeAttr($translate('Buscar recursos')); ?>">
+                <label class="screen-reader-text" for="resource-browse-search"><?php echo $escape($translate('Buscar recursos')); ?></label>
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                <input
+                    id="resource-browse-search"
+                    type="search"
+                    name="fulltext_search"
+                    value="<?php echo $escapeAttr($fulltextSearch); ?>"
+                    placeholder="<?php echo $escapeAttr($translate('Buscar recursos, materias o niveles')); ?>"
+                >
+                <?php foreach ($query as $key => $value): ?>
+                    <?php if (in_array($key, ['fulltext_search', 'page'], true)) continue; ?>
+                    <?php echo $renderHiddenInputs((string) $key, $value); ?>
+                <?php endforeach; ?>
+                <button type="submit"><?php echo $escape($translate('Buscar')); ?></button>
+            </form>
+        </div>
 
-<ul class="resources <?php echo ($isGrid) ? 'resource-grid' : 'resource-list'; ?>">
+        <div class="resource-browse-toolbar__secondary">
+            <div class="resource-browse-toolbar__count">
+                <strong><?php echo (int) $totalResults; ?></strong>
+                <?php echo $escape($translate('recursos')); ?>
+            </div>
 
-    <?php
-    foreach ($items as $item):
-        $body = $bodyTerm ? $item->value($bodyTerm, ['lang' => ($valueLang)]) : $item->displayDescription(null, ($valueLang));
-        $thumbnail = $this->thumbnail($item, 'large');
-        ?>
-        <li class="item resource <?php echo ($isGrid) ? '' : 'media-object'; ?>">
-            <!-- Thumbnail -->
-            <?php if ($thumbnail): ?>
-                <div class="resource__thumbnail <?php echo $decorationClass; ?>">
-                    <?php echo $item->linkRaw($thumbnail); ?>
+            <?php if (strpos($layoutSetting, 'toggle') !== false): ?>
+                <div class="resource-browse-toolbar__layout">
+                    <div class="layout-toggle" role="group" aria-label="<?php echo $escapeAttr($translate('Cambiar modo de visualización')); ?>">
+                        <button type="button" aria-label="<?php echo $translate('Grid'); ?>" title="<?php echo $translate('Grid'); ?>" class="grid icon-btn o-icon-grid" <?php echo $gridState; ?>></button>
+                        <button type="button" aria-label="<?php echo $translate('List'); ?>" title="<?php echo $translate('List'); ?>" class="list icon-btn o-icon-list" <?php echo $listState; ?>></button>
+                    </div>
                 </div>
             <?php endif; ?>
 
-            <!-- Content -->
-            <div class="resource__content">
-                <!-- Metadata -->
-                <div class="resource__meta <?php echo ($isGrid) ? '' : 'media-object-section'; ?>">
-                    <?php echo $item->link($item->displayTitle(null, $valueLang)); ?>
-                    <?php if ($body): ?>
-                        <div class="description <?php echo ($bodyTruncate) ? $bodyTruncate : ''; ?>"><?php echo $escape($body); ?></div>
-                    <?php endif; ?>
+            <?php if ($user && $showToolboxForUser): ?>
+                <div class="resource-browse-toolbar__actions">
+                    <a
+                        class="button item-actions"
+                        title="<?php echo $escapeAttr($translate('Add new item')); ?>"
+                        href="<?php echo $escapeAttr($adminBasePath . '/item/add'); ?>"
+                        aria-label="<?php echo $escapeAttr($translate('Add new item')); ?>"
+                        target="_self"
+                    >
+                        <?php echo $escape($translate('Add new item')); ?>
+                    </a>
                 </div>
-                <?php
-                // Calculate days since creation
-                $createdDate = $item->created();
-                $now = new DateTime();
-                $diff = $now->diff($createdDate);
-                $daysAgo = $diff->days;
+            <?php endif; ?>
+        </div>
+    </div>
 
-                // Get resource tags output
-                $resourceTagsHtml = $this->ResourceTags($item);
+    <?php $this->trigger('view.browse.before'); ?>
 
-                $actionsHtml="";
-                // DENTRO del loop de cada item
-                if ($user && $showToolboxForUser):
-                    $itemId = $item->id();
-                    $editUrl = $adminBasePath . '/item/' . $itemId . '/edit';
-                    $addMediaUrl = $adminBasePath . '/item/' . $itemId . '/edit#item-media';
-                    $actionsHtml = '<ul class="item-actions">'
-                        . '<li><a class="o-icon-edit" title="' . $escape($translate('Edit')) . '" href="' . $escape($editUrl) . '" aria-label="' . $escape($translate('Edit')) . '"></a></li>'
-                        . '<li><a class="o-icon-add" title="' . $escape($translate('Add media')) . '" href="' . $escape($addMediaUrl) . '" aria-label="' . $escape($translate('Add media')) . '"></a></li>'
-                        . '<li><a class="o-icon-delete" title="' . $escape($translate('Delete')) . '" href="#" aria-label="' . $escape($translate('Delete')) . '" data-item-id="' . $itemId . '" data-item-title="' . $escape($item->displayTitle(null, $valueLang)) . '"></a></li>'
-                        . '</ul>';
-                endif;
+    <ul class="resources <?php echo $isGrid ? 'resource-grid' : 'resource-list'; ?>" data-disable-masonry="true" data-server-toggle="true" data-current-layout="<?php echo $escapeAttr($currentView); ?>">
+        <?php foreach ($items as $item): ?>
+            <?php
+            $title = $item->displayTitle(null, $valueLang);
+            $resourceUrl = $item->siteUrl();
+            $thumbnail = $this->thumbnail($item, 'large');
+            $resourceType = $item->value('lrmi:learningResourceType');
+            $educationalLevel = $getFirstValue($item, ['lrmi:educationalLevel', 'lom:educationalLevel']);
+            $topic = $getFirstValue($item, ['schema:about', 'dcterms:subject']);
+            $body = $bodyTerm ? $item->value($bodyTerm, ['lang' => $valueLang]) : $item->displayDescription(null, $valueLang);
+            $summary = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $body)));
 
-                // Create days ago tag
-                $daysAgoTag = '<div class="resource-tag days-ago-tag" >'
-                    . $escape(sprintf($translate($daysAgo == 1 ?  '%s day ago' : '%s days ago'), $daysAgo))
-                    . '</div>';
+            $createdDate = $item->created();
+            $daysAgo = null;
+            if ($createdDate instanceof DateTimeInterface) {
+                $daysAgo = (new DateTimeImmutable('now'))->diff($createdDate)->days;
+            }
+            ?>
+            <li class="item resource <?php echo $isGrid ? 'resource-card' : 'resource-row'; ?>">
+                <?php if ($isGrid): ?>
+                    <div class="resource-card__media">
+                        <a class="resource-card__media-link" href="<?php echo $escapeAttr($resourceUrl); ?>">
+                            <?php if ($thumbnail): ?>
+                                <?php echo $thumbnail; ?>
+                            <?php else: ?>
+                                <span class="resource-card__media-fallback">
+                                    <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+                                </span>
+                            <?php endif; ?>
+                        </a>
 
-                // Group actions and days-ago tag together
-                $actionsGroup = '<div class="resource-tags-group">' . $actionsHtml . $daysAgoTag . '</div>';
+                        <?php if ($resourceType): ?>
+                            <div class="resource-card__badge">
+                                <?php echo $this->partial('common/resource-type-badge', [
+                                    'resourceTypeValue' => $resourceType,
+                                    'class' => 'resource-type-badge--overlay',
+                                ]); ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
 
-                // If resource tags exist, inject our group inside; otherwise create wrapper
-                if (!empty($resourceTagsHtml)) {
-                    // Remove the closing </div> and add our group before closing
-                    echo substr($resourceTagsHtml, 0, -6) . $actionsGroup . '</div>';
-                } else {
-                    // Create our own resource-tags wrapper
-                    echo '<div class="resource-tags">' . $actionsGroup . '</div>';
-                }
-                ?>
-            </div>
-        </li>
-    <?php endforeach; ?>
+                    <div class="resource-card__body">
+                        <?php if ($topic): ?>
+                            <p class="resource-card__eyebrow"><?php echo $escape((string) $topic); ?></p>
+                        <?php endif; ?>
 
-</ul>
+                        <h2 class="resource-card__title">
+                            <a href="<?php echo $escapeAttr($resourceUrl); ?>"><?php echo $escape($title); ?></a>
+                        </h2>
 
-<?php echo ($itemSetShow) ? '</div>' : ''; ?>
-<?php $this->trigger('view.browse.after'); ?>
+                        <div class="resource-card__meta">
+                            <?php if ($educationalLevel): ?>
+                                <span class="resource-level-pill"><?php echo $escape((string) $educationalLevel); ?></span>
+                            <?php endif; ?>
+                        </div>
 
-<?php echo $this->pagination(); ?>
+                        <?php if ($summary !== ''): ?>
+                            <p class="resource-card__summary"><?php echo $escape($summary); ?></p>
+                        <?php endif; ?>
+
+                        <?php if ($daysAgo !== null || ($user && $showToolboxForUser)): ?>
+                            <div class="resource-catalog-footer">
+                                <?php if ($daysAgo !== null): ?>
+                                    <span class="resource-days-ago">
+                                        <?php echo $escape(sprintf($translate($daysAgo == 1 ? '%s day ago' : '%s days ago'), $daysAgo)); ?>
+                                    </span>
+                                <?php endif; ?>
+
+                                <?php if ($user && $showToolboxForUser): ?>
+                                    <ul class="resource-admin-actions">
+                                        <li>
+                                            <a class="o-icon-edit" title="<?php echo $escapeAttr($translate('Edit')); ?>" href="<?php echo $escapeAttr($adminBasePath . '/item/' . $item->id() . '/edit'); ?>" aria-label="<?php echo $escapeAttr($translate('Edit')); ?>"></a>
+                                        </li>
+                                        <li>
+                                            <a class="o-icon-add" title="<?php echo $escapeAttr($translate('Add media')); ?>" href="<?php echo $escapeAttr($adminBasePath . '/item/' . $item->id() . '/edit#item-media'); ?>" aria-label="<?php echo $escapeAttr($translate('Add media')); ?>"></a>
+                                        </li>
+                                        <li>
+                                            <a class="o-icon-delete" title="<?php echo $escapeAttr($translate('Delete')); ?>" href="#" aria-label="<?php echo $escapeAttr($translate('Delete')); ?>" data-item-id="<?php echo (int) $item->id(); ?>" data-item-title="<?php echo $escapeAttr($title); ?>"></a>
+                                        </li>
+                                    </ul>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="resource-row__media">
+                        <a class="resource-row__media-link" href="<?php echo $escapeAttr($resourceUrl); ?>">
+                            <?php if ($thumbnail): ?>
+                                <?php echo $thumbnail; ?>
+                            <?php else: ?>
+                                <span class="resource-row__media-fallback">
+                                    <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </div>
+
+                    <div class="resource-row__body">
+                        <div class="resource-row__header">
+                            <?php if ($resourceType): ?>
+                                <?php echo $this->partial('common/resource-type-badge', [
+                                    'resourceTypeValue' => $resourceType,
+                                    'class' => 'resource-type-badge--inline',
+                                ]); ?>
+                            <?php endif; ?>
+
+                            <?php if ($educationalLevel): ?>
+                                <span class="resource-row__level-pill"><?php echo $escape((string) $educationalLevel); ?></span>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if ($topic): ?>
+                            <p class="resource-row__eyebrow"><?php echo $escape((string) $topic); ?></p>
+                        <?php endif; ?>
+
+                        <h2 class="resource-row__title">
+                            <a href="<?php echo $escapeAttr($resourceUrl); ?>"><?php echo $escape($title); ?></a>
+                        </h2>
+
+                        <?php if ($summary !== ''): ?>
+                            <p class="resource-row__summary"><?php echo $escape($summary); ?></p>
+                        <?php endif; ?>
+
+                        <?php if ($daysAgo !== null || ($user && $showToolboxForUser)): ?>
+                            <div class="resource-catalog-footer">
+                                <?php if ($daysAgo !== null): ?>
+                                    <span class="resource-days-ago">
+                                        <?php echo $escape(sprintf($translate($daysAgo == 1 ? '%s day ago' : '%s days ago'), $daysAgo)); ?>
+                                    </span>
+                                <?php endif; ?>
+
+                                <?php if ($user && $showToolboxForUser): ?>
+                                    <ul class="resource-admin-actions">
+                                        <li>
+                                            <a class="o-icon-edit" title="<?php echo $escapeAttr($translate('Edit')); ?>" href="<?php echo $escapeAttr($adminBasePath . '/item/' . $item->id() . '/edit'); ?>" aria-label="<?php echo $escapeAttr($translate('Edit')); ?>"></a>
+                                        </li>
+                                        <li>
+                                            <a class="o-icon-add" title="<?php echo $escapeAttr($translate('Add media')); ?>" href="<?php echo $escapeAttr($adminBasePath . '/item/' . $item->id() . '/edit#item-media'); ?>" aria-label="<?php echo $escapeAttr($translate('Add media')); ?>"></a>
+                                        </li>
+                                        <li>
+                                            <a class="o-icon-delete" title="<?php echo $escapeAttr($translate('Delete')); ?>" href="#" aria-label="<?php echo $escapeAttr($translate('Delete')); ?>" data-item-id="<?php echo (int) $item->id(); ?>" data-item-title="<?php echo $escapeAttr($title); ?>"></a>
+                                        </li>
+                                    </ul>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+
+    <?php $this->trigger('view.browse.after'); ?>
+    <?php echo $this->pagination(); ?>
+</section>
 
 <?php if ($user && $showToolboxForUser): ?>
 <?php
@@ -216,16 +376,15 @@ if (is_array($decoration) && in_array('media', $decoration)) {
     $csrfToken = $csrfElement->getCsrfValidator()->getHash(true);
 ?>
 <div id="delete-confirm-modal" class="delete-confirm-modal" style="display:none;"
-     data-csrf-token="<?php echo $escape($csrfToken); ?>"
-     data-admin-base-path="<?php echo $escape($this->url('admin')); ?>">
+     data-csrf-token="<?php echo $escapeAttr($csrfToken); ?>"
+     data-admin-base-path="<?php echo $escapeAttr($this->url('admin')); ?>">
     <div class="delete-confirm-modal__overlay"></div>
     <div class="delete-confirm-modal__content">
         <h3><?php echo $escape($translate('Confirm Delete')); ?></h3>
         <p><?php echo $escape($translate('Are you sure you want to delete the item')); ?> "<span id="delete-item-title"></span>"?</p>
         <div class="delete-confirm-modal__actions">
             <button type="button" class="button btn--secondary" id="delete-cancel"><?php echo $escape($translate('Cancel')); ?></button>
-            <button type="button" class=
-            "button" id="delete-confirm"><?php echo $escape($translate('Confirm Delete')); ?></button>
+            <button type="button" class="button" id="delete-confirm"><?php echo $escape($translate('Confirm Delete')); ?></button>
         </div>
     </div>
 </div>

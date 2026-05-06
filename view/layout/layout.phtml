@@ -11,6 +11,19 @@ $primaryColor = $this->themeSetting('primary_color') ?? '#0C2C84';
 $secondaryColor = $this->themeSetting('secondary_color') ?? '#0C2C84';
 $accentColor = $this->themeSetting('accent_color') ?? '#0768AC';
 
+$normalizePath = static function (?string $path): string {
+	$path = trim((string) $path);
+	if ($path === '' || $path === '/') {
+		return '/';
+	}
+
+	return '/' . trim($path, '/');
+};
+
+$siteHomePath = $normalizePath(parse_url($site->siteUrl(), PHP_URL_PATH) ?: '/');
+$requestPath = $normalizePath(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '/');
+$isHomePage = $requestPath === $siteHomePath;
+
 $this->htmlElement('html')->setAttribute('lang', $this->lang());
 $this->headMeta()->setCharset('utf-8');
 $this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1');
@@ -107,6 +120,9 @@ $this->htmlElement('body')->appendAttribute('class', 'user-bar');
 		<?php echo $this->partial('common/banner'); ?>
 
 		<div id="main-content" class="container" role="main">
+			<?php if ($isHomePage): ?>
+				<?php echo $this->partial('common/home-audience-rail', ['site' => $site]); ?>
+			<?php endif; ?>
 			<?php echo $this->content; ?>
 		</div>
 
