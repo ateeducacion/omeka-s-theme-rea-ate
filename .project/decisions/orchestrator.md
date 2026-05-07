@@ -586,3 +586,23 @@ El problema es una decisión de sistema visual, no una corrección técnica aisl
 - Desbloquea: corrección de QA-013 por el Desarrollador.
 
 **Agente:** orchestrator
+
+---
+
+## [2026-05-07] ACEPTADA — QA-014 asignado al Desarrollador: grid de audiencias adaptativo
+
+**Contexto:** La sección `.audience-rail` siempre renderiza las tres tarjetas independientemente de si el administrador ha dejado algún parámetro de URL en blanco. El comportamiento esperado es que las tarjetas sin URL configurada se supriman y el grid se adapte a 1, 2 o 3 columnas de forma automática. Es un cambio de lógica de renderizado y CSS sin ambigüedad de diseño: la especificación está completa en `qa-findings.md`.
+
+**Decisión:** Asignar QA-014 directamente al Desarrollador sin necesidad de decisión previa del Diseñador. El patrón `auto-fit` es coherente con el sistema de grid ya establecido en otras vistas del proyecto.
+
+**Alternativas descartadas:** Derivar al Diseñador — descartado porque no hay decisión visual pendiente; el comportamiento esperado es no mostrar tarjetas vacías y el CSS adaptativo es un detalle de implementación.
+
+**Consecuencias:**
+- El Desarrollador puede implementar QA-014 de forma inmediata.
+- Si tras la implementación el aspecto visual con 1 o 2 tarjetas no resulta satisfactorio, se abre un hallazgo de seguimiento para el Diseñador.
+
+**Dependencias:**
+- Requiere: `QA-014` abierto en `.project/docs/qa-findings.md`.
+- Desbloquea: corrección inmediata por el Desarrollador.
+
+**Agente:** orchestrator

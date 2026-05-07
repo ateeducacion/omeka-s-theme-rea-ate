@@ -2,7 +2,7 @@
 
 _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-07
+Última actualización: 2026-05-07 (2)
 
 ---
 
@@ -363,11 +363,31 @@ Determinar si los fondos y colores de texto de las tarjetas de audiencia deben q
 
 ---
 
+### QA-014 — Audience rail: columnas se adaptan a las tarjetas configuradas
+
+- **Fecha:** 2026-05-07
+- **Severidad:** Media
+- **Área:** Home
+- **Hallazgo:** La sección `.audience-rail` siempre renderiza las tres tarjetas (Profesorado, Alumnado, Familias) aunque el administrador deje en blanco el parámetro de URL de alguna de ellas. El comportamiento esperado es que una tarjeta con URL vacía no se renderice y la rejilla se adapte automáticamente a 1, 2 o 3 columnas según las tarjetas visibles.
+- **Reproducción mínima:**
+  1. En `Apariencia → Configurar tema`, dejar vacío el campo `Families card destination`.
+  2. Recargar la home.
+  3. Ver que la tarjeta de Familias sigue apareciendo (o que la rejilla queda desequilibrada si se suprime sin CSS adaptativo).
+- **Estado:** Abierto
+- **Responsable:** Desarrollador
+
+**Especificación:**
+- En `view/common/home-audience-rail.phtml`: filtrar el array `$cards` para excluir aquellas cuya URL sea cadena vacía tras `trim()`. Si no queda ninguna tarjeta, no renderizar la sección en absoluto.
+- El valor por defecto `item` en `theme.ini` actúa como URL válida; solo la cadena vacía o espacios en blanco se considera "deshabilitado".
+- En `asset/sass/components/home/_audience-rail.scss`: el `.audience-rail__grid` debe usar `grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))` (o equivalente) de forma que el grid pase a 1 o 2 columnas de forma natural sin media queries adicionales específicas para cada combinación.
+
+---
+
 ## Resumen rápido
 
 | Estado | Conteo |
 |--------|--------|
-| Abierto | 0 |
+| Abierto | 1 |
 | En análisis | 1 |
 | En curso | 0 |
 | Resuelto | 3 |
