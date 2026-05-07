@@ -956,34 +956,45 @@ li.resource.resource-row
 ## [2026-05-07] ACEPTADA — Sistema de color de audience-card: desacoplado de tema y WCAG AA garantizado (QA-013)
 
 ### Decisión
-Los colores de todas las variantes de `.audience-card` usan exclusivamente tokens `--ate-*` hardcodeados, sin ninguna dependencia de los colores configurables del tema (`--primary`, `--secondary`, `--accent`). Los contrastes WCAG AA están verificados. Se elimina `opacity: 0.8` del eyebrow y se sustituye por colores explícitos por variante para garantizar la auditabilidad por herramientas WCAG.
+Todos los elementos descendientes de `.audience-card` (title, eyebrow, body, icon) y todos los estados de interacción (`:hover`, `:visited`, `:focus-visible`) tienen `color` declarado explícitamente con tokens `--ate-*` fijos dentro del bloque de cada variante. Ningún color depende de `--primary`, `--secondary`, `--accent` ni hereda de reglas globales de elemento.
 
-### Análisis de contraste (verificado con valores reales de tokens)
+### Diagnóstico real del problema
 
-| Variante | Fondo | Texto principal | Ratio | AA (4.5:1) |
-|----------|-------|-----------------|-------|------------|
+El problema no era el fondo de la card, sino la **cascada CSS sobre los elementos hijos**:
+
+1. **`h3 { color: var(--ate-text-ink); }`** — regla global con especificidad (0,0,0,1). El `<h3 class="audience-card__title">` recibe `#0A0A0A` (negro) en lugar de heredar el blanco del padre. Resultado: negro sobre azul oscuro, ratio ~1:1. ❌
+2. **`a:hover { color: var(--accent-dark); }`** — especificidad (0,0,1,1) > `.audience-card--teachers` (0,0,1,0). En hover, el color de toda la card cambia a `--accent-dark` configurable. ❌
+3. **`a:visited { color: var(--accent); }`** — misma situación. ❌
+
+### Solución
+
+Color explícito en cada descendiente dentro del bloque de variante, con especificidad (0,0,2,0) que supera cualquier regla global de elemento o pseudo-clase simple:
+
+```scss
+.audience-card--teachers {
+    // ...fondos y borde...
+    &:hover, &:focus-visible, &:visited { color: var(--ate-text-on-dark); }
+    .audience-card__eyebrow { color: var(--ate-text-on-dark); }
+    .audience-card__title   { color: var(--ate-text-on-dark); }
+    .audience-card__body    { color: var(--ate-text-on-dark); }
+    .audience-card__icon    { color: var(--ate-text-on-dark); }
+}
+// idem para --students / --families con sus tokens
+```
+
+### Contraste verificado (valores reales de tokens)
+
+| Variante | Fondo | Texto | Ratio | AA |
+|----------|-------|-------|-------|----|
 | Teachers | `#0C2C84` | `#FFFFFF` | ~10.7:1 | ✅ |
-| Students (peor punto del gradiente) | `#0768AC` | `#FFFFFF` | ~5.2:1 | ✅ |
-| Families | `#F5F7FA` | `#2C2C2C` | ~11.4:1 | ✅ |
-
-### Cambio en el eyebrow
-
-`opacity: 0.8` sobre `currentColor` no es evaluable por herramientas WCAG automáticas (ven opacidad, no el color compuesto resultante). Se sustituye por colores explícitos:
-
-- `.audience-card--teachers .audience-card__eyebrow` → `color: var(--ate-text-on-dark)` (#FFFFFF, ratio ~10.7:1 ✅)
-- `.audience-card--students .audience-card__eyebrow` → `color: var(--ate-text-on-dark)` (#FFFFFF, ratio ~5.2:1 ✅)
-- `.audience-card--families .audience-card__eyebrow` → `color: var(--ate-text-muted)` (#6B7280 sobre #F5F7FA, ratio ~4.8:1 ✅)
-
-La jerarquía visual del eyebrow respecto al título se mantiene a través de los recursos tipográficos ya presentes: `font-size: 12px`, `text-transform: uppercase`, `letter-spacing: 1.2px`. No se necesita dimming de color para establecer la jerarquía.
-
-### Alternativas descartadas
-- Usar `--ate-text-on-dark-soft` (#B8C8E8) en el eyebrow de dark cards: descartado porque sobre `#0768AC` (students) da solo ~3.2:1, insuficiente para texto de 12px.
-- Usar `color-mix(in srgb, var(--ate-text-on-dark) 82%, transparent)`: descartado porque la herramienta sigue viendo color semitransparente; no resuelve el problema de auditabilidad.
-- Vincular colores de fondo a `--primary/--secondary`: descartado definitivamente. Las tarjetas de audiencia representan la identidad institucional ATE y deben ser invariantes ante cambios de configuración del admin.
+| Students (peor gradiente) | `#0768AC` | `#FFFFFF` | ~5.2:1 | ✅ |
+| Families body | `#F5F7FA` | `#2C2C2C` | ~11.4:1 | ✅ |
+| Families eyebrow | `#F5F7FA` | `#6B7280` | ~4.8:1 | ✅ |
+| Families icon | `#F5F7FA` | `#0768AC` | ~5.2:1 | ✅ |
 
 ### Consecuencias
-- El Desarrollador aplica el cambio directamente en `asset/sass/components/home/_audience-rail.scss`.
 - `QA-013` pasa a estado Resuelto.
+- Cualquier componente `.audience-card` futuro debe declarar sus colores en el bloque de variante, no en reglas de elemento ni depender de herencia.
 
 ### Dependencias
 - Requiere: D1 (tokens `--ate-*`), decisión Orquestador [2026-05-07].

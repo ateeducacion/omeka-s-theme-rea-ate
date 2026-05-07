@@ -93,6 +93,17 @@
     background: var(--ate-color-brand-blue-dark);
     color: var(--ate-text-on-dark);
     border-color: color-mix(in srgb, var(--ate-color-brand-blue-dark) 65%, var(--ate-surface-canvas));
+
+    &:hover,
+    &:focus-visible,
+    &:visited {
+        color: var(--ate-text-on-dark);
+    }
+
+    .audience-card__eyebrow { color: var(--ate-text-on-dark); }
+    .audience-card__title   { color: var(--ate-text-on-dark); }
+    .audience-card__body    { color: var(--ate-text-on-dark); }
+    .audience-card__icon    { color: var(--ate-text-on-dark); }
 }
 
 .audience-card--students {
@@ -103,12 +114,34 @@
     );
     color: var(--ate-text-on-dark);
     border-color: color-mix(in srgb, var(--ate-color-brand-blue-mid) 45%, var(--ate-color-brand-blue-dark));
+
+    &:hover,
+    &:focus-visible,
+    &:visited {
+        color: var(--ate-text-on-dark);
+    }
+
+    .audience-card__eyebrow { color: var(--ate-text-on-dark); }
+    .audience-card__title   { color: var(--ate-text-on-dark); }
+    .audience-card__body    { color: var(--ate-text-on-dark); }
+    .audience-card__icon    { color: var(--ate-text-on-dark); }
 }
 
 .audience-card--families {
     background: var(--ate-surface-soft);
     color: var(--ate-text-body);
     border-color: var(--ate-hairline);
+
+    &:hover,
+    &:focus-visible,
+    &:visited {
+        color: var(--ate-text-body);
+    }
+
+    .audience-card__eyebrow { color: var(--ate-text-muted); }
+    .audience-card__title   { color: var(--ate-text-body); }
+    .audience-card__body    { color: var(--ate-text-body); }
+    .audience-card__icon    { color: var(--ate-color-brand-blue-mid); }
 }
 
 .audience-card__icon {
@@ -120,15 +153,6 @@
     font-weight: 700;
     letter-spacing: 1.2px;
     text-transform: uppercase;
-}
-
-.audience-card--teachers .audience-card__eyebrow,
-.audience-card--students .audience-card__eyebrow {
-    color: var(--ate-text-on-dark);
-}
-
-.audience-card--families .audience-card__eyebrow {
-    color: var(--ate-text-muted);
 }
 
 .audience-card__title {
@@ -143,8 +167,6 @@
     max-width: 32ch;
     font-size: 15px;
     line-height: 1.6;
-    color: currentColor;
-    opacity: 0.92;
 }
 
 .audience-card__cta {
