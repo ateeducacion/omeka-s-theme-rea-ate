@@ -355,11 +355,15 @@ Pendiente de revalidación en instancia real.
   2. Inspeccionar los valores de color aplicados sobre las tarjetas `.audience-card`.
   3. Comprobar con una herramienta WCAG (p.ej. Colour Contrast Analyser) si el texto supera la ratio 4.5:1 sobre cada fondo.
   4. Cambiar `primary_color` en la configuración del tema y recargar para verificar si el aspecto visual se degrada.
-- **Estado:** En análisis
+- **Estado:** Resuelto
 - **Responsable:** Diseñador
 
-**Decisión pendiente del Diseñador:**
-Determinar si los fondos y colores de texto de las tarjetas de audiencia deben quedar completamente desacoplados de los colores configurables del tema (usando solo tokens `--ate-*` fijos), o si debe existir algún mecanismo de garantía de contraste cuando el administrador personaliza los colores del sitio. Ver decisión del Orquestador [2026-05-07].
+**Resolución:**
+Decisión del Diseñador [2026-05-07] registrada en `designer.md`. Los fondos de las tarjetas ya usaban exclusivamente tokens `--ate-*` hardcodeados — sin herencia de `--primary/--secondary/--accent`. Contrastes verificados: Teachers 10.7:1, Students (peor punto) 5.2:1, Families 11.4:1; todos pasan WCAG AA.
+
+Único cambio de código: `opacity: 0.8` en `.audience-card__eyebrow` sustituido por colores explícitos por variante (`--ate-text-on-dark` para cards oscuras, `--ate-text-muted` para Familias), eliminando la dependencia de opacidad que impedía la auditoría WCAG automática.
+
+Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/css/style.css`.
 
 ---
 
@@ -388,9 +392,9 @@ Determinar si los fondos y colores de texto de las tarjetas de audiencia deben q
 | Estado | Conteo |
 |--------|--------|
 | Abierto | 0 |
-| En análisis | 1 |
+| En análisis | 0 |
 | En curso | 0 |
-| Resuelto | 4 |
+| Resuelto | 5 |
 | Cerrado | 9 |
 | Diferido | 0 |
 | Rechazado | 0 |

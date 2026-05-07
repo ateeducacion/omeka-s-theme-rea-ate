@@ -120,8 +120,15 @@
     font-weight: 700;
     letter-spacing: 1.2px;
     text-transform: uppercase;
-    color: currentColor;
-    opacity: 0.8;
+}
+
+.audience-card--teachers .audience-card__eyebrow,
+.audience-card--students .audience-card__eyebrow {
+    color: var(--ate-text-on-dark);
+}
+
+.audience-card--families .audience-card__eyebrow {
+    color: var(--ate-text-muted);
 }
 
 .audience-card__title {

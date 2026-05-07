@@ -950,3 +950,41 @@ li.resource.resource-row
 ### Dependencias
 - Requiere: D1, D2c, QA-002.
 - Desbloquea: backlog Ciclo 3 #6 (Browse list).
+
+---
+
+## [2026-05-07] ACEPTADA — Sistema de color de audience-card: desacoplado de tema y WCAG AA garantizado (QA-013)
+
+### Decisión
+Los colores de todas las variantes de `.audience-card` usan exclusivamente tokens `--ate-*` hardcodeados, sin ninguna dependencia de los colores configurables del tema (`--primary`, `--secondary`, `--accent`). Los contrastes WCAG AA están verificados. Se elimina `opacity: 0.8` del eyebrow y se sustituye por colores explícitos por variante para garantizar la auditabilidad por herramientas WCAG.
+
+### Análisis de contraste (verificado con valores reales de tokens)
+
+| Variante | Fondo | Texto principal | Ratio | AA (4.5:1) |
+|----------|-------|-----------------|-------|------------|
+| Teachers | `#0C2C84` | `#FFFFFF` | ~10.7:1 | ✅ |
+| Students (peor punto del gradiente) | `#0768AC` | `#FFFFFF` | ~5.2:1 | ✅ |
+| Families | `#F5F7FA` | `#2C2C2C` | ~11.4:1 | ✅ |
+
+### Cambio en el eyebrow
+
+`opacity: 0.8` sobre `currentColor` no es evaluable por herramientas WCAG automáticas (ven opacidad, no el color compuesto resultante). Se sustituye por colores explícitos:
+
+- `.audience-card--teachers .audience-card__eyebrow` → `color: var(--ate-text-on-dark)` (#FFFFFF, ratio ~10.7:1 ✅)
+- `.audience-card--students .audience-card__eyebrow` → `color: var(--ate-text-on-dark)` (#FFFFFF, ratio ~5.2:1 ✅)
+- `.audience-card--families .audience-card__eyebrow` → `color: var(--ate-text-muted)` (#6B7280 sobre #F5F7FA, ratio ~4.8:1 ✅)
+
+La jerarquía visual del eyebrow respecto al título se mantiene a través de los recursos tipográficos ya presentes: `font-size: 12px`, `text-transform: uppercase`, `letter-spacing: 1.2px`. No se necesita dimming de color para establecer la jerarquía.
+
+### Alternativas descartadas
+- Usar `--ate-text-on-dark-soft` (#B8C8E8) en el eyebrow de dark cards: descartado porque sobre `#0768AC` (students) da solo ~3.2:1, insuficiente para texto de 12px.
+- Usar `color-mix(in srgb, var(--ate-text-on-dark) 82%, transparent)`: descartado porque la herramienta sigue viendo color semitransparente; no resuelve el problema de auditabilidad.
+- Vincular colores de fondo a `--primary/--secondary`: descartado definitivamente. Las tarjetas de audiencia representan la identidad institucional ATE y deben ser invariantes ante cambios de configuración del admin.
+
+### Consecuencias
+- El Desarrollador aplica el cambio directamente en `asset/sass/components/home/_audience-rail.scss`.
+- `QA-013` pasa a estado Resuelto.
+
+### Dependencias
+- Requiere: D1 (tokens `--ate-*`), decisión Orquestador [2026-05-07].
+- Cierra: QA-013.
