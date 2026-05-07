@@ -480,6 +480,25 @@ Los badges se colocan siempre en la esquina superior izquierda de las tarjetas d
 - **`badge-family`** — Azul atlántico, texto blanco. "Familias"
 - **`badge-new`** — Verde grisáceo (`{colors.brand-sage}`), texto oscuro. "Novedad"
 
+### Chips de recuento
+
+Píldora compacta que muestra totales o rangos de resultados. Se usa en cualquier vista que liste elementos: colecciones, resultados de búsqueda, catálogo de recursos.
+
+**Estilo canónico** (fuente de verdad: `.item-set-browse-header__count`):
+
+| Propiedad | Token / valor |
+|-----------|--------------|
+| `font-size` | `12px` |
+| `font-weight` | `500` |
+| `color` | `var(--ate-text-muted)` |
+| `padding` | `4px 14px` |
+| `background` | `var(--ate-surface-soft)` |
+| `border` | `1px solid var(--ate-hairline-soft)` |
+| `border-radius` | `var(--ate-radius-pill)` |
+| Número destacado (`<strong>`) | `color: var(--ate-color-brand-blue-dark); font-weight: 700` |
+
+**Regla de aplicación:** cualquier chip que muestre un recuento de registros debe usar estos tokens, independientemente del contexto (colecciones, búsqueda, browse de recursos). No usar colores hardcoded ni variables Sass heredadas del tema base.
+
 ### CTA Band
 
 **`cta-band`** — Fondo amarillo solar, texto azul institucional, rounded `{rounded.2xl}`, padding `{spacing.xxxl}`. Título en `{typography.display-md}`, subtexto en `{typography.body-lg}`, botón primario azul. Ejemplo: "¿Buscas recursos para tu aula? Explora el catálogo completo."

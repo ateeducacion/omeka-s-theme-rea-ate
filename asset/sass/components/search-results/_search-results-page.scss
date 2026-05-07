@@ -336,13 +336,15 @@
 
                 // Always visible, prominent total/range counter
                 .row-count {
-                    display: inline-block;
-                    font-size: 0.88rem;
-                    font-weight: 600;
-                    color: $color__headings;
-                    padding: 0.25rem 0.65rem;
-                    background: $color__gray-95;
-                    border-radius: 999px;
+                    display: inline-flex;
+                    align-items: center;
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: var(--ate-text-muted);
+                    padding: 4px 14px;
+                    background: var(--ate-surface-soft);
+                    border: 1px solid var(--ate-hairline-soft);
+                    border-radius: var(--ate-radius-pill);
                     white-space: nowrap;
                     flex: 0 0 auto;
                     order: 1;
