@@ -373,13 +373,13 @@ Determinar si los fondos y colores de texto de las tarjetas de audiencia deben q
   1. En `Apariencia → Configurar tema`, dejar vacío el campo `Families card destination`.
   2. Recargar la home.
   3. Ver que la tarjeta de Familias sigue apareciendo (o que la rejilla queda desequilibrada si se suprime sin CSS adaptativo).
-- **Estado:** Abierto
+- **Estado:** Resuelto
 - **Responsable:** Desarrollador
 
-**Especificación:**
-- En `view/common/home-audience-rail.phtml`: filtrar el array `$cards` para excluir aquellas cuya URL sea cadena vacía tras `trim()`. Si no queda ninguna tarjeta, no renderizar la sección en absoluto.
-- El valor por defecto `item` en `theme.ini` actúa como URL válida; solo la cadena vacía o espacios en blanco se considera "deshabilitado".
-- En `asset/sass/components/home/_audience-rail.scss`: el `.audience-rail__grid` debe usar `grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))` (o equivalente) de forma que el grid pase a 1 o 2 columnas de forma natural sin media queries adicionales específicas para cada combinación.
+**Resolución:**
+- `view/common/home-audience-rail.phtml`: `$resolveAudienceUrl` devuelve `null` cuando el setting está vacío (antes devolvía la URL por defecto). El array `$cards` se filtra con `array_filter` para excluir entradas con `url === null`. Si el array queda vacío, se sale del partial con `return` sin renderizar nada.
+- `asset/sass/components/home/_audience-rail.scss`: `grid-template-columns` pasa de `repeat(2, minmax(0, 1fr))` a `repeat(auto-fit, minmax(260px, 1fr))`. Eliminado `grid-column: 1 / -1` de `.audience-card--families` para que fluya de forma natural en cualquier número de columnas.
+- `asset/css/style.css`: recompilado con `npm run build`.
 
 ---
 
@@ -387,10 +387,10 @@ Determinar si los fondos y colores de texto de las tarjetas de audiencia deben q
 
 | Estado | Conteo |
 |--------|--------|
-| Abierto | 1 |
+| Abierto | 0 |
 | En análisis | 1 |
 | En curso | 0 |
-| Resuelto | 3 |
+| Resuelto | 4 |
 | Cerrado | 9 |
 | Diferido | 0 |
 | Rechazado | 0 |

@@ -10,10 +10,10 @@ $defaultBrowseUrl = $this->url(
     true
 );
 
-$resolveAudienceUrl = function (string $settingName) use ($site, $defaultBrowseUrl): string {
+$resolveAudienceUrl = function (string $settingName) use ($site): ?string {
     $value = trim((string) $this->themeSetting($settingName));
     if ($value === '') {
-        return $defaultBrowseUrl;
+        return null;
     }
 
     if (preg_match('~^(https?:)?//~', $value) || str_starts_with($value, '/')) {
@@ -23,7 +23,7 @@ $resolveAudienceUrl = function (string $settingName) use ($site, $defaultBrowseU
     return rtrim($site->siteUrl(), '/') . '/' . ltrim($value, '/');
 };
 
-$cards = [
+$cards = array_filter([
     [
         'modifier' => 'teachers',
         'icon' => 'school',
@@ -51,7 +51,11 @@ $cards = [
         'cta' => $translate('Ver recursos'),
         'url' => $resolveAudienceUrl('home_audience_families_url'),
     ],
-];
+], fn($card) => $card['url'] !== null);
+
+if (empty($cards)) {
+    return;
+}
 ?>
 
 <section class="audience-rail" aria-labelledby="audience-rail-title">
