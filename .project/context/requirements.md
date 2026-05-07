@@ -2,7 +2,7 @@
 
 _Documento vivo. Se actualiza conforme se confirman o refinan requisitos._
 
-Última actualización: 2026-04-27 (dependencias de cliente confirmadas)
+Última actualización: 2026-05-07
 
 ---
 
@@ -27,6 +27,32 @@ _Documento vivo. Se actualiza conforme se confirman o refinan requisitos._
 - El repositorio aloja Recursos Educativos Abiertos descritos con un 
   modelo de metadatos basado en LRMI / Schema.org.
 - Ver `metadata_model.md` para el modelo de referencia.
+
+### Bloque de visibilidad institucional (cofinanciación de proyectos)
+
+Añadido: 2026-05-07.
+
+Cada ítem REA puede estar vinculado a un ítem de tipo `schema:Project` mediante la propiedad `schema:isPartOf`. Si el vínculo existe, la página de detalle del REA (`item/show`) debe mostrar un **bloque de visibilidad institucional** con los datos del proyecto.
+
+**Modelo de datos:**
+- `schema:isPartOf` en el ítem REA → enlaza a un ítem Omeka-S de tipo `schema:Project`
+- El ítem Project contiene:
+  - `schema:name` → nombre oficial del proyecto
+  - `schema:description` → texto legal de cofinanciación (ej: "Cofinanciado por la Unión Europea — FEDER 2021-2027")
+  - `schema:logo` → recurso media (imagen) adjunto al ítem Project
+  - `schema:url` → enlace a la ficha oficial del programa
+- Un REA pertenece a un proyecto como máximo. Algunos REA no tienen proyecto.
+
+**Requisito funcional:**
+- Si el REA tiene `schema:isPartOf` apuntando a un `schema:Project`, mostrar el bloque con logo, texto legal y enlace.
+- Si no hay proyecto vinculado, el bloque no se muestra.
+
+**Requisitos técnicos:**
+- Implementar como partial reutilizable `view/common/project-funding.phtml`
+- Recuperar el ítem Project navegando `schema:isPartOf` desde el ítem REA vía la API de Omeka-S
+- El logo se obtiene como media adjunta al ítem Project (`schema:logo`)
+- El bloque debe ser estilizable de forma independiente (clase raíz `.project-funding`)
+- Invocable desde `item/show.phtml` y cualquier otra plantilla futura
 
 ---
 

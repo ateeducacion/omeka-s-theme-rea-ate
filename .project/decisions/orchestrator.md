@@ -532,11 +532,12 @@ Los archivos de la estructura antigua de `skills/` (orchestrator.md, architect.m
 | Ficha de recurso (`item/show.phtml`) | ✅ |
 | Search results — chips + contador + A11y | ✅ |
 | Anclaje curricular (sidebar derecho) | ✅ |
-| Tarjetas de audiencia en home | ⏳ Ciclo 3 |
-| Browse de recursos — grid (`item/browse.phtml`) | ⏳ Ciclo 3 |
-| Browse de recursos — list (`item/browse.phtml`) | ⏳ Ciclo 3 |
-| Browse de colecciones (`item-set/browse.phtml`) | ✅ QA cerrado — corregidos filtros, contador, paginación y estados de filtro |
-| Mobile responsiveness (auditoría) | ⏳ Ciclo 3 |
+| Tarjetas de audiencia en home | ✅ Implementado — QA-013/014 resueltos |
+| Browse de recursos — grid (`item/browse.phtml`) | ✅ Implementado — QA-010/011/012 resueltos |
+| Browse de recursos — list (`item/browse.phtml`) | ✅ Implementado |
+| Browse de colecciones (`item-set/browse.phtml`) | ✅ QA cerrado |
+| Mobile responsiveness (auditoría) | ⏳ Ciclo 3 #3 |
+| Bloque cofinanciación (`project-funding.phtml`) | ⏳ Ciclo 3 #8 — pendiente Arquitecto + Diseñador |
 
 ---
 
@@ -604,5 +605,35 @@ El problema es una decisión de sistema visual, no una corrección técnica aisl
 **Dependencias:**
 - Requiere: `QA-014` abierto en `.project/docs/qa-findings.md`.
 - Desbloquea: corrección inmediata por el Desarrollador.
+
+**Agente:** orchestrator
+
+---
+
+## [2026-05-07] ACEPTADA — Apertura de nuevo requisito: bloque de cofinanciación en item/show (ciclo 3 #8)
+
+**Contexto:** Se registra un nuevo requisito funcional para `item/show`: mostrar un bloque institucional de visibilidad de proyecto cuando el REA tiene `schema:isPartOf` apuntando a un ítem de tipo `schema:Project`. El ítem Project contiene logo (`schema:logo` como media adjunta), texto legal (`schema:description`) y enlace (`schema:url`). El bloque debe ser un partial reutilizable (`project-funding.phtml`) e independiente del resto de la página. Requisito completo registrado en `.project/context/requirements.md`.
+
+**Decisión:** Abrir dos carriles de especificación en paralelo antes de cualquier implementación:
+
+- **Carril Arquitectura:** el Arquitecto debe registrar una decisión ACEPTADA sobre el patrón PHP para navegar ítems vinculados en Omeka-S 4.2 — cómo obtener el ítem `schema:Project` desde `schema:isPartOf`, cómo acceder a sus medias para el logo, qué helpers de plantilla usar (`$item->value()`, `$api->read()`, `linkedResources()` u otro), y si el partial debe hacer la llamada API directamente o recibir el ítem como parámetro.
+
+- **Carril Diseño:** el Diseñador debe registrar una decisión ACEPTADA con la especificación visual del bloque `.project-funding`: posición dentro del layout de `item/show` (sidebar derecho, sección inferior del main, etc.), tratamiento del logo (tamaño, aspect-ratio, fallback), layout del bloque (logo + texto + link), tokens ATE, responsive y estados cuando falta algún campo opcional.
+
+**Alternativas descartadas:**
+- Asignar directamente al Desarrollador sin pasar por Arquitecto: descartado. La navegación de ítems vinculados en Omeka-S tiene varios patrones posibles (`value()->valueResource()`, `$api->read()`, `linkedResources()`); elegir mal implica N+1 queries o código frágil.
+- Implementar inline en `show.phtml` sin partial: descartado. El requisito explicita reutilización desde cualquier plantilla.
+- Definir posición en el layout sin consultar al Diseñador: descartado. El sidebar derecho ya aloja el bloque de anclaje curricular; añadir el bloque de proyecto sin spec puede romper la jerarquía visual.
+
+**Consecuencias:**
+- El Arquitecto queda desbloqueado para decidir el patrón de acceso a `schema:isPartOf` y sus medias.
+- El Diseñador queda desbloqueado para especificar el bloque `.project-funding`.
+- El Desarrollador queda **bloqueado** hasta que existan decisiones ACEPTADAS de ambos.
+- El nuevo ítem queda registrado como **backlog Ciclo 3 #8** en la tabla de estado de implementación.
+
+**Dependencias:**
+- Requiere: nuevo requisito en `.project/context/requirements.md`.
+- Desbloquea: decisiones paralelas de Arquitecto y Diseñador.
+- Bloquea: implementación de `project-funding.phtml` e integración en `item/show`.
 
 **Agente:** orchestrator
