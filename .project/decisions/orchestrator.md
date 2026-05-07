@@ -558,3 +558,31 @@ Los archivos de la estructura antigua de `skills/` (orchestrator.md, architect.m
 - QA queda pendiente para un lote posterior que valide conjuntamente mobile + Home/Browse una vez implementados.
 
 **Agente:** orchestrator
+
+---
+
+## [2026-05-07] ACEPTADA — Se deriva al Diseñador la resolución de QA-013: contraste en tarjetas de audiencia
+
+**Contexto:** La sección de audiencias implementada en ciclo 3 (#1 Home) usa tokens ATE fijos para los fondos de las tarjetas principales (`--ate-color-brand-blue-dark`, gradiente con `--ate-color-brand-blue-mid`). El hallazgo QA-013 detecta que la combinación de colores no está garantizada frente a WCAG AA: los colores configurables del tema (`--primary`, `--secondary`, `--accent`) podrían afectar al texto o a otros elementos dentro de las tarjetas si el administrador los modifica, y el diseño actual no incluye ningún mecanismo de garantía de contraste.
+
+El problema es una decisión de sistema visual, no una corrección técnica aislada. Implica elegir entre:
+- Desacoplar completamente las tarjetas de audiencia de los colores configurables del tema (solo tokens `--ate-*` fijos, sin herencia de `--primary/secondary`).
+- Definir un subconjunto de propiedades que sí pueden ser configurables con restricciones explícitas de contraste.
+- Otra alternativa que el Diseñador considere más adecuada.
+
+**Decisión:** Derivar QA-013 al Diseñador para que registre una decisión ACEPTADA que fije el sistema de color de las tarjetas de audiencia y garantice el contraste WCAG AA en cualquier configuración del tema.
+
+**Alternativas descartadas:**
+- Corregir directamente en código sin decisión de diseño: descartado, repetiría el patrón que ya obligó a varias iteraciones en QA anteriores.
+- Bloquear la corrección hasta el próximo ciclo: descartado, es un hallazgo de severidad Alta sobre un componente ya en producción.
+
+**Consecuencias:**
+- El Diseñador queda desbloqueado para registrar la decisión sobre el sistema de color de `.audience-card`.
+- El Desarrollador no debe modificar los colores de las tarjetas de audiencia hasta que exista esa decisión ACEPTADA.
+- `QA-013` permanece en estado **En análisis** hasta que el Diseñador registre su decisión.
+
+**Dependencias:**
+- Requiere: `QA-013` abierto en `.project/docs/qa-findings.md`.
+- Desbloquea: corrección de QA-013 por el Desarrollador.
+
+**Agente:** orchestrator

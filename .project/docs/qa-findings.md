@@ -2,7 +2,7 @@
 
 _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-06
+Última actualización: 2026-05-07
 
 ---
 
@@ -342,12 +342,33 @@ Pendiente de revalidación en instancia real.
 
 ---
 
+---
+
+### QA-013 — Contraste no garantizado en tarjetas de audiencia (home)
+
+- **Fecha:** 2026-05-07
+- **Severidad:** Alta
+- **Área:** Home / Accesibilidad
+- **Hallazgo:** Las tarjetas `.audience-card--teachers` y `.audience-card--students` usan colores de fondo definidos con tokens ATE hardcoded (`--ate-color-brand-blue-dark`, gradiente con `--ate-color-brand-blue-mid`). Sin embargo, el color del texto dentro de las tarjetas podría depender o verse afectado por los colores configurables del tema en el admin de Omeka-S (`--primary`, `--secondary`, `--accent`), cuya combinación no está sometida a ninguna restricción de contraste. Además, el diseño actual no garantiza que una eventual reconfiguración de esos tokens por el administrador no rompa el contraste WCAG AA (4.5:1 para texto normal, 3:1 para texto grande).
+- **Reproducción mínima:**
+  1. Navegar a la home del sitio.
+  2. Inspeccionar los valores de color aplicados sobre las tarjetas `.audience-card`.
+  3. Comprobar con una herramienta WCAG (p.ej. Colour Contrast Analyser) si el texto supera la ratio 4.5:1 sobre cada fondo.
+  4. Cambiar `primary_color` en la configuración del tema y recargar para verificar si el aspecto visual se degrada.
+- **Estado:** En análisis
+- **Responsable:** Diseñador
+
+**Decisión pendiente del Diseñador:**
+Determinar si los fondos y colores de texto de las tarjetas de audiencia deben quedar completamente desacoplados de los colores configurables del tema (usando solo tokens `--ate-*` fijos), o si debe existir algún mecanismo de garantía de contraste cuando el administrador personaliza los colores del sitio. Ver decisión del Orquestador [2026-05-07].
+
+---
+
 ## Resumen rápido
 
 | Estado | Conteo |
 |--------|--------|
 | Abierto | 0 |
-| En análisis | 0 |
+| En análisis | 1 |
 | En curso | 0 |
 | Resuelto | 3 |
 | Cerrado | 9 |
