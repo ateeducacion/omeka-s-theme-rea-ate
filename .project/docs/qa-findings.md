@@ -2,7 +2,7 @@
 
 _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-07 (2)
+Última actualización: 2026-05-11 — Auditoría mobile ciclo 3 #3 (QA-015→QA-018)
 
 ---
 
@@ -387,12 +387,78 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
 
 ---
 
+### QA-015 — No hay formulario de búsqueda accesible en el header en mobile (< 1024px)
+
+- **Fecha:** 2026-05-11
+- **Severidad:** Alta
+- **Área:** Header / Mobile
+- **Hallazgo:** Tanto `.main-header__search-area--top` como `.main-header__search-area--compact` están condicionadas a `@media (min-width: $lg)` (1024px). En cualquier pantalla inferior (todo el rango mobile y tablet < 1024px), ninguna área de búsqueda es visible en el header. El menu-drawer tampoco incluye formulario de búsqueda. El usuario solo podría alcanzar la búsqueda navegando manualmente a la URL `/item/search` si el menú principal contiene ese enlace, lo que contradice el requisito funcional "barra de búsqueda siempre visible en header".
+- **Reproducción mínima:**
+  1. Abrir DevTools → modo responsive → viewport 375px.
+  2. Observar el header completo (top-bar + main-bar + drawer abierto).
+  3. Verificar que no hay ningún input de búsqueda visible en ninguno de los tres elementos.
+- **Estado:** En análisis
+- **Responsable:** Diseñador (debe especificar cómo integrar la búsqueda en el header mobile antes de implementar)
+
+---
+
+### QA-016 — `audience-rail__grid` puede provocar scroll horizontal en viewports de 320px (WCAG 1.4.10)
+
+- **Fecha:** 2026-05-11
+- **Severidad:** Media
+- **Área:** Home / Mobile / A11y
+- **Hallazgo:** `grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))` genera un track mínimo de 260px. En un viewport de 320px con el contenedor a `padding: 0 15px` y el rail a `padding: 20px 16px`, el ancho disponible para el grid es ~258px (< 260px mínimo). El grid fuerza el único track a 260px, causando 2px de desbordamiento horizontal. Viola WCAG 2.1 criterio 1.4.10 Reflow (sin scroll horizontal a 320px).
+- **Reproducción mínima:**
+  1. Abrir DevTools → responsive → 320px de ancho.
+  2. Navegar a la home con al menos una audience-card visible.
+  3. Verificar scroll horizontal o el grid desbordado.
+- **Estado:** Abierto
+- **Responsable:** Developer
+
+**Corrección propuesta:** Cambiar `minmax(260px, 1fr)` a `minmax(min(260px, 100%), 1fr)` o reducir el mínimo a `240px`.
+
+---
+
+### QA-017 — `.resource-link-info__panel` de 260px puede desbordar el viewport en mobile
+
+- **Fecha:** 2026-05-11
+- **Severidad:** Baja
+- **Área:** Item Show / Mobile
+- **Hallazgo:** El panel expandido de `.resource-link-info` tiene `position: absolute; width: 260px; left: 0; top: 100%` sin ningún mecanismo de contención lateral. En viewports < 375px, o cuando el pill que lo contiene está posicionado en la mitad derecha del viewport, el panel puede quedar parcialmente fuera del área visible, requiriendo scroll horizontal.
+- **Reproducción mínima:**
+  1. Abrir `item/show` de un recurso con valores `dcterms:relation` en DevTools a 360px.
+  2. Expandir el botón `+` de un pill de relación situado cerca del borde derecho.
+  3. Verificar si el panel se desborda a la derecha del viewport.
+- **Estado:** Abierto
+- **Responsable:** Developer
+
+**Corrección propuesta:** Añadir `max-width: min(260px, calc(100vw - 30px))` al panel expandido y usar `right: 0; left: auto` como alternativa cuando el pill está en la mitad derecha.
+
+---
+
+### QA-018 — `scroll-padding-top` y `body padding-top` no reflejan la altura real del header en mobile
+
+- **Fecha:** 2026-05-11
+- **Severidad:** Baja
+- **Área:** Header / Mobile
+- **Hallazgo:** `$header-min-height: 133px` se usa para `body { padding-top: 133px }` y `scroll-padding-top: 133px`. La altura real del header en mobile es: `top-bar` (min-height 80px) + `hr` (~17px, incluye el `margin-top: 1em` heredado de normalize.css) + `main-bar` (min-height 68px) ≈ 165px. El desfase (~32px) no produce clipping visible de contenido porque `#main-content { padding-top: 2rem }` lo compensa, pero sí causa que los enlaces de ancla internos queden parcialmente tapados por el header al hacer scroll.
+- **Reproducción mínima:**
+  1. Crear un enlace de ancla a una sección en medio de una página larga.
+  2. Activar el enlace en mobile (375px viewport).
+  3. Verificar si el destino del scroll queda visible o tapado por el header.
+- **Estado:** Abierto
+- **Responsable:** Developer
+
+**Corrección propuesta:** Medir la altura real del header en DevTools y actualizar `$header-min-height` a un valor que cubra el header completo en mobile (probablemente 152–165px). Comprobar también el efecto en `menu-drawer { top: $header-min-height }`.
+
+---
+
 ## Resumen rápido
 
 | Estado | Conteo |
 |--------|--------|
-| Abierto | 0 |
-| En análisis | 0 |
+| Abierto | 3 |
+| En análisis | 1 |
 | En curso | 0 |
 | Resuelto | 5 |
 | Cerrado | 9 |
