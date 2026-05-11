@@ -412,10 +412,10 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. Abrir DevTools → responsive → 320px de ancho.
   2. Navegar a la home con al menos una audience-card visible.
   3. Verificar scroll horizontal o el grid desbordado.
-- **Estado:** Abierto
+- **Estado:** Resuelto
 - **Responsable:** Developer
 
-**Corrección propuesta:** Cambiar `minmax(260px, 1fr)` a `minmax(min(260px, 100%), 1fr)` o reducir el mínimo a `240px`.
+**Resolución:** `grid-template-columns` cambiado de `repeat(auto-fit, minmax(260px, 1fr))` a `repeat(auto-fit, minmax(min(260px, 100%), 1fr))` en `_audience-rail.scss`. Con `min(260px, 100%)`, el track nunca supera el ancho disponible del contenedor, eliminando el overflow a cualquier viewport. CSS compilado.
 
 ---
 
@@ -429,10 +429,10 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. Abrir `item/show` de un recurso con valores `dcterms:relation` en DevTools a 360px.
   2. Expandir el botón `+` de un pill de relación situado cerca del borde derecho.
   3. Verificar si el panel se desborda a la derecha del viewport.
-- **Estado:** Abierto
+- **Estado:** Resuelto
 - **Responsable:** Developer
 
-**Corrección propuesta:** Añadir `max-width: min(260px, calc(100vw - 30px))` al panel expandido y usar `right: 0; left: auto` como alternativa cuando el pill está en la mitad derecha.
+**Resolución:** En `_item-show.scss`, el selector `.resource-link-info.expanded .resource-link-info__panel` pasa de `width: 260px; max-width: none` a `width: min(260px, calc(100vw - 30px))`. El panel nunca superará el viewport menos 30px de margen de seguridad, independientemente de la posición del pill en el flujo.
 
 ---
 
@@ -446,10 +446,12 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. Crear un enlace de ancla a una sección en medio de una página larga.
   2. Activar el enlace en mobile (375px viewport).
   3. Verificar si el destino del scroll queda visible o tapado por el header.
-- **Estado:** Abierto
+- **Estado:** Resuelto
 - **Responsable:** Developer
 
-**Corrección propuesta:** Medir la altura real del header en DevTools y actualizar `$header-min-height` a un valor que cubra el header completo en mobile (probablemente 152–165px). Comprobar también el efecto en `menu-drawer { top: $header-min-height }`.
+**Resolución:** Dos cambios aplicados:
+1. `_header.scss`: añadido `margin-top: 0` al selector `.main-header hr` para neutralizar el `margin: 1em 0` heredado de normalize.css — el hr separador ya no empuja el main-bar hacia abajo.
+2. `_layout.scss`: `$header-min-height` actualizado de `133px` a `149px` (top-bar 80px + hr 1px + main-bar 68px, border-box). `scroll-padding-top` y `body { padding-top }` ahora referencian la variable en lugar de valores literales, por lo que se actualizan solos.
 
 ---
 
@@ -457,10 +459,10 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
 
 | Estado | Conteo |
 |--------|--------|
-| Abierto | 3 |
+| Abierto | 0 |
 | En análisis | 1 |
 | En curso | 0 |
-| Resuelto | 5 |
+| Resuelto | 8 |
 | Cerrado | 9 |
 | Diferido | 0 |
 | Rechazado | 0 |

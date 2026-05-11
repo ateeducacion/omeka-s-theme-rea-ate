@@ -571,6 +571,27 @@ Los archivos de la estructura antigua de `skills/` (orchestrator.md, architect.m
 
 ---
 
+## [2026-05-11] ACEPTADA — QA-016/017/018 asignados al Desarrollador como lote de corrección técnica directa
+
+**Contexto:** Los tres hallazgos son correcciones técnicas sin ambigüedad de diseño: están completamente especificados en `qa-findings.md` con la corrección propuesta y no requieren decisión previa de Arquitecto ni Diseñador.
+
+| Hallazgo | Fix | Ficheros |
+|----------|-----|---------|
+| QA-016 — audience-rail overflow 2px a 320px (WCAG 1.4.10) | `minmax(260px,1fr)` → `minmax(min(260px,100%),1fr)` | `_audience-rail.scss` |
+| QA-017 — resource-link-info panel 260px sin containment | `width: 260px` → `width: min(260px, calc(100vw - 30px))` | `_item-show.scss` |
+| QA-018 — `$header-min-height: 133px` desalineado de la altura real del header | Añadir `margin-top: 0` a `.main-header hr`; actualizar variable a `149px` | `_header.scss`, `_layout.scss` |
+
+**Alternativas descartadas:** derivar al Diseñador — descartado porque la posición, tamaño y comportamiento de los componentes están ya definidos; son ajustes de CSS de una línea. Abrir decisiones de Arquitecto — descartado porque no hay ambigüedad de rutas, APIs ni PHP.
+
+**Consecuencias:**
+- El Desarrollador implementa el lote inmediatamente.
+- Tras compilar y commitear, los tres hallazgos pasan a estado Resuelto.
+- QA-015 sigue independiente, bloqueado por spec del Diseñador.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |

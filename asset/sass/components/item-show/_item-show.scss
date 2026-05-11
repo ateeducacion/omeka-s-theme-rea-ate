@@ -320,8 +320,7 @@ body.item.resource.show {
                 z-index: 10;
                 overflow: visible;
                 max-height: none;
-                max-width: none;
-                width: 260px;
+                width: min(260px, calc(100vw - 30px));
                 margin-top: 4px;
                 background: var(--ate-surface-card);
             }

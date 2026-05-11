@@ -3,11 +3,11 @@ html, body {
 }
 
 html {
-    scroll-padding-top: 133px;
+    scroll-padding-top: $header-min-height;
 }
 
 body {
-    padding-top: 133px;
+    padding-top: $header-min-height;
 
     @media (min-width: $lg) {
         padding-top: 160px;
