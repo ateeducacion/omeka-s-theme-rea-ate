@@ -500,11 +500,51 @@ Los archivos de la estructura antigua de `skills/` (orchestrator.md, architect.m
 
 ---
 
+## [2026-05-11] ACEPTADA — Auditoría mobile (#3) asignada al agente QA
+
+**Contexto:** El backlog del ciclo 3 incluye el ítem #3 "Auditoría de responsividad" sobre header (top-bar + main-bar), facetas, `item/show`, `item/browse` e `item-set/browse` en pantallas < 768px. La decisión de apertura de lote [2026-05-06] mencionaba al Desarrollador como ejecutor, pero la tarea es ante todo una auditoría de detección: enumerar qué rompe, clasificarlo por severidad y producir hallazgos trazables antes de tocar código. Eso es trabajo del agente QA.
+
+**Decisión:** Asignar la fase de auditoría mobile al **agente QA**. El Desarrollador intervendrá en una segunda fase, con los hallazgos ya documentados en `qa-findings.md`.
+
+**Scope de la auditoría:**
+
+| Vista | Elementos a revisar |
+|-------|---------------------|
+| Header | `top-bar` (logo + GobCan), `main-bar` (búsqueda + menú), transición sticky, menú hamburguesa si existe |
+| Facetas | Panel lateral de filtros — visibilidad y usabilidad en pantalla estrecha |
+| `item/show` | Hero, grid `item-body` dos columnas → apilado, sidebar derecho (anclaje + project-funding), bloque de medios |
+| `item/browse` | Toolbar (selector de orden + contador), grid de tarjetas, paginación |
+| `item-set/browse` | Barra de filtros, grid de colecciones, contador |
+| Home | `.audience-rail` con 1, 2 o 3 tarjetas |
+
+**Breakpoints mínimos a verificar:** < 480px (móvil pequeño), 480–767px (móvil grande/tablet pequeña).
+
+**Criterios de severidad a aplicar:** los mismos de `qa-findings.md` (Bloqueante / Alta / Media / Baja).
+
+**Alternativas descartadas:**
+- Asignar directamente al Desarrollador: descartado. Sin hallazgos documentados, el Desarrollador no tiene criterio de priorización ni base para decidir qué correcciones son necesarias y cuáles no.
+- Unificar auditoría y corrección en una sola sesión sin documentar: descartado. Ya ocurrió en iteraciones anteriores y generó retrabajo.
+
+**Consecuencias:**
+- El agente QA abre la auditoría y registra hallazgos en `qa-findings.md` (IDs continuando desde QA-014).
+- Si algún hallazgo requiere decisión de diseño (ej. cómo reorganizar el header en móvil) → el QA lo escala al Diseñador antes de asignarlo al Desarrollador.
+- Si algún hallazgo requiere decisión arquitectónica (ej. breakpoint condicional en PHP) → lo escala al Arquitecto.
+- Las correcciones sin ambigüedad van directamente al Desarrollador.
+- La release `v0.3.0` queda supeditada al cierre de esta auditoría y sus correcciones.
+
+**Dependencias:**
+- Requiere: bloque de cofinanciación (#8) commiteado [2026-05-11].
+- Desbloquea: correcciones mobile por el Desarrollador y posterior release `v0.3.0`.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | CICLO 3 — QA CERRADO / BACKLOG ABIERTO |
+| Fase | CICLO 3 — AUDITORÍA MOBILE EN CURSO |
 | Dependencias cliente | ✅ Todas confirmadas |
 | Decisiones Arquitecto | ✅ `architecture.md` actualizado con mapeo QA-006 |
 | Decisiones Diseñador | ✅ Incluyen las directrices validadas para `QA-002` y `QA-003` |
@@ -536,8 +576,8 @@ Los archivos de la estructura antigua de `skills/` (orchestrator.md, architect.m
 | Browse de recursos — grid (`item/browse.phtml`) | ✅ Implementado — QA-010/011/012 resueltos |
 | Browse de recursos — list (`item/browse.phtml`) | ✅ Implementado |
 | Browse de colecciones (`item-set/browse.phtml`) | ✅ QA cerrado |
-| Mobile responsiveness (auditoría) | ⏳ Ciclo 3 #3 |
-| Bloque cofinanciación (`project-funding.phtml`) | ⏳ Ciclo 3 #8 — pendiente Arquitecto + Diseñador |
+| Mobile responsiveness (auditoría) | 🔵 Ciclo 3 #3 — QA en curso |
+| Bloque cofinanciación (`project-funding.phtml`) | ✅ Ciclo 3 #8 — implementado [2026-05-11] |
 
 ---
 
