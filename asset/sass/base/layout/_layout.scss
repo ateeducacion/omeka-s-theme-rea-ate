@@ -3,7 +3,11 @@ html, body {
 }
 
 html {
-    scroll-padding-top: $header-min-height;
+    scroll-padding-top: $header-min-height; // mobile: 199px (incluye fila búsqueda)
+
+    @media (min-width: $lg) {
+        scroll-padding-top: 160px; // desktop: sin fila búsqueda mobile
+    }
 }
 
 body {

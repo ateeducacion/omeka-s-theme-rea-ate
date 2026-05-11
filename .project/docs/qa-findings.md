@@ -2,7 +2,7 @@
 
 _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-11 — Auditoría mobile ciclo 3 #3 (QA-015→QA-018)
+Última actualización: 2026-05-11 — QA-015→018 resueltos; pendiente revalidación en instancia real
 
 ---
 
@@ -397,8 +397,14 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. Abrir DevTools → modo responsive → viewport 375px.
   2. Observar el header completo (top-bar + main-bar + drawer abierto).
   3. Verificar que no hay ningún input de búsqueda visible en ninguno de los tres elementos.
-- **Estado:** En análisis
-- **Responsable:** Diseñador — derivado por el Orquestador [2026-05-11]. Debe registrar decisión ACEPTADA con la spec visual antes de que el Desarrollador toque `_header.scss` / `header.phtml` / `menu-drawer.phtml`.
+- **Estado:** Resuelto
+- **Responsable:** Developer
+
+**Resolución:** Decisión del Diseñador [2026-05-11] ACEPTADA: segunda fila de búsqueda siempre visible en la main-bar mobile (< 1024px). Implementación:
+- `view/common/header.phtml`: añadido `<div class="main-header__search-area--mobile">` con `common/search-form` dentro de `.main-header__main-bar`, antes del área compact existente.
+- `_header.scss`: bloque `&__search-area--mobile` con `display: block; width: 100%; padding-bottom: 10px` en mobile, `display: none` en ≥ 1024px. Override `form { width: 100% }` e `input { background: --ate-surface-soft; placeholder: --ate-text-muted }`.
+- `_layout.scss`: `$header-min-height` 149px → 199px; `scroll-padding-top` con override de 160px en desktop.
+CSS compilado. Pendiente de revalidación en instancia real.
 
 ---
 
@@ -460,9 +466,9 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
 | Estado | Conteo |
 |--------|--------|
 | Abierto | 0 |
-| En análisis | 1 |
+| En análisis | 0 |
 | En curso | 0 |
-| Resuelto | 8 |
+| Resuelto | 9 |
 | Cerrado | 9 |
 | Diferido | 0 |
 | Rechazado | 0 |

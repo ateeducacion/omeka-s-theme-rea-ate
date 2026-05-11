@@ -1199,3 +1199,98 @@ Color explícito en cada descendiente dentro del bloque de variante, con especif
 ### Dependencias
 - Requiere: D1 (tokens `--ate-*`), decisión Orquestador [2026-05-07].
 - Cierra: QA-013.
+
+---
+
+## [2026-05-11] ACEPTADA — Búsqueda mobile en header: segunda fila de la main-bar siempre visible (QA-015)
+
+### Decisión
+
+La búsqueda mobile se integra como **segunda fila de la main-bar**, siempre visible en pantallas < 1024px. No se usa lupa activable, ni drawer, ni overlay: la barra de búsqueda aparece directamente en el header sin acción del usuario, cumpliendo el requisito "siempre visible".
+
+### Justificación
+
+Este repositorio educativo tiene la búsqueda como acción primaria para los tres perfiles de audiencia. Una solución activada por icono (lupa, toggle) añade una fricción injustificada y convierte la búsqueda en una funcionalidad "descubrible", no visible. El menu-drawer está reservado para navegación estructural, no para herramientas de búsqueda. La segunda fila es el patrón correcto: siempre presente, ningún paso adicional, funciona sin JS.
+
+### Anatomía del header mobile
+
+```
+┌────────────────────────────────────────┐  ← top-bar (80px, colapsa al scroll)
+│  [Logo GobCan]                [user]   │
+├────────────────────────────────────────┤  ← hr separador (1px)
+│  [Site title]              [hamburger] │  ← main-bar fila 1 (68px)
+│  [🔍  Buscar recursos…     ] [Buscar]  │  ← main-bar fila 2 (48px, NUEVA)
+└─────────── borde amarillo ─────────────┘
+```
+
+En el estado `.header-scrolled` (top-bar colapsada):
+```
+│  [Site title]              [hamburger] │  ← sticky
+│  [🔍  Buscar recursos…     ] [Buscar]  │  ← sticky, siempre visible
+└─────────── borde amarillo ─────────────┘
+```
+
+### Especificación del componente `.main-header__search-area--mobile`
+
+**Posición en el DOM:** dentro de `.main-header__main-bar`, después de `<nav>` y antes de `__search-area--compact`.
+
+**Comportamiento CSS:**
+- Visible en `< $lg` (< 1024px): `display: block; width: 100%;`
+- Oculto en `≥ $lg`: `display: none;`
+- En `.header-scrolled`: permanece visible (está dentro de la main-bar sticky, sin cambio).
+
+**Formulario — reutiliza `common/search-form`**, mismo que `__search-area--top`. No requiere partial nuevo.
+
+**Styling del wrapper `.main-header__search-area--mobile`:**
+
+| Propiedad | Valor |
+|-----------|-------|
+| `display` | `block` (mobile) / `none` (desktop) |
+| `width` | `100%` |
+| `padding` | `0 0 10px` (espacio inferior antes del borde amarillo) |
+
+**Styling del formulario heredado de `__search-form` (sin cambios en el partial):**
+
+| Propiedad | Valor |
+|-----------|-------|
+| `form width` en mobile | `100%` (override del `width: 280px` de desktop) |
+| `input height` | `40px` (igual que desktop) |
+| `border` | `1.5px solid var(--ate-hairline)` |
+| `border-radius` | `var(--ate-radius-pill)` |
+| `font-size` | `14px` |
+| `placeholder` | Mantener el texto actual del partial |
+| `button` | Mantener icono lupa existente (Font Awesome `\f002`) |
+
+**Ajuste de `$header-min-height`:**
+Con la fila de búsqueda (40px input + 10px padding-bottom = 50px añadidos a la main-bar), el header mobile pasa a:
+- top-bar: 80px + hr: 1px + main-bar fila1 (68px) + main-bar fila2 (50px) = **199px**
+
+El Desarrollador debe actualizar `$header-min-height` de `149px` a `199px` en `_layout.scss` y verificar el efecto en `.menu-drawer { top }`.
+
+### Contraste y accesibilidad
+
+- El campo de búsqueda tiene `border: 1.5px solid var(--ate-hairline)` (`#DDE3EC`). Ratio sobre blanco: 1.5:1 — inferior al mínimo WCAG 3:1 para bordes de UI (criterio 1.4.11). **Compensar con un `background: var(--ate-surface-soft)` en el input mobile** para incrementar el contraste visual del campo sin cambiar el color del borde global.
+- El placeholder `var(--ate-text-muted-light)` (`#9CA3AF`) sobre `--ate-surface-soft` (`#F5F7FA`): ratio 2.6:1. Los placeholders están exentos del criterio 1.4.3 (no son texto funcional), pero se recomienda `var(--ate-text-muted)` (`#6B7280`) → ratio 4.6:1 para mayor legibilidad.
+- El botón de búsqueda es un `<button>` con texto visualmente oculto (font-size: 0) y pseudo-elemento FA — correcto para accesibilidad si el `<button>` tiene `aria-label` (verificar en el partial `common/search-form`).
+
+### Variantes descartadas
+
+- **Lupa toggle → overlay fullscreen**: requiere JS y convierte la búsqueda en funcionalidad oculta. Descartado.
+- **Búsqueda dentro del drawer**: no es "siempre visible". Descartado.
+- **Compactar site-title y poner búsqueda inline en fila 1**: reduce el site-title a un icono, rompe la identidad institucional en mobile. Descartado.
+- **Ocultar top-bar siempre en mobile** para recuperar altura: la top-bar muestra el logo GobCan institucional. Descartado.
+
+### Consecuencias
+
+**Desarrollador — ficheros a modificar:**
+
+| Fichero | Cambio |
+|---------|--------|
+| `view/common/header.phtml` | Añadir `<div class="main-header__search-area main-header__search-area--mobile">` con el partial de búsqueda, dentro de `.main-header__main-bar`, tras `<nav>` |
+| `asset/sass/components/header/_header.scss` | Añadir bloque `&__search-area--mobile` con `display: block` en mobile, `display: none` en `≥ $lg`; override `form { width: 100%; }` e `input { background: var(--ate-surface-soft); }` |
+| `asset/sass/abstracts/variables/_layout.scss` | Actualizar `$header-min-height` de `149px` a `199px` |
+
+### Dependencias
+- Requiere: QA-015 en análisis + decisión Orquestador [2026-05-11].
+- Desbloquea: implementación del Desarrollador.
+- Cierra: QA-015.

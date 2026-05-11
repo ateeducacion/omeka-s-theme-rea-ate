@@ -124,7 +124,7 @@
         transition: font-size 0.25s ease;
     }
 
-    // Search in top-bar (desktop, hidden on mobile)
+    // Search in top-bar (desktop only)
     &__search-area--top {
         display: none;
 
@@ -136,7 +136,30 @@
         }
     }
 
-    // Compact search in main-bar (hidden until .header-scrolled)
+    // Search in main-bar second row (mobile only, always visible)
+    &__search-area--mobile {
+        display: block;
+        width: 100%;
+        padding-bottom: 10px;
+
+        @media (min-width: $lg) {
+            display: none;
+        }
+
+        .main-header__search-form form {
+            width: 100%;
+        }
+
+        .main-header__search-form input {
+            background-color: var(--ate-surface-soft);
+
+            &::placeholder {
+                color: var(--ate-text-muted);
+            }
+        }
+    }
+
+    // Compact search in main-bar (desktop, hidden until .header-scrolled)
     &__search-area--compact {
         display: none;
         flex-shrink: 0;
