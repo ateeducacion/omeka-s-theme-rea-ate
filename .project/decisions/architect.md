@@ -426,3 +426,110 @@ Desde arquitectura, la decisión relevante no es solo qué propiedades leer, sin
 - Requiere: hallazgo `QA-001` documentado en `.project/docs/qa-findings.md`.
 - Requiere: validación del Orquestador para pasar de `PROPUESTA` a `ACEPTADA`.
 - Desbloquea: corrección del filtro de `item-set/browse` por el Desarrollador una vez validada.
+
+---
+
+## [2026-05-07] ACEPTADA — Patrón PHP para `project-funding.phtml` (backlog #8)
+
+### Decisión
+El bloque de visibilidad institucional se implementa como partial `view/common/project-funding.phtml`. La navegación `schema:isPartOf` → ítem Project y la resolución del logo se realizan en `item/show.phtml` antes de invocar el partial. El partial recibe el `$projectItem` ya resuelto y es pasivo: solo renderiza o no renderiza.
+
+### Contexto
+El requisito #8 exige mostrar en `item/show` un bloque con logo, texto legal y enlace del proyecto cofinanciador cuando el REA tiene `schema:isPartOf` apuntando a un ítem de clase `schema:Project`. El patrón debe:
+- No añadir coste de API si no hay proyecto vinculado.
+- Ser reutilizable desde otras plantillas futuras.
+- Ser compatible con Omeka-S 4.2 sin registrar servicios PHP propios.
+- Resolver el logo desde el modelo de datos documentado (`schema:logo` como media adjunta).
+
+### Patrón adoptado
+
+**1. Resolución en `item/show.phtml` (caller)**
+
+```php
+$projectItem = null;
+$isPartOfValue = $item->value('schema:isPartOf');
+if ($isPartOfValue && $isPartOfValue->type() === 'resource') {
+    $projectItem = $isPartOfValue->valueResource(); // ItemRepresentation
+}
+echo $this->partial('common/project-funding', ['projectItem' => $projectItem]);
+```
+
+La comprobación `$value->type() === 'resource'` es necesaria: `schema:isPartOf` podría tener un valor URI o literal si el dato fue importado con inconsistencias; solo los valores de tipo `resource` tienen `valueResource()`.
+
+**2. Lógica interna de `project-funding.phtml`**
+
+```php
+/** @var \Omeka\Api\Representation\ItemRepresentation|null $projectItem */
+if (!isset($projectItem) || $projectItem === null) { return; }
+
+$name        = $projectItem->value('schema:name');
+$description = $projectItem->value('schema:description');
+$url         = $projectItem->value('schema:url');
+
+// Logo: schema:logo como recurso vinculado (Media) con fallback a primaryMedia
+$logoUrl = null;
+$logoValue = $projectItem->value('schema:logo');
+if ($logoValue && $logoValue->type() === 'resource') {
+    $logoMedia = $logoValue->valueResource();
+    $logoUrl   = $logoMedia->thumbnailUrl('large') ?: $logoMedia->originalUrl();
+}
+if (!$logoUrl) {
+    $primary = $projectItem->primaryMedia();
+    if ($primary) {
+        $logoUrl = $primary->thumbnailUrl('large') ?: $primary->originalUrl();
+    }
+}
+
+if (!$name && !$logoUrl) { return; } // sin datos mínimos, no renderizar
+```
+
+**Resolución del logo — dos capas:**
+
+| Capa | Condición | Método |
+|------|-----------|--------|
+| Principal | `schema:logo` es un valor de tipo `resource` que apunta a un Media | `$logoValue->valueResource()->thumbnailUrl('large')` |
+| Fallback | No hay `schema:logo` vinculado o es URI/literal | `$projectItem->primaryMedia()->thumbnailUrl('large')` |
+
+El fallback con `primaryMedia()` cubre el caso habitual en Omeka-S donde el logo se sube como adjunto del ítem sin propiedad vinculante explícita, evitando que el bloque quede en blanco por una diferencia de carga editorial.
+
+**3. Estructura HTML mínima requerida (a completar por el Diseñador)**
+
+```html
+<aside class="project-funding">
+    <!-- logo si $logoUrl -->
+    <!-- $name como heading o texto -->
+    <!-- $description como párrafo legal -->
+    <!-- $url como enlace externo -->
+</aside>
+```
+
+La clase raíz es `.project-funding`. El Diseñador decide la composición interna.
+
+### Alternativas descartadas
+
+- **Resolver `schema:isPartOf` dentro del partial**: el partial quedaría acoplado a `$item` (el REA), que no siempre estará disponible en futuros callers. Descartado.
+- **Inyectar solo el ID del proyecto y llamar a `$api->read()` en el partial**: introduce una llamada de API dentro de un partial, invisible para el caller. Descartado.
+- **Usar `$item->linkedResources('schema:isPartOf')` (si existiese)**: no existe como método público en `ItemRepresentation` en Omeka-S 4.2. El patrón `$value->valueResource()` es el único oficial.
+- **Resolver logo solo por URI en `schema:logo`**: el modelo documenta media adjunta, no URI externa. Usar URI como único mecanismo obligaría al editor a gestionar URLs externas para un activo que ya está en el repositorio.
+
+### Consecuencias
+
+**Desarrollador — ficheros a crear:**
+
+| Fichero | Acción |
+|---------|--------|
+| `view/common/project-funding.phtml` | Crear — partial con lógica de resolución de logo y renderizado condicional |
+
+**Desarrollador — ficheros a modificar:**
+
+| Fichero | Cambio |
+|---------|--------|
+| `view/omeka/site/item/show.phtml` | Añadir resolución de `schema:isPartOf` e invocación del partial antes del cierre de la zona de metadatos |
+
+**Diseñador — spec visual requerida antes de implementar.**
+El partial no se implementa hasta tener la decisión del Diseñador sobre layout, tokens y posición en `item/show`.
+
+### Dependencias
+- Desbloquea: decisión del Diseñador (spec visual del bloque `.project-funding`).
+- Bloqueado por: decisión del Diseñador — Desarrollador no implementa hasta tenerla.
+- Sin dependencias de módulos externos; usa únicamente la API de representación estándar de Omeka-S 4.2.

@@ -23,6 +23,12 @@ $rightSidebarHasBlocks = $rightSidebarBlockContent->hasBlocks();
 
 $plugins    = $this->getHelperPluginManager();
 $breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : null;
+
+$projectItem = null;
+$isPartOfValue = $item->value('schema:isPartOf');
+if ($isPartOfValue && $isPartOfValue->type() === 'resource') {
+    $projectItem = $isPartOfValue->valueResource();
+}
 ?>
 
 <?php if ($breadcrumbs): ?>
@@ -92,10 +98,12 @@ $breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : nul
 
 <?php $this->trigger('view.show.before'); ?>
 
-<?php if ($mainHasBlocks || $leftSidebarHasBlocks || $rightSidebarHasBlocks):
+<?php
+$hasRightSidebar = $rightSidebarHasBlocks || ($projectItem !== null);
+if ($mainHasBlocks || $leftSidebarHasBlocks || $hasRightSidebar):
     $bodyClass = 'item-body';
-    if ($leftSidebarHasBlocks)  $bodyClass .= ' item-body--has-left';
-    if ($rightSidebarHasBlocks) $bodyClass .= ' item-body--has-right';
+    if ($leftSidebarHasBlocks) $bodyClass .= ' item-body--has-left';
+    if ($hasRightSidebar)      $bodyClass .= ' item-body--has-right';
 ?>
 <div class="<?php echo $bodyClass; ?>">
 
@@ -111,10 +119,10 @@ $breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : nul
     </main>
     <?php endif; ?>
 
-    <?php if ($rightSidebarHasBlocks): ?>
+    <?php if ($hasRightSidebar): ?>
     <aside class="item-sidebar item-sidebar--right">
-        <?php echo $rightSidebarBlockContent->getBlocks(); ?>
-
+        <?php if ($rightSidebarHasBlocks): echo $rightSidebarBlockContent->getBlocks(); endif; ?>
+        <?php echo $this->partial('common/project-funding', ['projectItem' => $projectItem]); ?>
     </aside>
     <?php endif; ?>
 

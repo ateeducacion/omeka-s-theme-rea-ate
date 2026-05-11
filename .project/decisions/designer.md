@@ -953,6 +953,206 @@ li.resource.resource-row
 
 ---
 
+## [2026-05-07] ACEPTADA — Spec visual del bloque de cofinanciación `.project-funding` (backlog #8)
+
+### Decisión
+El bloque `.project-funding` se renderiza como una banda institucional discreta al pie de la ficha del recurso, **después de `view.show.after`**, con layout horizontal logo + texto en desktop y apilado en mobile. No compite con el contenido del recurso ni con los bloques de metadatos: actúa como acreditación legal, análogo a los bloques de cofinanciación que aparecen al final de materiales FEDER.
+
+### Posición en `item/show`
+- Ubicación: inmediatamente después de `<?php $this->trigger('view.show.after'); ?>`, antes del modal de admin.
+- El bloque ocupa el ancho del contenedor de página (`max-width` del layout general), separado del cuerpo del recurso por un margen superior que lo sitúa claramente fuera del área de contenido.
+- Se renderiza solo si `$projectItem !== null` (lógica PHP en el partial, no en `show.phtml`).
+
+### Anatomía HTML
+
+```html
+<aside class="project-funding" aria-label="Proyecto cofinanciador">
+    <div class="project-funding__logo-wrap">
+        <img class="project-funding__logo" src="…" alt="«schema:name»">
+    </div>
+    <div class="project-funding__content">
+        <span class="project-funding__name"><!-- schema:name --></span>
+        <p class="project-funding__description"><!-- schema:description --></p>
+        <a class="project-funding__link" href="…" target="_blank" rel="noopener">
+            Más información
+            <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+        </a>
+    </div>
+</aside>
+```
+
+- El `<aside>` lleva `aria-label` para que lectores de pantalla lo identifiquen como región informativa.
+- El `alt` de la imagen usa `schema:name` del proyecto; si no hay logo, el wrap no se renderiza.
+- `schema:url` abre en nueva pestaña con `rel="noopener"` — es un enlace a ficha oficial externa.
+- Si `schema:url` está vacío, el enlace no se renderiza (el partial PHP lo controla).
+
+### Especificación visual
+
+**Layout desktop (≥ 600px):**
+
+```
+┌────────────────────────────────────────────────────────┐
+│ ▌ [LOGO]   Nombre del proyecto                         │
+│            Cofinanciado por la Unión Europea — FEDER…  │
+│            Más información ↗                           │
+└────────────────────────────────────────────────────────┘
+```
+
+- Flex horizontal: logo a la izquierda, contenido de texto a la derecha.
+- Acento visual: borde izquierdo de `4px solid var(--ate-color-brand-blue-mid)` — mismo patrón que el acento del título en `.audience-rail__title`.
+- Logo: `max-height: 56px; max-width: 180px; object-fit: contain`. Sin distorsión de aspecto.
+- Gap entre logo y texto: `20px`.
+
+**Layout mobile (< 600px):**
+- Apilado vertical: logo arriba (alineado a la izquierda), texto debajo.
+- Logo: `max-height: 44px`.
+
+**Tokens por elemento:**
+
+| Elemento | Propiedad | Token | Valor |
+|----------|-----------|-------|-------|
+| `.project-funding` | `background` | `--ate-surface-soft` | `#F5F7FA` |
+| `.project-funding` | `border` | `1px solid var(--ate-hairline-soft)` | `#EEF0F4` |
+| `.project-funding` | `border-left` | `4px solid var(--ate-color-brand-blue-mid)` | `#0768AC` |
+| `.project-funding` | `border-radius` | `var(--ate-radius-lg)` | `14px` |
+| `.project-funding` | `padding` | `20px 24px` | — |
+| `.project-funding` | `margin-top` | `40px` | — |
+| `.project-funding__name` | `color` | `--ate-color-brand-blue-dark` | `#0C2C84` |
+| `.project-funding__name` | `font-size` | `13px` | — |
+| `.project-funding__name` | `font-weight` | `600` | — |
+| `.project-funding__description` | `color` | `--ate-text-muted` | `#6B7280` |
+| `.project-funding__description` | `font-size` | `13px` | — |
+| `.project-funding__description` | `line-height` | `1.5` | — |
+| `.project-funding__link` | `color` | `--ate-color-brand-blue-mid` | `#0768AC` |
+| `.project-funding__link` | `font-size` | `12px` | — |
+| `.project-funding__link` | `font-weight` | `600` | — |
+| `.project-funding__link icon` | `font-size` | `14px` | — |
+
+**Tipografía:** Inter en todos los elementos. Sin titulares grandes — el bloque es informativo, no editorial.
+
+**Estado sin logo:**
+- Si no hay logo resuelto, el `.project-funding__logo-wrap` no se renderiza.
+- El `.project-funding__content` ocupa el ancho completo del bloque.
+
+**Estado sin `schema:url`:**
+- `.project-funding__link` no se renderiza. El partial PHP no genera el `<a>`.
+
+**WCAG AA:**
+- Name `#0C2C84` sobre `#F5F7FA`: ratio ~11.5:1 ✅
+- Description `#6B7280` sobre `#F5F7FA`: ratio ~4.8:1 ✅ (texto pequeño, 13px — cumple AA para texto normal)
+- Link `#0768AC` sobre `#F5F7FA`: ratio ~5.2:1 ✅
+
+### Archivo Sass a crear
+`asset/sass/components/item-show/_project-funding.scss`
+
+Importar desde `asset/sass/components/_components.scss` en la sección de item-show.
+
+### Alternativas consideradas
+
+- **Banner ancho con imagen de fondo del logo**: descartado. Demasiado protagonismo para un elemento legal; además el logo puede ser muy variable en proporción.
+- **Bloque dentro de la región de bloques del recurso (como `resourcePageBlocks`)**: descartado. El requisito es que aparezca en todos los REA con proyecto sin configuración por ítem; insertarlo como partial post-contenido es más predecible y no depende de la configuración de "Configure resource pages".
+- **Posición al inicio de la ficha (antes del `item-body`)**: descartado. La cofinanciación es información complementaria-legal, no atributo editorial del recurso. Debe ir al pie para no competir con el contenido principal.
+- **Usar `--ate-color-brand-yellow` como acento izquierdo**: evaluado pero descartado. El amarillo en bandas de borde estrecho no tiene contraste WCAG suficiente sobre fondo blanco/suave. El `--ate-color-brand-blue-mid` es el correcto para acentos de borde.
+
+### Consecuencias
+- El Desarrollador crea `project-funding.phtml` y `_project-funding.scss` siguiendo esta spec.
+- Se integra en `show.phtml` después de `view.show.after`.
+- El bloque `.project-funding` hereda la tipografía Inter del tema sin declaración adicional.
+- No se requiere cambio en `config/theme.ini` — el vínculo es dato del ítem, no configuración del tema.
+
+### Dependencias
+- Requiere: decisión Arquitecto [2026-05-07] para el patrón PHP.
+- Desbloquea: implementación del Desarrollador (backlog #8).
+
+---
+
+## [2026-05-08] ACEPTADA — Ajustes visuales header main-bar y footer
+
+### Decisión
+Dos cambios menores de identidad visual aplicados directamente al código:
+
+**1. Main-bar del header: sin cambio**
+- El fondo del `__main-bar` queda en blanco (`$color__white`, heredado de `.main-header`). El cambio a `--ate-text-on-dark-soft` fue aplicado y revertido en la misma sesión.
+
+**2. Footer: borde superior eliminado**
+- `border-top: 4px solid var(--ate-color-brand-yellow)` eliminado de `.main-footer`.
+- El footer arranca directamente con el fondo oscuro (`$color__secondary`) sin línea de separación. La transición de contenido a footer es más suave.
+
+### Archivos modificados
+- `asset/sass/components/header/_header.scss` — `background-color` en `&__main-bar`
+- `asset/sass/components/footer/_footer.scss` — eliminada línea `border-top`
+
+### Dependencias
+- Sin dependencias. Cambios de estilo aislados, no afectan estructura HTML ni PHP.
+
+---
+
+## [2026-05-07] ACEPTADA — Revisión visual `.project-funding`: sidebar compacto (backlog #8)
+
+**Supera: spec inicial [2026-05-07] para `.project-funding`**
+
+### Decisión
+El bloque de cofinanciación se reubica en el **sidebar derecho**, debajo del bloque anclaje curricular, y adopta un lenguaje visual compacto de panel de sidebar — no de banda de pie de página.
+
+### Posición
+- Dentro de `<aside class="item-sidebar item-sidebar--right">`, después de `$rightSidebarBlockContent->getBlocks()`.
+- Si el ítem tiene `$projectItem` pero no tiene otros bloques de sidebar, se crea igualmente el sidebar derecho (el grid `item-body--has-right` se activa).
+- Se elimina la llamada autónoma tras `view.show.after`.
+
+### Anatomía
+
+```
+┌──────────────────────────────────┐  ← border-top: 3px brand-blue-mid
+│ PROYECTO COFINANCIADOR           │  ← eyebrow 10px uppercase, muted
+│ ────────────────────────────── │  ← hairline divider
+│        [  L O G O  ]            │  ← logo centrado, max-height 40px
+│ ────────────────────────────── │  ← hairline divider (solo si hay logo)
+│ Nombre del proyecto              │  ← 13px, weight 600, brand-blue-dark
+│ Descripción legal cofinancia-   │  ← 12px, muted, line-clamp 4
+│ ción FEDER 2021-2027...         │
+│                    Más info ↗   │  ← 12px, weight 600, brand-blue-mid
+└──────────────────────────────────┘
+```
+
+### Tokens
+
+| Elemento | Propiedad | Token/Valor |
+|----------|-----------|-------------|
+| `.project-funding` | `background` | `var(--ate-surface-canvas)` |
+| `.project-funding` | `border` | `1px solid var(--ate-hairline)` |
+| `.project-funding` | `border-top` | `3px solid var(--ate-color-brand-blue-mid)` |
+| `.project-funding` | `border-radius` | `var(--ate-radius-lg)` |
+| `.project-funding` | `padding` | `16px 18px` |
+| `.project-funding__eyebrow` | `color` | `var(--ate-text-muted)` |
+| `.project-funding__eyebrow` | `font-size` | `10px` |
+| `.project-funding__logo-area` | `text-align` | `center` |
+| `.project-funding__logo` | `max-height` | `40px` |
+| `.project-funding__logo` | `max-width` | `160px` |
+| `.project-funding__name` | `color` | `var(--ate-color-brand-blue-dark)` |
+| `.project-funding__name` | `font-size` | `13px; weight 600` |
+| `.project-funding__description` | `color` | `var(--ate-text-muted)` |
+| `.project-funding__description` | `font-size` | `12px` |
+| `.project-funding__link` | `color` | `var(--ate-color-brand-blue-mid)` |
+| `.project-funding__link` | `font-size` | `12px; weight 600` |
+| `.project-funding__link` | `display` | `block; text-align: right` |
+
+### Diferenciación respecto al anclaje curricular
+
+| Atributo | Anclaje curricular | Project funding |
+|----------|--------------------|-----------------|
+| Fondo | `surface-soft` | `surface-canvas` (blanco) |
+| Acento | `border-left` amarillo | `border-top` azul-mid |
+| Propósito visual | Metadatos curriculares | Acreditación institucional |
+
+### Consecuencias
+- Desarrollador actualiza `_project-funding.scss` completo.
+- Desarrollador mueve la llamada al partial en `show.phtml` al interior del sidebar derecho y actualiza la condición de `$bodyClass`.
+
+### Dependencias
+- Cierra: spec inicial `.project-funding` [2026-05-07].
+
+---
+
 ## [2026-05-07] ACEPTADA — Sistema de color de audience-card: desacoplado de tema y WCAG AA garantizado (QA-013)
 
 ### Decisión

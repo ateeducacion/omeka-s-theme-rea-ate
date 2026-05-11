@@ -1,0 +1,86 @@
+.project-funding {
+    background: var(--ate-surface-canvas);
+    border: 1px solid var(--ate-hairline);
+    border-top: 3px solid var(--ate-color-brand-blue-mid);
+    border-radius: var(--ate-radius-lg);
+    padding: 16px 18px;
+    overflow: hidden;
+}
+
+.project-funding__eyebrow {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--ate-text-muted);
+    margin-bottom: 12px;
+}
+
+.project-funding__logo-area {
+    text-align: center;
+    padding: 10px 0 14px;
+    border-top: 1px solid var(--ate-hairline-soft);
+    border-bottom: 1px solid var(--ate-hairline-soft);
+    margin-bottom: 14px;
+}
+
+.project-funding__logo {
+    display: inline-block;
+    max-height: 40px;
+    max-width: 160px;
+    width: auto;
+    object-fit: contain;
+}
+
+.project-funding__content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.project-funding__name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ate-color-brand-blue-dark);
+}
+
+.project-funding__description {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ate-text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.project-funding__link {
+    display: block;
+    text-align: right;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ate-color-brand-blue-mid);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+        text-decoration: underline;
+        color: var(--ate-color-brand-blue-mid);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--ate-color-brand-blue-mid);
+        outline-offset: 2px;
+        border-radius: var(--ate-radius-xs);
+    }
+
+    .material-symbols-outlined {
+        font-size: 13px;
+        vertical-align: middle;
+    }
+}

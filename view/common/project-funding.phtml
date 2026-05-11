@@ -1,0 +1,73 @@
+<?php
+/** @var \Omeka\Api\Representation\ItemRepresentation|null $projectItem */
+if (!isset($projectItem) || $projectItem === null) { return; }
+
+$escape    = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+
+$name        = $projectItem->value('schema:name');
+$description = $projectItem->value('schema:description');
+$url         = $projectItem->value('schema:url');
+
+$logoUrl = null;
+$logoValue = $projectItem->value('schema:logo');
+if ($logoValue) {
+    if ($logoValue->type() === 'resource') {
+        $logoMedia = $logoValue->valueResource();
+        $logoUrl   = $logoMedia->thumbnailUrl('large') ?: $logoMedia->originalUrl();
+    } elseif ($logoValue->uri()) {
+        $logoUrl = $logoValue->uri();
+    } else {
+        $raw = trim((string) $logoValue);
+        if ($raw !== '') { $logoUrl = $raw; }
+    }
+}
+if (!$logoUrl) {
+    $primary = $projectItem->primaryMedia();
+    if ($primary) {
+        $logoUrl = $primary->thumbnailUrl('large') ?: $primary->originalUrl();
+    }
+}
+
+if (!$name && !$logoUrl) { return; }
+
+$urlStr = '';
+if ($url) {
+    $urlStr = $url->uri() ?: trim((string) $url);
+}
+?>
+<aside class="project-funding" aria-label="<?php echo $escape($translate('Proyecto cofinanciador')); ?>">
+
+    <span class="project-funding__eyebrow">
+        <?php echo $escape($translate('Proyecto cofinanciador')); ?>
+    </span>
+
+    <?php if ($logoUrl): ?>
+    <div class="project-funding__logo-area">
+        <img class="project-funding__logo"
+             src="<?php echo $escape($logoUrl); ?>"
+             alt="<?php echo $escape($name ? (string) $name : $translate('Logo del proyecto')); ?>">
+    </div>
+    <?php endif; ?>
+
+    <div class="project-funding__content">
+        <?php if ($name): ?>
+        <span class="project-funding__name"><?php echo $escape((string) $name); ?></span>
+        <?php endif; ?>
+
+        <?php if ($description): ?>
+        <p class="project-funding__description"><?php echo $escape((string) $description); ?></p>
+        <?php endif; ?>
+
+        <?php if ($urlStr): ?>
+        <a class="project-funding__link"
+           href="<?php echo $escape($urlStr); ?>"
+           target="_blank"
+           rel="noopener noreferrer">
+            <?php echo $escape($translate('Más información')); ?>
+            <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+        </a>
+        <?php endif; ?>
+    </div>
+
+</aside>
