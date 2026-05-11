@@ -540,6 +540,37 @@ Los archivos de la estructura antigua de `skills/` (orchestrator.md, architect.m
 
 ---
 
+## [2026-05-11] ACEPTADA — QA-015 derivado al Diseñador: spec de búsqueda en header mobile
+
+**Contexto:** La auditoría mobile del ciclo 3 (#3) detectó en QA-015 que ningún formulario de búsqueda es accesible en el header en pantallas < 1024px. Ambas áreas (`__search-area--top` y `__search-area--compact`) están condicionadas a `@media (min-width: $lg)`, y el menu-drawer no incluye campo de búsqueda. El requisito del proyecto establece "barra de búsqueda siempre visible en header". Resolver este hallazgo requiere una decisión visual antes de tocar el código: el Diseñador debe decidir dónde y cómo aparece la búsqueda en el header mobile (inline en la main-bar, dentro del drawer, como capa superpuesta al activar un icono, u otro patrón).
+
+**Decisión:** Derivar QA-015 al agente Diseñador para que registre una decisión ACEPTADA con la spec visual de la búsqueda en mobile. El Desarrollador no toca `_header.scss`, `header.phtml` ni `menu-drawer.phtml` en relación con este hallazgo hasta que exista esa spec.
+
+**Preguntas que el Diseñador debe resolver:**
+
+1. **Posición:** ¿La búsqueda aparece siempre visible en la main-bar de mobile (desplazando o comprimiendo el site-title), o se activa mediante un icono de lupa que expande un campo?
+2. **Drawer:** ¿Se añade también la búsqueda al menu-drawer para coherencia con el flujo de navegación mobile?
+3. **Compatibilidad con el sticky:** El header en mobile colapsa la top-bar al hacer scroll. ¿Debe la búsqueda seguir visible en el estado compacto (main-bar sticky)?
+4. **Tokens y sizing:** Tamaño mínimo del área de búsqueda en mobile, altura del input, y si se reutiliza el componente `__search-form` existente o se crea una variante compacta.
+
+**Alternativas descartadas:**
+- Asignar directamente al Desarrollador sin spec: descartado. La posición de la búsqueda en mobile afecta el layout visual del header y puede requerir reorganizar el site-title, el hamburger toggle y el border amarillo de la main-bar. Decidirlo en implementación repetiría el patrón que generó retrabajo en ciclos anteriores.
+- Usar el Advanced Search link del top-bar como sustituto: descartado. El top-bar ya no es visible en el estado scrolled; el link no es un formulario funcional; y no cumple el requisito de "siempre visible".
+
+**Consecuencias:**
+- El Diseñador queda desbloqueado para registrar la decisión sobre búsqueda mobile.
+- El Desarrollador no toca los ficheros de header relacionados con este hallazgo hasta que exista la decisión del Diseñador.
+- Los hallazgos QA-016, QA-017 y QA-018 son correcciones técnicas directas y pueden asignarse al Desarrollador en paralelo sin esperar a la spec del Diseñador.
+
+**Dependencias:**
+- Requiere: QA-015 en estado "En análisis" en `qa-findings.md`.
+- Desbloquea: spec visual del Diseñador → implementación del Desarrollador.
+- No bloquea: corrección de QA-016, QA-017, QA-018 por el Desarrollador.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |

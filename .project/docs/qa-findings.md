@@ -398,7 +398,7 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   2. Observar el header completo (top-bar + main-bar + drawer abierto).
   3. Verificar que no hay ningún input de búsqueda visible en ninguno de los tres elementos.
 - **Estado:** En análisis
-- **Responsable:** Diseñador (debe especificar cómo integrar la búsqueda en el header mobile antes de implementar)
+- **Responsable:** Diseñador — derivado por el Orquestador [2026-05-11]. Debe registrar decisión ACEPTADA con la spec visual antes de que el Desarrollador toque `_header.scss` / `header.phtml` / `menu-drawer.phtml`.
 
 ---
 
