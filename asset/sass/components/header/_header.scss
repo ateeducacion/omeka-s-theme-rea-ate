@@ -63,9 +63,10 @@
 
     &__main-bar {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        column-gap: 16px;
         min-height: 68px;
         border-bottom: 3px solid var(--ate-color-brand-yellow);
         overflow: visible;

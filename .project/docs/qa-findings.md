@@ -2,7 +2,7 @@
 
 _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-11 — QA-015→018 resueltos; pendiente revalidación en instancia real
+Última actualización: 2026-05-12 — Ronda de revalidación en instancia real abierta (QA-010→018 en revisión)
 
 ---
 
@@ -404,7 +404,10 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
 - `view/common/header.phtml`: añadido `<div class="main-header__search-area--mobile">` con `common/search-form` dentro de `.main-header__main-bar`, antes del área compact existente.
 - `_header.scss`: bloque `&__search-area--mobile` con `display: block; width: 100%; padding-bottom: 10px` en mobile, `display: none` en ≥ 1024px. Override `form { width: 100% }` e `input { background: --ate-surface-soft; placeholder: --ate-text-muted }`.
 - `_layout.scss`: `$header-min-height` 149px → 199px; `scroll-padding-top` con override de 160px en desktop.
-CSS compilado. Pendiente de revalidación en instancia real.
+
+**Bug detectado en revalidación [2026-05-12]:** la búsqueda se solapaba con el nombre del sitio porque `.main-header__main-bar` usaba `gap: 16px` sin `flex-wrap`, por lo que el área de búsqueda participaba como un flex-item más en la fila del título en lugar de saltar a una segunda fila.
+
+**Corrección [2026-05-12]:** `_header.scss` — añadido `flex-wrap: wrap` a `__main-bar` y cambiado `gap: 16px` a `column-gap: 16px` (elimina el row-gap no deseado entre filas). Con `width: 100%` ya presente en `__search-area--mobile`, el área salta correctamente a la segunda fila. CSS recompilado.
 
 ---
 

@@ -592,6 +592,30 @@ Los archivos de la estructura antigua de `skills/` (orchestrator.md, architect.m
 
 ---
 
+## [2026-05-12] ACEPTADA — Apertura de la ronda de revalidación en instancia real: QA mobile
+
+**Contexto:** La auditoría mobile del ciclo 3 (#3) produjo los hallazgos QA-015→018. Todos han sido corregidos por el Desarrollador y están en estado **Resuelto**, junto con QA-010→014 (browse de recursos y home), que también llevan estado Resuelto sin haberse revalidado en instancia real. Esta ronda cierra el ciclo de validación antes de publicar `v0.3.0`.
+
+**Decisión:** Abrir la ronda de **revalidación en instancia real** con el siguiente alcance y asignación:
+
+| Lote | Hallazgos | Prioridad | Breakpoints |
+|------|-----------|-----------|-------------|
+| Mobile core | QA-015, QA-016, QA-018 | 1ª | 375px, 320px |
+| Item show mobile | QA-017 | 1ª | 375px, 360px |
+| Browse y home | QA-010, QA-011, QA-012, QA-013, QA-014 | 2ª | Desktop + 375px |
+
+Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado** en `qa-findings.md`. Si es **FAIL** → se abre nuevo hallazgo o se reactiva el existente con prioridad según severidad.
+
+**Criterio de salida:** todos los hallazgos QA-010→018 en estado Cerrado → desbloquear release `v0.3.0`.
+
+**Alternativas descartadas:**
+- Marcar Cerrado sin validación real: descartado. El patrón `Resuelto → Cerrado` requiere siempre revalidación en instancia.
+- Incluir también vistas aún no auditadas (home hero, footer): descartado. Ampliar el alcance antes de cerrar lo pendiente aplaza la release sin beneficio claro.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
