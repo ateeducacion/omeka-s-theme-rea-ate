@@ -2,7 +2,7 @@
 
 _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-18 — Ciclo 4: hallazgos visuales QA-019→023 registrados y cerrados
+Última actualización: 2026-05-18 — Ciclo 4: hallazgos QA-024→025 registrados y cerrados
 
 ---
 
@@ -563,6 +563,44 @@ Cambios en `asset/sass/components/item-show/_item-show.scss`:
 
 ---
 
+### QA-024 — Chips de `educationalLevel` y `schema:about` en search results no tienen diseño de pill
+
+- **Fecha:** 2026-05-18
+- **Severidad:** Media
+- **Área:** Search results
+- **Hallazgo:** Las propiedades `lrmi:educationalLevel` y `schema:about` en los cards de resultados se renderizaban como texto gris sin borde ni fondo, flotando libremente junto al badge de tipo de recurso. Sin contorno visual, los valores no se percibían como etiquetas/chips, y el texto no tenía contención clara: sin max-width ni truncado, valores largos podían desbordar o romper el layout del `.property-meta-group`.
+- **Reproducción mínima:**
+  1. Navegar a los resultados de búsqueda con recursos que tengan `lrmi:educationalLevel` y `schema:about`.
+  2. Observar el grupo de metadata en la parte derecha de la tarjeta.
+  3. Ver que nivel y temática aparecen como texto plano sin chip, sin contorno coherente con el badge de tipo de recurso.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`asset/sass/components/search-results/_search-results-list.scss`:
+- Los dos selectores se fusionan en una regla combinada.
+- `dd` pasa a `display: inline-block` con `padding: 2px 8px`, `background: var(--ate-surface-soft)`, `border: 1px solid var(--ate-hairline)`, `border-radius: var(--ate-radius-pill)`, `font-size: 0.75rem`, `color: var(--ate-text-muted)` y `max-width: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap`.
+- En `@media (max-width: $md)` se añade reset explícito (`display: inline; padding: 0; background: none; border: none; ...`) para que en mobile los valores se muestren como texto inline junto a la etiqueta `dt`, sin chip.
+
+---
+
+### QA-025 — `resource-link-info` añade botón `+` en links cuyo icono está oculto por CSS
+
+- **Fecha:** 2026-05-18
+- **Severidad:** Baja
+- **Área:** Search results / Item show
+- **Hallazgo:** El script `resource-link-info.js` ya comprobaba que el enlace contuviese un `span.o-icon-items` antes de añadir el botón `+`. Sin embargo, no comprobaba si ese span era visible. En contextos donde el CSS oculta el icono (`display: none`), como en los chips de `lrmi:educationalLevel` y `schema:about` en search results, el botón `+` se inyectaba igualmente aunque el icono no fuera visible. El resultado era un `+` flotante sin contexto visual en el chip.
+- **Reproducción mínima:**
+  1. En search results, inspeccionar el HTML de un chip `lrmi:educationalLevel` que apunte a un recurso enlazado.
+  2. Ver que el script añade `<button class="resource-link-info__btn">+</button>` aunque `.o-icon-items` tenga `display: none`.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`asset/js/resource-link-info.js`: tras confirmar que `span.o-icon-items` existe, se añade `if (getComputedStyle(iconSpan).display === 'none') return`. El botón `+` solo se inyecta cuando el icono de recurso es realmente visible.
+
+---
+
 ## Resumen rápido
 
 | Estado | Conteo |
@@ -571,6 +609,6 @@ Cambios en `asset/sass/components/item-show/_item-show.scss`:
 | En análisis | 0 |
 | En curso | 0 |
 | Resuelto | 0 |
-| Cerrado | 23 |
+| Cerrado | 25 |
 | Diferido | 0 |
 | Rechazado | 0 |

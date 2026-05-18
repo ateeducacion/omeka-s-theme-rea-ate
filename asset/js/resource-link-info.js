@@ -8,8 +8,12 @@ const resourceLinkInfoScript = () => {
         // Skip if already processed
         if (link.closest('.resource-link-info')) return;
 
-        // Only process links that contain the o-icon-items span (Omeka-S linked resource icon)
-        if (!link.querySelector('span.o-icon-items')) return;
+        // Only process links that have a *visible* o-icon-items span.
+        // CSS may hide the icon in certain contexts (e.g. search-results metadata chips);
+        // adding the '+' button there would be invisible noise.
+        const iconSpan = link.querySelector('span.o-icon-items');
+        if (!iconSpan) return;
+        if (getComputedStyle(iconSpan).display === 'none') return;
 
         const href = link.getAttribute('href');
         if (!href) return;

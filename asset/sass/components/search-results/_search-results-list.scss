@@ -113,30 +113,28 @@ ul.resource-list.search-result-list.list {
             }
         }
 
-        .property[data-term="lrmi:educationalLevel"] {
-            font-size: 0.85rem;
-            color: $color__gray-40;
-
-            .metadata-search-link,
-            .resource-link {
-                color: inherit;
-                text-decoration: none;
-                white-space: nowrap;
-                &:hover { color: $color__link; }
-            }
-            .o-icon-items { display: none; }
-        }
-
+        .property[data-term="lrmi:educationalLevel"],
         .property[data-term="schema:about"] {
-            font-size: 0.85rem;
-            color: $color__gray-40;
+            dd {
+                display: inline-block;
+                padding: 2px 8px;
+                background: var(--ate-surface-soft);
+                border: 1px solid var(--ate-hairline);
+                border-radius: var(--ate-radius-pill);
+                font-size: 0.75rem;
+                color: var(--ate-text-muted);
+                max-width: 18ch;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                vertical-align: middle;
+            }
 
             .metadata-search-link,
             .resource-link {
                 color: inherit;
                 text-decoration: none;
-                white-space: nowrap;
-                &:hover { color: $color__link; }
+                &:hover { color: var(--ate-text-body); }
             }
             .o-icon-items { display: none; }
         }
@@ -269,6 +267,21 @@ ul.resource-list.search-result-list.list {
 
             .property[data-term="lrmi:learningResourceType"] dt {
                 display: none;
+            }
+
+            // Reset chip appearance — in mobile these properties show inline with dt label
+            .property[data-term="lrmi:educationalLevel"] dd,
+            .property[data-term="schema:about"] dd {
+                display: inline;
+                padding: 0;
+                background: none;
+                border: none;
+                border-radius: 0;
+                max-width: none;
+                overflow: visible;
+                text-overflow: clip;
+                white-space: normal;
+                color: $color__gray-40;
             }
 
             .property[data-term="lrmi:teaches"],
