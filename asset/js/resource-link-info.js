@@ -38,7 +38,6 @@ const resourceLinkInfoScript = () => {
         // Create the accordion panel
         const panel = document.createElement('div');
         panel.className = 'resource-link-info__panel';
-        panel.style.maxHeight = '0';
         panel.innerHTML = '<span class="resource-link-info__loading">…</span>';
         wrapper.appendChild(panel);
 
@@ -48,7 +47,6 @@ const resourceLinkInfoScript = () => {
             const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
 
             if (isExpanded) {
-                panel.style.maxHeight = '0';
                 toggleBtn.setAttribute('aria-expanded', 'false');
                 toggleBtn.textContent = '+';
                 wrapper.classList.remove('expanded');
@@ -59,15 +57,12 @@ const resourceLinkInfoScript = () => {
                     group.querySelectorAll('.resource-link-info.expanded').forEach(function (other) {
                         if (other === wrapper) return;
                         const otherBtn = other.querySelector('.resource-link-info__btn');
-                        const otherPanel = other.querySelector('.resource-link-info__panel');
-                        otherPanel.style.maxHeight = '0';
                         otherBtn.setAttribute('aria-expanded', 'false');
                         otherBtn.textContent = '+';
                         other.classList.remove('expanded');
                     });
                 }
 
-                panel.style.maxHeight = panel.scrollHeight + 'px';
                 toggleBtn.setAttribute('aria-expanded', 'true');
                 toggleBtn.textContent = '−';
                 wrapper.classList.add('expanded');
@@ -87,12 +82,9 @@ const resourceLinkInfoScript = () => {
                                 html = '<p class="resource-link-info__empty">—</p>';
                             }
                             panel.innerHTML = html;
-                            // Recalculate height after content is set
-                            panel.style.maxHeight = panel.scrollHeight + 'px';
                         })
                         .catch(function () {
                             panel.innerHTML = '<p class="resource-link-info__error">Error loading info.</p>';
-                            panel.style.maxHeight = panel.scrollHeight + 'px';
                         });
                 }
             }

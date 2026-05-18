@@ -16,9 +16,21 @@
     // that case, so we match the <dt> label instead. Keys must be lowercase.
     const LABEL_TO_TERM = {
         'learning resource type': 'lrmi:learningResourceType',
-        'learningresourcetype': 'lrmi:learningResourceType',
+        'learningresourcetype':   'lrmi:learningResourceType',
         'tipo de recurso educativo': 'lrmi:learningResourceType',
-        'tipo de recurso': 'lrmi:learningResourceType',
+        'tipo de recurso':        'lrmi:learningResourceType',
+
+        'educational level':      'lrmi:educationalLevel',
+        'educationallevel':       'lrmi:educationalLevel',
+        'nivel educativo':        'lrmi:educationalLevel',
+        'nivel':                  'lrmi:educationalLevel',
+
+        'about':                  'schema:about',
+        'temática':               'schema:about',
+        'tematica':               'schema:about',
+        'tema':                   'schema:about',
+        'subject':                'dcterms:subject',
+        'materia':                'dcterms:subject',
     };
 
     function extractTerm(href) {
@@ -136,6 +148,26 @@
             });
     }
 
+    function groupMetaProperties(item) {
+        if (item.querySelector('.property-meta-group')) return;
+
+        var dl = item.querySelector('dl.properties');
+        if (!dl) return;
+
+        var terms = ['lrmi:educationalLevel', 'schema:about', 'lrmi:learningResourceType'];
+        var props = terms.map(function (t) {
+            return dl.querySelector('.property[data-term="' + t + '"]');
+        }).filter(Boolean);
+        if (props.length === 0) return;
+
+        // Insert directly into <li> so it is a first-class flex item,
+        // avoiding any display:contents chain issues with dl.properties.
+        var group = document.createElement('div');
+        group.className = 'property-meta-group';
+        item.appendChild(group);
+        props.forEach(function (p) { group.appendChild(p); });
+    }
+
     function processItem(item) {
         const properties = item.querySelectorAll('dl.properties > .property');
         properties.forEach(function (prop) {
@@ -160,6 +192,8 @@
                 groupNoBreak(prop);
             }
         });
+
+        groupMetaProperties(item);
     }
 
     function processList(list) {

@@ -225,6 +225,11 @@ body.item.resource.show {
     // ── dcterms:relation — valores como pill tags ───────────
     .property.dcterms-relation {
 
+        // Mobile: containing block for the absolute panel (pill is too narrow)
+        @media (max-width: #{$lg - 1}) {
+            position: relative;
+        }
+
         > dt {
             display: block !important;
             font-size: 10px;
@@ -251,7 +256,11 @@ body.item.resource.show {
             border: 1px solid var(--ate-hairline);
             border-radius: var(--ate-radius-pill);
             transition: background 0.15s ease, border-color 0.15s ease;
-            position: relative; // anchoring for the absolute panel
+            position: relative; // anchoring for the absolute panel (desktop)
+
+            @media (max-width: #{$lg - 1}) {
+                position: static; // release: .property.dcterms-relation becomes the block
+            }
 
             &:hover {
                 background: var(--ate-surface-yellow);
@@ -320,9 +329,16 @@ body.item.resource.show {
                 z-index: 10;
                 overflow: visible;
                 max-height: none;
-                width: min(260px, calc(100vw - 30px));
+                max-width: none;
+                width: 260px;
                 margin-top: 4px;
                 background: var(--ate-surface-card);
+
+                @media (max-width: #{$lg - 1}) {
+                    // Containing block is .property.dcterms-relation (~full content width)
+                    // left: 0 and top: 100% work correctly — no overflow possible
+                    width: min(260px, 100%);
+                }
             }
         }
 

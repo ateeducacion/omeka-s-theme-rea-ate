@@ -70,7 +70,7 @@ ul.resource-list.search-result-list.list {
         // ---- Title ----
         .resource-heading {
             order: 2;
-            flex: 1 1 40%;
+            flex: 1 1 0;
             min-width: 0;
             padding: 0;
             margin: 0;
@@ -91,57 +91,54 @@ ul.resource-list.search-result-list.list {
             }
         }
 
-        // ---- Compact metadata columns (right side of the top row) ----
-        .property[data-term="lrmi:educationalLevel"],
-        .property[data-term="schema:about"],
-        .property[data-term="lrmi:learningResourceType"] {
-            margin: 0;
+        // ---- Compact metadata group (nivel · temática · tipo recurso) ----
+        // JS wraps the three properties in .property-meta-group so they
+        // behave as a single flex item — either all fit on the title row or
+        // all wrap together.
+        .property-meta-group {
+            order: 3;
+            flex: 0 0 auto;
+            margin-left: auto;
+            align-self: center;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem 0.75rem;
 
-            dt { display: none; }
-            dd {
+            > .property {
                 margin: 0;
-                padding: 0;
+                flex: 0 0 auto;
+
+                dt { display: none; }
+                dd { margin: 0; padding: 0; }
             }
         }
 
         .property[data-term="lrmi:educationalLevel"] {
-            order: 3;
-            flex: 0 0 auto;
-            align-self: center;
-            text-align: right;
             font-size: 0.85rem;
             color: $color__gray-40;
 
-            .metadata-search-link {
+            .metadata-search-link,
+            .resource-link {
                 color: inherit;
                 text-decoration: none;
                 white-space: nowrap;
                 &:hover { color: $color__link; }
             }
+            .o-icon-items { display: none; }
         }
 
         .property[data-term="schema:about"] {
-            order: 4;
-            flex: 0 0 auto;
-            align-self: center;
-            text-align: right;
             font-size: 0.85rem;
             color: $color__gray-40;
 
-            .metadata-search-link {
+            .metadata-search-link,
+            .resource-link {
                 color: inherit;
                 text-decoration: none;
                 white-space: nowrap;
                 &:hover { color: $color__link; }
             }
-        }
-
-        .property[data-term="lrmi:learningResourceType"] {
-            order: 5;
-            flex: 0 0 auto;
-            align-self: center;
-            margin-left: auto;
-            text-align: right;
+            .o-icon-items { display: none; }
         }
 
         // ---- Description (full-width row) ----
@@ -251,23 +248,23 @@ ul.resource-list.search-result-list.list {
                 flex: 1 1 calc(100% - 72px);
             }
 
-            .property[data-term="lrmi:educationalLevel"],
-            .property[data-term="schema:about"],
-            .property[data-term="lrmi:learningResourceType"] {
+            .property-meta-group {
                 order: 6;
-                flex: 0 0 auto;
                 margin-left: 0;
-                text-align: left;
+                flex-wrap: wrap;
+                gap: 0.25rem 0.5rem;
 
-                dt {
-                    display: inline;
-                    margin-right: 0.25rem;
-                    font-size: 0.75rem;
-                    font-weight: 600;
-                    color: $color__gray-46;
-                    text-transform: uppercase;
+                > .property {
+                    dt {
+                        display: inline;
+                        margin-right: 0.25rem;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        color: $color__gray-46;
+                        text-transform: uppercase;
+                    }
+                    dd { display: inline; }
                 }
-                dd { display: inline; }
             }
 
             .property[data-term="lrmi:learningResourceType"] dt {

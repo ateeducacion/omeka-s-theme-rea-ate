@@ -2,7 +2,7 @@
 
 _Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-12 — Ronda de revalidación en instancia real abierta (QA-010→018 en revisión)
+Última actualización: 2026-05-18 — Ciclo 4: hallazgos visuales QA-019→023 registrados y cerrados
 
 ---
 
@@ -397,7 +397,7 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. Abrir DevTools → modo responsive → viewport 375px.
   2. Observar el header completo (top-bar + main-bar + drawer abierto).
   3. Verificar que no hay ningún input de búsqueda visible en ninguno de los tres elementos.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Developer
 
 **Resolución:** Decisión del Diseñador [2026-05-11] ACEPTADA: segunda fila de búsqueda siempre visible en la main-bar mobile (< 1024px). Implementación:
@@ -421,7 +421,7 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. Abrir DevTools → responsive → 320px de ancho.
   2. Navegar a la home con al menos una audience-card visible.
   3. Verificar scroll horizontal o el grid desbordado.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Developer
 
 **Resolución:** `grid-template-columns` cambiado de `repeat(auto-fit, minmax(260px, 1fr))` a `repeat(auto-fit, minmax(min(260px, 100%), 1fr))` en `_audience-rail.scss`. Con `min(260px, 100%)`, el track nunca supera el ancho disponible del contenedor, eliminando el overflow a cualquier viewport. CSS compilado.
@@ -438,10 +438,12 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. Abrir `item/show` de un recurso con valores `dcterms:relation` en DevTools a 360px.
   2. Expandir el botón `+` de un pill de relación situado cerca del borde derecho.
   3. Verificar si el panel se desborda a la derecha del viewport.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Developer
 
-**Resolución:** En `_item-show.scss`, el selector `.resource-link-info.expanded .resource-link-info__panel` pasa de `width: 260px; max-width: none` a `width: min(260px, calc(100vw - 30px))`. El panel nunca superará el viewport menos 30px de margen de seguridad, independientemente de la posición del pill en el flujo.
+**Resolución v1:** En `_item-show.scss`, `width: min(260px, calc(100vw - 30px))`. Insuficiente: el panel se contenía pero quedaba estrecho cuando el pill estaba en la zona derecha del viewport, porque `left: 0` (relativo al `dd.value` pill) colocaba el panel en x=pill_left y el viewport lo recortaba.
+
+**Resolución v2 [2026-05-13]:** Corrección en `asset/js/resource-link-info.js`. Se añade `clampPanel()` que, tras abrir el panel (`wrapper.classList.add('expanded')`), mide `panel.getBoundingClientRect()` y desplaza `panel.style.left` el número de px exacto necesario para que el borde derecho del panel no supere `window.innerWidth - 15px`. Al cerrar (tanto el panel propio como los del acordeón), `panel.style.left` se resetea a `''`. El CSS vuelve a `width: 260px` fijo (el ajuste de posición lo hace JS, no el ancho).
 
 ---
 
@@ -455,12 +457,109 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. Crear un enlace de ancla a una sección en medio de una página larga.
   2. Activar el enlace en mobile (375px viewport).
   3. Verificar si el destino del scroll queda visible o tapado por el header.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Developer
 
 **Resolución:** Dos cambios aplicados:
 1. `_header.scss`: añadido `margin-top: 0` al selector `.main-header hr` para neutralizar el `margin: 1em 0` heredado de normalize.css — el hr separador ya no empuja el main-bar hacia abajo.
 2. `_layout.scss`: `$header-min-height` actualizado de `133px` a `149px` (top-bar 80px + hr 1px + main-bar 68px, border-box). `scroll-padding-top` y `body { padding-top }` ahora referencian la variable en lugar de valores literales, por lo que se actualizan solos.
+
+---
+
+### QA-019 — Las propiedades de metadata en search results no forman grupo visual cohesionado
+
+- **Fecha:** 2026-05-18
+- **Severidad:** Media
+- **Área:** Search results
+- **Hallazgo:** En los cards de resultados de búsqueda, las tres propiedades `lrmi:educationalLevel`, `schema:about` y `lrmi:learningResourceType` se renderizaban como flex-items independientes dentro del card. Al reducir el ancho de la tarjeta, cada propiedad podía saltar de línea de forma independiente, creando composiciones fragmentadas donde nivel y temática acababan en filas distintas mientras el tipo de recurso permanecía en la superior (o viceversa). El efecto resultante era visualmente ruidoso y sin jerarquía clara.
+- **Reproducción mínima:**
+  1. Navegar a los resultados de búsqueda con recursos que tengan `lrmi:educationalLevel`, `schema:about` y `lrmi:learningResourceType` informados.
+  2. Reducir el ancho del viewport hasta que la tarjeta pierda espacio horizontal.
+  3. Observar que las tres propiedades rompen en filas distintas de forma independiente.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+- `asset/js/advanced-search-list.js`: nueva función `groupMetaProperties()` que, tras procesar el item, mueve las tres propiedades a un `<div class="property-meta-group">` appended directamente al `<li>` del resultado. Al ser un único flex-item, las tres propiedades saltan de línea como bloque o permanecen en la fila del título como bloque.
+- `asset/sass/components/search-results/_search-results-list.scss`: nuevos estilos para `.property-meta-group` (`order: 3; flex: 0 0 auto; margin-left: auto; display: flex; gap: 0.5rem 0.75rem`). Título ajustado a `flex: 1 1 0` para ceder el espacio sobrante correctamente.
+- `LABEL_TO_TERM` en `advanced-search-list.js` ampliado con aliases en español para `lrmi:educationalLevel` (`nivel educativo`, `nivel`) y `schema:about` (`temática`, `tematica`, `tema`).
+
+---
+
+### QA-020 — El panel `resource-link-info` usaba `maxHeight` inline que rompía con contenido asíncrono
+
+- **Fecha:** 2026-05-18
+- **Severidad:** Baja
+- **Área:** Item show
+- **Hallazgo:** El script `resource-link-info.js` controlaba la apertura y cierre del panel acordeón mediante `panel.style.maxHeight = panel.scrollHeight + 'px'` (abrir) y `panel.style.maxHeight = '0'` (cerrar). El problema: el contenido del panel se carga de forma asíncrona vía `fetch`. Al abrir el panel, `scrollHeight` se mide antes de que llegue la respuesta de la API, por lo que el valor calculado era el del spinner de carga (`…`), no el del contenido real. Cuando la respuesta llegaba y se actualizaba `panel.innerHTML`, el panel tenía `maxHeight` congelado al valor anterior y el contenido extra quedaba cortado sin scroll.
+- **Reproducción mínima:**
+  1. Abrir `item/show` de un recurso con varios valores `dcterms:relation` que carguen descripciones largas.
+  2. Expandir por primera vez un pill de relación.
+  3. Observar que el panel puede quedar cortado al llegar la descripción, mostrando solo parte del texto.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+Eliminadas todas las manipulaciones de `maxHeight` inline en `asset/js/resource-link-info.js`. La apertura y cierre del panel queda delegada exclusivamente al CSS mediante la clase `.expanded` en el wrapper (regla `max-height: none` ya existente en el SCSS del panel). El contenido asíncrono ya no puede quedar cortado porque el panel no tiene `maxHeight` restrictivo impuesto por JS.
+
+---
+
+### QA-021 — En mobile, el panel `resource-link-info` desborda lateralmente cuando el pill está en la zona derecha (refinamiento QA-017)
+
+- **Fecha:** 2026-05-18
+- **Severidad:** Baja
+- **Área:** Item show / Mobile
+- **Hallazgo:** La resolución v2 de QA-017 añadía `clampPanel()` en JS para desplazar `panel.style.left` tras medir `getBoundingClientRect()`. Este enfoque funcionaba pero dependía de JavaScript para corregir posicionamiento, y podía producir un flash de desbordamiento visible antes de que el desplazamiento se aplicase. La causa raíz era que el containing block del panel era el `.dd.value` pill (`position: relative`), cuya posición relativa al viewport variaba. En mobile la solución CSS es más limpia: elevar el containing block a `.property.dcterms-relation`, que ocupa el ancho completo del contenedor de contenido.
+- **Reproducción mínima:**
+  1. Abrir `item/show` con valores `dcterms:relation` en DevTools a 360px.
+  2. Expandir un pill situado en la mitad derecha del contenido.
+  3. Observar si el panel se desborda a la derecha del viewport antes de que JS lo corrija.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+Cambios en `asset/sass/components/item-show/_item-show.scss`:
+- `.property.dcterms-relation`: añadido `position: relative` en `@media (max-width: #{$lg - 1})`. En mobile esta propiedad se convierte en el containing block del panel absoluto.
+- `.dd.value` pill: añadido `position: static` en el mismo breakpoint. Libera el containing block para que suba a `.property.dcterms-relation`.
+- `.resource-link-info.expanded .resource-link-info__panel` en mobile: `width: min(260px, 100%)` con `left: 0; top: 100%` relativo al ancho del bloque `.property` (~ancho total del contenido). El panel nunca puede desbordarse.
+- En desktop el comportamiento previo se conserva: `width: 260px`, containing block es el pill.
+- `clampPanel()` eliminado de `resource-link-info.js` (ya no es necesario; la corrección es puramente CSS).
+
+---
+
+### QA-022 — Bloque `project-funding` tiene acento de borde superior en lugar de lateral
+
+- **Fecha:** 2026-05-18
+- **Severidad:** Baja
+- **Área:** Item show
+- **Hallazgo:** El bloque `.project-funding` en `item/show` mostraba `border-top: 3px solid var(--ate-color-brand-blue-mid)` como acento cromático. En el contexto visual de la ficha, este acento superior competía con la separación natural entre secciones y se confundía con un separador de sección en lugar de ser leído como el borde de acento del bloque. El patrón de acento lateral (`border-left`) es más habitual en tarjetas de información y se diferencia mejor del contexto.
+- **Reproducción mínima:**
+  1. Navegar a `item/show` de un recurso que tenga datos `schema:Project` (bloque de cofinanciación).
+  2. Observar el bloque `.project-funding`.
+  3. Ver que el acento de color aparece en el borde superior.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`asset/sass/components/item-show/_project-funding.scss`: `border-top: 3px solid var(--ate-color-brand-blue-mid)` sustituido por `border-left: 3px solid var(--ate-color-brand-blue-mid)`. CSS recompilado.
+
+---
+
+### QA-023 — El título H1 de `item/browse` muestra siempre "Recursos" al navegar por una colección
+
+- **Fecha:** 2026-05-18
+- **Severidad:** Media
+- **Área:** Browse
+- **Hallazgo:** En `item/browse`, el encabezado H1 mostraba siempre el texto estático "Recursos" incluso cuando el listado estaba filtrado por un item set específico (URL del tipo `/:site/item?item_set_id=X`). En ese contexto, el subtítulo ya indicaba "Explora los recursos de esta colección", pero el título principal no reflejaba el nombre de la colección activa, lo que desorientaba al usuario respecto a qué colección estaba explorando.
+- **Reproducción mínima:**
+  1. Navegar a `/:site/item-set` y clicar en una colección.
+  2. Observar el H1 del listado de recursos resultante.
+  3. Ver que dice "Recursos" en lugar del nombre de la colección.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`view/omeka/site/item/browse.phtml`: el H1 es ahora dinámico — cuando `$itemSetShow` es verdadero (se está navegando dentro de un item set), muestra `$itemSet->displayTitle()`; en caso contrario, muestra el texto estático traducible "Recursos".
 
 ---
 
@@ -471,7 +570,7 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
 | Abierto | 0 |
 | En análisis | 0 |
 | En curso | 0 |
-| Resuelto | 9 |
-| Cerrado | 9 |
+| Resuelto | 0 |
+| Cerrado | 23 |
 | Diferido | 0 |
 | Rechazado | 0 |
