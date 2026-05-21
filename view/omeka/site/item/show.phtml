@@ -29,6 +29,72 @@ $isPartOfValue = $item->value('schema:isPartOf');
 if ($isPartOfValue && $isPartOfValue->type() === 'resource') {
     $projectItem = $isPartOfValue->valueResource();
 }
+
+// ---- JSON-LD: Schema.org LearningResource ----
+$_resolve = function($v) use ($valueLang) {
+    if (!$v) return '';
+    return $v->type() === 'resource'
+        ? ($v->valueResource() ? $v->valueResource()->displayTitle(null, $valueLang) : (string) $v)
+        : (string) $v;
+};
+
+$_jl = [
+    '@context' => 'https://schema.org',
+    '@type'    => 'LearningResource',
+    'name'     => $item->displayTitle(null, $valueLang),
+    'url'      => $item->siteUrl(null, true),
+];
+
+$_desc = $item->displayDescription(null, $valueLang);
+if ($_desc) $_jl['description'] = strip_tags($_desc);
+
+foreach ([
+    'inLanguage'    => 'dcterms:language',
+    'license'       => 'dcterms:rights',
+    'datePublished' => 'dcterms:date',
+    'timeRequired'  => 'lrmi:timeRequired',
+] as $_prop => $_term) {
+    $_v = $item->value($_term);
+    if ($_v) $_jl[$_prop] = (string) $_v;
+}
+
+foreach ([
+    'learningResourceType' => 'lrmi:learningResourceType',
+    'educationalLevel'     => 'lrmi:educationalLevel',
+] as $_prop => $_term) {
+    $_v = $item->value($_term);
+    if ($_v) { $_r = $_resolve($_v); if ($_r !== '') $_jl[$_prop] = $_r; }
+}
+
+$_tVals = $item->value('lrmi:teaches', ['all' => true]) ?: [];
+if ($_tVals) {
+    $_t = array_values(array_filter(array_map($_resolve, $_tVals)));
+    if ($_t) $_jl['teaches'] = count($_t) === 1 ? $_t[0] : $_t;
+}
+
+$_kwVals = array_merge(
+    $item->value('dcterms:subject', ['all' => true]) ?: [],
+    $item->value('schema:about', ['all' => true]) ?: []
+);
+if ($_kwVals) {
+    $_kw = array_values(array_filter(array_map($_resolve, $_kwVals)));
+    if ($_kw) $_jl['keywords'] = implode(', ', $_kw);
+}
+
+$_creator = $item->value('dcterms:creator');
+if ($_creator) $_jl['creator'] = ['@type' => 'Person', 'name' => (string) $_creator];
+$_pub = $item->value('dcterms:publisher');
+if ($_pub) $_jl['publisher'] = ['@type' => 'Organization', 'name' => (string) $_pub];
+
+if ($item->primaryMedia()) {
+    $_jl['thumbnailUrl'] = $item->primaryMedia()->thumbnailUrl('medium');
+}
+
+$this->headScript()->appendScript(
+    json_encode($_jl, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+    'application/ld+json'
+);
+unset($_resolve, $_jl, $_desc, $_prop, $_term, $_v, $_r, $_tVals, $_t, $_kwVals, $_kw, $_creator, $_pub);
 ?>
 
 <?php if ($breadcrumbs): ?>

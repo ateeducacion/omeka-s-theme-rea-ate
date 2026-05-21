@@ -2,17 +2,16 @@
 
 _Documento operativo del proyecto. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-21 — Ciclo 4 cerrado. QA-027–032 validados en instancia real. Release v0.4.0 desbloqueada. Próximo ID: QA-033.
+Última actualización: 2026-05-21 — Ciclo 5 en curso. QA-033 cerrado. JSON-LD implementado. Próximo ID: QA-034.
 
 ---
 
 ## Alcance actual
 
-**Ciclo 4 — Auditoría mobile (IDs desde QA-027):**
+**Ciclo 5 — JSON-LD + correcciones enlace (IDs desde QA-033):**
 
-- `item/show` → linked-resources en mobile (375px, 320px): tarjetas apiladas, thumbnail, título, descripción, meta-group pills + badge en modo inline.
-- `item/browse` grid en mobile: cards sin desbordamiento, eyebrow, pill de nivel, badge de tipo.
-- `item/browse` lista en mobile: filas compactas, badge inline, pill, eyebrow.
+- `view/common/header.phtml`: enlace "Advanced search" apuntaba a `/item/search` (formulario nativo) en lugar de `/search` (módulo AdvancedSearch). — ✅ cerrado (QA-033)
+- `view/omeka/site/item/show.phtml`: bloque JSON-LD Schema.org `LearningResource` inyectado en `<head>` vía `headScript()->appendScript()`. — ✅ implementado
 
 **Ciclo 4 — Cerrado:**
 
@@ -747,12 +746,34 @@ El resto del estilo pill (padding, background, border, border-radius, font-size,
 
 ## Resumen rápido
 
+---
+
+### QA-033 — Header: enlace "Advanced search" apunta a `/item/search` en lugar de `/search`
+
+- **Fecha:** 2026-05-21
+- **Severidad:** Alta
+- **Área:** Header global (`view/common/header.phtml`)
+- **Hallazgo:** El enlace `.main-header__advanced-search` construía su `href` concatenando `$site->url() . '/item/search'`, que es el formulario de búsqueda nativo de Omeka-S. El módulo AdvancedSearch 3.4.60 expone su interfaz en `/search`, no en `/item/search`. El resultado era que el enlace "Búsqueda avanzada" llevaba a un formulario sin facetas ni opciones del módulo.
+- **Reproducción mínima:**
+  1. Abrir cualquier página del sitio.
+  2. Hacer clic en el enlace "Búsqueda avanzada" del top-bar.
+  3. El formulario que se carga es el nativo de Omeka-S (`/item/search`), sin facetas ni filtros del módulo AdvancedSearch.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`view/common/header.phtml` línea 10: `$site->url() . '/item/search'` → `$site->url() . '/search'`.
+
+---
+
+## Resumen rápido
+
 | Estado | Conteo |
 |--------|--------|
 | Abierto | 0 |
 | En análisis | 0 |
 | En curso | 0 |
 | Resuelto | 0 |
-| Cerrado | 32 |
+| Cerrado | 33 |
 | Diferido | 0 |
 | Rechazado | 0 |

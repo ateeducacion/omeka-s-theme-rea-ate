@@ -891,3 +891,23 @@ Los cambios que pueden afectar al mobile son:
 **Decisión:** Publicar `v0.4.0`. El backlog del ciclo 5 queda abierto para nuevos ítems.
 
 **Agente:** orchestrator
+
+---
+
+## [2026-05-21] ACEPTADA — Apertura ciclo 5: JSON-LD structured data + fix enlace Advanced Search
+
+**Contexto:** Tras la release de `v0.4.0`, se abre el ciclo 5. Los dos candidatos de mayor valor identificados en el backlog son:
+
+1. **JSON-LD Schema.org `LearningResource`** en `item/show`: mejora el SEO y la interoperabilidad del repositorio con agregadores externos (Google, Europeana). Sin JSON-LD, los ítems no son elegibles para rich results en buscadores.
+2. **Corrección enlace "Advanced search"** en el header: el enlace apuntaba a `/item/search` (formulario nativo Omeka-S) en lugar de `/search` (módulo AdvancedSearch 3.4.60). Bug de alta severidad: los usuarios no podían acceder a la búsqueda avanzada con facetas.
+
+**Implementación ejecutada:**
+
+| Fichero | Cambio |
+|---------|--------|
+| `view/common/header.phtml:10` | `'/item/search'` → `'/search'` (QA-033, Cerrado) |
+| `view/omeka/site/item/show.phtml:33–97` | Bloque PHP JSON-LD: `$_jl` array con todos los campos LRMI/DC disponibles, inyectado en `<head>` vía `$this->headScript()->appendScript(..., 'application/ld+json')`. Campos: `name`, `url`, `description`, `inLanguage`, `license`, `datePublished`, `timeRequired`, `learningResourceType`, `educationalLevel`, `teaches` (multi-valor), `keywords` (subject + about combinados), `creator`, `publisher`, `thumbnailUrl`. Valores linked-resource resueltos con `$_resolve()`. Cleanup con `unset()`. |
+
+**Criterio de salida del ciclo 5:** validación del JSON-LD en `validator.schema.org` + confirmación del enlace Advanced Search funcional en instancia real.
+
+**Agente:** orchestrator
