@@ -1,12 +1,23 @@
 # Registro de hallazgos QA
 
-_Documento operativo del ciclo 3. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
+_Documento operativo del proyecto. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-18 — Ciclo 4: hallazgos QA-024→025 registrados y cerrados
+Última actualización: 2026-05-21 — QA ciclo 4 abierto (linked-resources). Próximo ID: QA-026.
 
 ---
 
 ## Alcance actual
+
+**Ciclo 4 — QA abierto (IDs desde QA-026):**
+
+- `item/show` → bloque linked-resources: sin filtro, sin acordeón, sin cabecera de grupo, recursos siempre visibles.
+- Tarjeta linked-resource: thumbnail 80px, título enlazado, descripción condicional, pills `lrmi:educationalLevel` + `schema:about`, badge `lrmi:learningResourceType`, placeholder icon si no hay imagen.
+- Visual: coherencia con tarjetas de search results (card blanco, borde, sombra, hover lift).
+- Responsive mobile ≤ 768px: tarjeta apilada, meta-group inline.
+- Regresión search results: tarjetas de búsqueda sin cambios visuales con el selector CSS compartido.
+- Regresión `resource-link-info`: botón `+` solo en iconos visibles (QA-025).
+
+**Ciclos anteriores — cerrados:**
 
 - Header sticky: top-bar, main-bar, búsqueda y navegación.
 - Search results: facetas, chips activos, contador y estados sin resultados.

@@ -620,7 +620,7 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | CICLO 4 — EN CURSO |
+| Fase | CICLO 4 — QA EN CURSO |
 | Dependencias cliente | ✅ Todas confirmadas |
 | Decisiones Arquitecto | ✅ `architecture.md` actualizado con mapeo QA-006 |
 | Decisiones Diseñador | ✅ Incluyen las directrices validadas para `QA-002` y `QA-003` |
@@ -636,7 +636,8 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 | Release v0.2.0 | ✅ Publicada [2026-05-06] |
 | Release v0.3.0 | ✅ Publicada [2026-05-21] |
 | Backlog ciclo 3 | ✅ Completado |
-| Backlog ciclo 4 | 🟡 En curso — #1 linked-resources implementado, pendiente QA |
+| Backlog ciclo 4 | 🔵 QA EN CURSO — #1 linked-resources implementado |
+| Release v0.4.0 | 🔒 Bloqueada hasta cierre QA ciclo 4 |
 
 ## Estado de implementación
 
@@ -807,10 +808,37 @@ El problema es una decisión de sistema visual, no una corrección técnica aisl
 |---|------|-------------|---------|----------|--------|
 | 1 | Linked resources | Rediseño de `linked-resources`: ocultar filtro, siempre expandido, tarjeta con thumbnail + título + badge LRT + descripción | UX / Visual | S | ✅ Implementado [2026-05-21] |
 
-**Prioridad sugerida:** QA sobre instancia real del ítem #1 tras despliegue en producción.
+**Release entregada:** —. Pendiente `v0.4.0` tras cierre del QA del ciclo 4.
 
 **Decisiones pendientes:**
 - No se abren carriles de Arquitecto ni Diseñador para el ítem #1: la spec era suficientemente concreta para implementación directa.
 - El backlog de ciclo 4 queda abierto para nuevos ítems según avance el proyecto.
+
+**Agente:** orchestrator
+
+---
+
+## [2026-05-21] ACEPTADA — Apertura del QA del ciclo 4
+
+**Contexto:** El ítem #1 del ciclo 4 (`linked-resources`) ha sido implementado en tres commits (`5c74b62`, `141252d`, `6194455`) desde `v0.3.0`. Los cambios afectan a un bloque visible en `item/show` y reutilizan CSS compartida con search results. Antes de publicar `v0.4.0` es necesario validar en instancia real que la nueva tarjeta funciona correctamente y que el selector compartido no introduce regresiones en los resultados de búsqueda.
+
+**Decisión:** Abrir el QA del ciclo 4 con el agente QA. Alcance:
+
+| Área | Elementos a verificar |
+|------|-----------------------|
+| `item/show` → bloque linked-resources | Sin filtro · sin acordeón · sin cabecera de grupo · recursos siempre visibles |
+| Tarjeta linked-resource | Thumbnail 80px · título enlazado · descripción (si existe) · pills `lrmi:educationalLevel` + `schema:about` · badge `lrmi:learningResourceType` · placeholder icon si no hay imagen · cada campo es condicional (no aparece si vacío) |
+| Visual | Coherencia con tarjeta de search results: card blanco, borde, sombra, hover lift |
+| Responsive | Mobile ≤ 768px: tarjeta apilada correctamente, meta-group sin chips (inline con etiqueta) |
+| Regresión | Search results: tarjetas de búsqueda siguen renderizando correctamente con la CSS compartida |
+| Regresión | `resource-link-info`: botón `+` no aparece en iconos ocultos (QA-025) |
+
+**Hallazgos se registran en:** `.project/docs/qa-findings.md` — IDs continuando desde `QA-026`.
+
+**Criterio de salida:** todos los hallazgos del ciclo 4 en estado Cerrado → desbloquear release `v0.4.0`.
+
+**Alternativas descartadas:**
+- Publicar `v0.4.0` sin QA previo: descartado. El selector compartido afecta a search results y un error de CSS podría romper la vista de búsqueda en producción.
+- Abrir QA en local sin instancia real: descartado. Los hallazgos de ciclos anteriores han demostrado que los problemas de integración con Omeka-S solo son detectables en la instancia real.
 
 **Agente:** orchestrator
