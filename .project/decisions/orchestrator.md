@@ -620,20 +620,22 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | CICLO 3 — AUDITORÍA MOBILE EN CURSO |
+| Fase | CICLO 3 — CERRADO / PENDIENTE RELEASE v0.3.0 |
 | Dependencias cliente | ✅ Todas confirmadas |
 | Decisiones Arquitecto | ✅ `architecture.md` actualizado con mapeo QA-006 |
 | Decisiones Diseñador | ✅ Incluyen las directrices validadas para `QA-002` y `QA-003` |
 | Implementación ciclo 1 | ✅ Completado |
 | Implementación ciclo 2 | ✅ Completado (8/8 ítems) |
-| Implementación ciclo 3 | 🟡 Parcial — `item-set/browse` completado; Home/Browse pendientes |
+| Implementación ciclo 3 | ✅ Completado (8/8 ítems) |
 | Release pipeline | ✅ Operativo |
-| QA sobre instancia real | ✅ Cerrado — hallazgos `QA-001` → `QA-009` normalizados y cerrados |
-| Registro de hallazgos QA | ✅ `.project/docs/qa-findings.md` alineado con el cierre del lote |
-| Lote QA-1 | ✅ Cerrado y documentado |
+| QA sobre instancia real | ✅ Cerrado — hallazgos `QA-001` → `QA-025` normalizados y cerrados |
+| Registro de hallazgos QA | ✅ `.project/docs/qa-findings.md` — 25 hallazgos cerrados |
+| Lote QA-1 (`QA-001`→`QA-009`) | ✅ Cerrado y documentado |
+| Lote QA-2 mobile + ciclo 4 (`QA-010`→`QA-025`) | ✅ Cerrado [2026-05-18] |
 | Release v0.1.0 | ✅ Publicada |
 | Release v0.2.0 | ✅ Publicada [2026-05-06] |
-| Backlog ciclo 3 | 🟡 #1/#2/#6 bloqueados por specs Diseñador; #3 disponible |
+| Release v0.3.0 | 🟡 Pendiente — desbloquea tras cierre QA ciclo 3 |
+| Backlog ciclo 3 | ✅ Completado |
 
 ## Estado de implementación
 
@@ -648,12 +650,12 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 | Ficha de recurso (`item/show.phtml`) | ✅ |
 | Search results — chips + contador + A11y | ✅ |
 | Anclaje curricular (sidebar derecho) | ✅ |
-| Tarjetas de audiencia en home | ✅ Implementado — QA-013/014 resueltos |
-| Browse de recursos — grid (`item/browse.phtml`) | ✅ Implementado — QA-010/011/012 resueltos |
-| Browse de recursos — list (`item/browse.phtml`) | ✅ Implementado |
-| Browse de colecciones (`item-set/browse.phtml`) | ✅ QA cerrado |
-| Mobile responsiveness (auditoría) | 🔵 Ciclo 3 #3 — QA en curso |
-| Bloque cofinanciación (`project-funding.phtml`) | ✅ Ciclo 3 #8 — implementado [2026-05-11] |
+| Tarjetas de audiencia en home | ✅ QA-013/014 cerrados |
+| Browse de recursos — grid (`item/browse.phtml`) | ✅ QA-010/011/012 cerrados |
+| Browse de recursos — list (`item/browse.phtml`) | ✅ |
+| Browse de colecciones (`item-set/browse.phtml`) | ✅ QA-001→009 cerrados |
+| Mobile responsiveness | ✅ QA-015→018 cerrados; ajustes ciclo 4 QA-019→025 cerrados |
+| Bloque cofinanciación (`project-funding.phtml`) | ✅ Ciclo 3 #8 — QA-022 cerrado |
 
 ---
 
@@ -751,5 +753,27 @@ El problema es una decisión de sistema visual, no una corrección técnica aisl
 - Requiere: nuevo requisito en `.project/context/requirements.md`.
 - Desbloquea: decisiones paralelas de Arquitecto y Diseñador.
 - Bloquea: implementación de `project-funding.phtml` e integración en `item/show`.
+
+**Agente:** orchestrator
+
+---
+
+## [2026-05-21] ACEPTADA — Normalización documental del cierre del ciclo 3
+
+**Contexto:** Tras los commits del 2026-05-18 que cerraron QA-019→025, el ciclo 3 quedó completamente entregado: los 8 ítems del backlog implementados, los 25 hallazgos QA (`QA-001`→`QA-025`) en estado Cerrado, y el registro `qa-findings.md` alineado con el estado real. Sin embargo, las tablas de estado de `orchestrator.md` seguían mostrando el ciclo 3 como parcial y la auditoría mobile como "en curso". Había dos fuentes de verdad contradictorias, el mismo patrón que motivó la normalización documental tras el cierre del lote QA-1.
+
+**Decisión:** Normalizar el estado documental del ciclo 3 en `orchestrator.md`:
+- Fase actualizada a `CICLO 3 — CERRADO / PENDIENTE RELEASE v0.3.0`.
+- Implementación ciclo 3: 8/8 ítems completados.
+- QA consolidado: `QA-001`→`QA-025` cerrados. Dos lotes registrados: QA-1 (`QA-001`→`QA-009`) y QA-2 mobile + ciclo 4 (`QA-010`→`QA-025`).
+- Mobile responsiveness: ✅ (QA-015→018 + correcciones ciclo 4 QA-019→025 cerrados).
+- Release `v0.3.0`: 🟡 Pendiente de publicación. Desbloqueada con este cierre.
+
+**Alternativas descartadas:** Mantener las tablas históricas sin actualizar — descartado porque obliga a reconstruir el estado real a partir del historial de decisiones en cada sesión nueva.
+
+**Consecuencias:**
+- `orchestrator.md` refleja el estado real del proyecto: ciclo 3 cerrado, 25 QA cerrados.
+- El siguiente paso inmediato es publicar `v0.3.0` mediante el tag correspondiente.
+- Backlog del ciclo 4 a definir en la sesión de apertura.
 
 **Agente:** orchestrator
