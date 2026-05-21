@@ -620,7 +620,7 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | CICLO 4 — QA EN CURSO |
+| Fase | CICLO 4 — AUDITORÍA MOBILE EN CURSO |
 | Dependencias cliente | ✅ Todas confirmadas |
 | Decisiones Arquitecto | ✅ `architecture.md` actualizado con mapeo QA-006 |
 | Decisiones Diseñador | ✅ Incluyen las directrices validadas para `QA-002` y `QA-003` |
@@ -636,8 +636,8 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 | Release v0.2.0 | ✅ Publicada [2026-05-06] |
 | Release v0.3.0 | ✅ Publicada [2026-05-21] |
 | Backlog ciclo 3 | ✅ Completado |
-| Backlog ciclo 4 | 🔵 QA EN CURSO — #1 linked-resources implementado |
-| Release v0.4.0 | 🔒 Bloqueada hasta cierre QA ciclo 4 |
+| Backlog ciclo 4 | 🔵 AUDITORÍA MOBILE EN CURSO — hallazgos desde QA-027 |
+| Release v0.4.0 | 🔒 Bloqueada hasta cierre auditoría mobile ciclo 4 |
 
 ## Estado de implementación
 
@@ -840,5 +840,33 @@ El problema es una decisión de sistema visual, no una corrección técnica aisl
 **Alternativas descartadas:**
 - Publicar `v0.4.0` sin QA previo: descartado. El selector compartido afecta a search results y un error de CSS podría romper la vista de búsqueda en producción.
 - Abrir QA en local sin instancia real: descartado. Los hallazgos de ciclos anteriores han demostrado que los problemas de integración con Omeka-S solo son detectables en la instancia real.
+
+**Agente:** orchestrator
+
+---
+
+## [2026-05-21] ACEPTADA — Apertura auditoría mobile ciclo 4: linked-resources y browse
+
+**Contexto:** La validación del QA del ciclo 4 en instancia real confirmó tres ítems del alcance (linked-resources en `item/show`, tarjeta linked-resource, regresión search results). El ítem de responsive mobile falló: los cambios del ciclo 4 introducen regresiones visuales en pantallas ≤ 768px que deben documentarse antes de publicar `v0.4.0`.
+
+Los cambios que pueden afectar al mobile son:
+- El rediseño de `linked-resources` (`5c74b62` → `6194455`): tarjeta compartida con search results, selector CSS extendido, `property-meta-group` con tres `.property` envueltos.
+- La corrección `QA-026` (`4d28007`): `$displayValue()` en `browse.phtml` — no afecta layout, pero forma parte del mismo batch.
+
+**Decisión:** El agente QA abre la auditoría mobile del ciclo 4. Alcance mínimo:
+
+| Vista | Breakpoints | Elementos a revisar |
+|-------|-------------|---------------------|
+| `item/show` → linked-resources | 375px, 320px | Tarjetas apiladas correctamente · thumbnail · title · descripción · meta-group (pills + badge) en modo inline |
+| `item/browse` grid | 375px, 320px | Cards no desbordadas · eyebrow · pill de nivel · badge de tipo |
+| `item/browse` lista | 375px, 320px | Filas compactas · badge inline · pill · eyebrow |
+
+**Hallazgos se registran en** `qa-findings.md` — IDs continuando desde `QA-027`.
+
+**Criterio de salida:** todos los hallazgos QA-027+ en estado Cerrado → desbloquear release `v0.4.0`.
+
+**Alternativas descartadas:**
+- Cerrar el ciclo 4 con el mobile pendiente: descartado. El patrón de ciclos anteriores demuestra que los problemas mobile no detectados en QA llegan a producción.
+- Diferir el mobile a ciclo 5: descartado. Los cambios que generan las regresiones son del ciclo 4 y deben corregirse en el mismo ciclo.
 
 **Agente:** orchestrator

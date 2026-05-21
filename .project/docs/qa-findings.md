@@ -2,20 +2,24 @@
 
 _Documento operativo del proyecto. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-21 — QA-026 registrado y cerrado. Próximo ID: QA-027.
+Última actualización: 2026-05-21 — Auditoría mobile ciclo 4 abierta. Próximo ID: QA-027.
 
 ---
 
 ## Alcance actual
 
-**Ciclo 4 — QA abierto (IDs desde QA-026):**
+**Ciclo 4 — Auditoría mobile (IDs desde QA-027):**
 
-- `item/show` → bloque linked-resources: sin filtro, sin acordeón, sin cabecera de grupo, recursos siempre visibles.
-- Tarjeta linked-resource: thumbnail 80px, título enlazado, descripción condicional, pills `lrmi:educationalLevel` + `schema:about`, badge `lrmi:learningResourceType`, placeholder icon si no hay imagen.
-- Visual: coherencia con tarjetas de search results (card blanco, borde, sombra, hover lift).
-- Responsive mobile ≤ 768px: tarjeta apilada, meta-group inline.
-- Regresión search results: tarjetas de búsqueda sin cambios visuales con el selector CSS compartido.
-- Regresión `resource-link-info`: botón `+` solo en iconos visibles (QA-025).
+- `item/show` → linked-resources en mobile (375px, 320px): tarjetas apiladas, thumbnail, título, descripción, meta-group pills + badge en modo inline.
+- `item/browse` grid en mobile: cards sin desbordamiento, eyebrow, pill de nivel, badge de tipo.
+- `item/browse` lista en mobile: filas compactas, badge inline, pill, eyebrow.
+
+**Ciclo 4 — Cerrado:**
+
+- `item/show` linked-resources (desktop): sin filtro, sin acordeón, sin cabecera — ✅ validado
+- Tarjeta linked-resource (desktop): thumbnail, título, descripción, pills, badge, placeholder — ✅ validado
+- Regresión search results: sin cambios visuales con CSS compartida — ✅ validado
+- QA-026: eyebrow/pill mostraban URL en lugar de título (recurso enlazado) — ✅ cerrado
 
 **Ciclos anteriores — cerrados:**
 
