@@ -15,25 +15,6 @@
     }
 }
 
-.linked-resource-group {
-    margin-bottom: 1.5rem;
-
-    &:last-child {
-        margin-bottom: 0;
-    }
-}
-
-.linked-resource-heading {
-    font-size: var(--ate-font-sm);
-    font-weight: 600;
-    color: var(--ate-text-muted);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    padding-bottom: 0.4rem;
-    margin-bottom: 0.5rem;
-    border-bottom: 1px solid var(--ate-hairline-soft);
-}
-
 .linked-resource-list {
     display: flex;
     flex-direction: column;
