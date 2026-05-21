@@ -18,6 +18,14 @@ ul.resource-list.search-result-list.list {
     }
 
     > li.resource.item {
+        // shared with .linked-resource-list .linked-resource — see below
+    }
+}
+
+// Shared card styles: search results and linked-resources cards.
+.search-results-list ul.search-result-list.list > li.resource.item,
+ul.resource-list.search-result-list.list > li.resource.item,
+.linked-resource-list .linked-resource.resource.item {
         display: flex;
         flex-wrap: wrap;
         align-items: flex-start;
@@ -294,5 +302,18 @@ ul.resource-list.search-result-list.list {
                 }
             }
         }
+    }
+
+// placeholder icon when a linked resource has no thumbnail
+.linked-resource-list .image-parent--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ate-surface-soft);
+    border-radius: 4px;
+
+    .material-symbols-outlined {
+        font-size: 2rem;
+        color: var(--ate-text-muted);
     }
 }
