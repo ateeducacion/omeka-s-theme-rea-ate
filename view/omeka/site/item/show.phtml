@@ -61,6 +61,8 @@ foreach ([
 foreach ([
     'learningResourceType' => 'lrmi:learningResourceType',
     'educationalLevel'     => 'lrmi:educationalLevel',
+    'educationalUse'       => 'lrmi:educationalUse',
+    'educationalRole'      => 'lrmi:educationalRole',
 ] as $_prop => $_term) {
     $_v = $item->value($_term);
     if ($_v) { $_r = $_resolve($_v); if ($_r !== '') $_jl[$_prop] = $_r; }
@@ -76,6 +78,20 @@ $_aVals = $item->value('lrmi:assesses', ['all' => true]) ?: [];
 if ($_aVals) {
     $_a = array_values(array_filter(array_map($_resolve, $_aVals)));
     if ($_a) $_jl['assesses'] = count($_a) === 1 ? $_a[0] : $_a;
+}
+
+if ($projectItem) {
+    $_jl['isPartOf'] = [
+        '@type' => 'LearningResource',
+        'name'  => $projectItem->displayTitle(null, $valueLang),
+        'url'   => $projectItem->siteUrl(null, true),
+    ];
+}
+
+$_relVals = $item->value('dcterms:relation', ['all' => true]) ?: [];
+if ($_relVals) {
+    $_rel = array_values(array_filter(array_map($_resolve, $_relVals)));
+    if ($_rel) $_jl['relatedLink'] = count($_rel) === 1 ? $_rel[0] : $_rel;
 }
 
 $_kwVals = array_merge(
@@ -100,7 +116,7 @@ $this->headScript()->appendScript(
     json_encode($_jl, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
     'application/ld+json'
 );
-unset($_resolve, $_jl, $_desc, $_prop, $_term, $_v, $_r, $_tVals, $_t, $_aVals, $_a, $_kwVals, $_kw, $_creator, $_pub);
+unset($_resolve, $_jl, $_desc, $_prop, $_term, $_v, $_r, $_tVals, $_t, $_aVals, $_a, $_relVals, $_rel, $_kwVals, $_kw, $_creator, $_pub);
 ?>
 
 <?php if ($breadcrumbs): ?>
