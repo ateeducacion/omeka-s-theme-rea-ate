@@ -72,6 +72,12 @@ if ($_tVals) {
     if ($_t) $_jl['teaches'] = count($_t) === 1 ? $_t[0] : $_t;
 }
 
+$_aVals = $item->value('lrmi:assesses', ['all' => true]) ?: [];
+if ($_aVals) {
+    $_a = array_values(array_filter(array_map($_resolve, $_aVals)));
+    if ($_a) $_jl['assesses'] = count($_a) === 1 ? $_a[0] : $_a;
+}
+
 $_kwVals = array_merge(
     $item->value('dcterms:subject', ['all' => true]) ?: [],
     $item->value('schema:about', ['all' => true]) ?: []
@@ -94,7 +100,7 @@ $this->headScript()->appendScript(
     json_encode($_jl, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
     'application/ld+json'
 );
-unset($_resolve, $_jl, $_desc, $_prop, $_term, $_v, $_r, $_tVals, $_t, $_kwVals, $_kw, $_creator, $_pub);
+unset($_resolve, $_jl, $_desc, $_prop, $_term, $_v, $_r, $_tVals, $_t, $_aVals, $_a, $_kwVals, $_kw, $_creator, $_pub);
 ?>
 
 <?php if ($breadcrumbs): ?>
