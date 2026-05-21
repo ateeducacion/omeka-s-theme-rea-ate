@@ -91,7 +91,7 @@ if ($projectItem) {
 $_relVals = $item->value('dcterms:relation', ['all' => true]) ?: [];
 if ($_relVals) {
     $_rel = array_values(array_filter(array_map($_resolve, $_relVals)));
-    if ($_rel) $_jl['relatedLink'] = count($_rel) === 1 ? $_rel[0] : $_rel;
+    if ($_rel) $_jl['about'] = count($_rel) === 1 ? $_rel[0] : $_rel;
 }
 
 $_kwVals = array_merge(
