@@ -2,7 +2,7 @@
 
 _Documento operativo del proyecto. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-21 — QA ciclo 4 abierto (linked-resources). Próximo ID: QA-026.
+Última actualización: 2026-05-21 — QA-026 registrado y cerrado. Próximo ID: QA-027.
 
 ---
 
@@ -612,6 +612,24 @@ Cambios en `asset/sass/components/item-show/_item-show.scss`:
 
 ---
 
+### QA-026 — `item/browse`: eyebrow y pill muestran URL en lugar del título cuando el valor es un recurso enlazado
+
+- **Fecha:** 2026-05-21
+- **Severidad:** Alta
+- **Área:** Browse (grid y lista)
+- **Hallazgo:** En `item/browse`, los campos `schema:about` (eyebrow) y `lrmi:educationalLevel` (pill de nivel) se renderizan con `(string) $value`. Cuando esos metadatos contienen un **valor de tipo recurso** (enlace a otro ítem Omeka-S), el cast devuelve la URL del ítem en lugar de su título — por ejemplo `http://localhost:8080/s/ceiplajares/item/24650` en vez de "1º ESO". El problema afecta tanto a la vista grid (`resource-card__eyebrow`, `resource-level-pill`) como a la vista lista (`resource-row__eyebrow`, `resource-row__level-pill`).
+- **Reproducción mínima:**
+  1. Crear o tener un ítem con `schema:about` o `lrmi:educationalLevel` apuntando a otro ítem Omeka-S (valor tipo recurso, no literal).
+  2. Navegar a `/:site/item` en vista grid o lista.
+  3. Ver que el eyebrow o el pill muestra la URL del ítem enlazado en lugar de su título.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`view/omeka/site/item/browse.phtml`: añadida función `$displayValue($value)` que comprueba `$value->type() === 'resource'` y llama a `$value->valueResource()->displayTitle(null, $valueLang)` cuando el valor es un recurso enlazado; si no, devuelve `(string) $value`. Los cuatro puntos de renderizado (`resource-card__eyebrow`, `resource-level-pill`, `resource-row__eyebrow`, `resource-row__level-pill`) usan ahora `$displayValue()` en lugar del cast directo.
+
+---
+
 ## Resumen rápido
 
 | Estado | Conteo |
@@ -620,6 +638,6 @@ Cambios en `asset/sass/components/item-show/_item-show.scss`:
 | En análisis | 0 |
 | En curso | 0 |
 | Resuelto | 0 |
-| Cerrado | 25 |
+| Cerrado | 26 |
 | Diferido | 0 |
 | Rechazado | 0 |

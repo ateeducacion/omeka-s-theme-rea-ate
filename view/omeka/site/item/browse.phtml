@@ -96,6 +96,16 @@ $getFirstValue = function ($resource, array $terms) {
     }
     return null;
 };
+
+// Returns display string for a value: title if resource-linked, raw string otherwise.
+$displayValue = function ($value) use ($valueLang) {
+    if (!$value) return '';
+    if ($value->type() === 'resource') {
+        $linked = $value->valueResource();
+        return $linked ? $linked->displayTitle(null, $valueLang) : (string) $value;
+    }
+    return (string) $value;
+};
 ?>
 
 <?php if ($itemSetShow): ?>
@@ -259,7 +269,7 @@ $getFirstValue = function ($resource, array $terms) {
 
                     <div class="resource-card__body">
                         <?php if ($topic): ?>
-                            <p class="resource-card__eyebrow"><?php echo $escape((string) $topic); ?></p>
+                            <p class="resource-card__eyebrow"><?php echo $escape($displayValue($topic)); ?></p>
                         <?php endif; ?>
 
                         <h2 class="resource-card__title">
@@ -268,7 +278,7 @@ $getFirstValue = function ($resource, array $terms) {
 
                         <div class="resource-card__meta">
                             <?php if ($educationalLevel): ?>
-                                <span class="resource-level-pill"><?php echo $escape((string) $educationalLevel); ?></span>
+                                <span class="resource-level-pill"><?php echo $escape($displayValue($educationalLevel)); ?></span>
                             <?php endif; ?>
                         </div>
 
@@ -323,12 +333,12 @@ $getFirstValue = function ($resource, array $terms) {
                             <?php endif; ?>
 
                             <?php if ($educationalLevel): ?>
-                                <span class="resource-row__level-pill"><?php echo $escape((string) $educationalLevel); ?></span>
+                                <span class="resource-row__level-pill"><?php echo $escape($displayValue($educationalLevel)); ?></span>
                             <?php endif; ?>
                         </div>
 
                         <?php if ($topic): ?>
-                            <p class="resource-row__eyebrow"><?php echo $escape((string) $topic); ?></p>
+                            <p class="resource-row__eyebrow"><?php echo $escape($displayValue($topic)); ?></p>
                         <?php endif; ?>
 
                         <h2 class="resource-row__title">
