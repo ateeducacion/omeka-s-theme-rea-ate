@@ -620,7 +620,7 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | CICLO 3 — CERRADO / PENDIENTE RELEASE v0.3.0 |
+| Fase | CICLO 4 — EN CURSO |
 | Dependencias cliente | ✅ Todas confirmadas |
 | Decisiones Arquitecto | ✅ `architecture.md` actualizado con mapeo QA-006 |
 | Decisiones Diseñador | ✅ Incluyen las directrices validadas para `QA-002` y `QA-003` |
@@ -634,8 +634,9 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 | Lote QA-2 mobile + ciclo 4 (`QA-010`→`QA-025`) | ✅ Cerrado [2026-05-18] |
 | Release v0.1.0 | ✅ Publicada |
 | Release v0.2.0 | ✅ Publicada [2026-05-06] |
-| Release v0.3.0 | 🟡 Pendiente — desbloquea tras cierre QA ciclo 3 |
+| Release v0.3.0 | ✅ Publicada [2026-05-21] |
 | Backlog ciclo 3 | ✅ Completado |
+| Backlog ciclo 4 | 🟡 En curso — #1 linked-resources implementado, pendiente QA |
 
 ## Estado de implementación
 
@@ -646,7 +647,7 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 | Header sticky (top-bar + main-bar con búsqueda) | ✅ |
 | Footer (border amarillo + hover yellow) | ✅ |
 | Sidebar de facetas (estilos ATE) | ✅ |
-| Pipeline de release (GitHub Actions + Makefile) | ✅ Operativo — `v0.2.0` publicada |
+| Pipeline de release (GitHub Actions + Makefile) | ✅ Operativo — `v0.3.0` publicada |
 | Ficha de recurso (`item/show.phtml`) | ✅ |
 | Search results — chips + contador + A11y | ✅ |
 | Anclaje curricular (sidebar derecho) | ✅ |
@@ -656,6 +657,7 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 | Browse de colecciones (`item-set/browse.phtml`) | ✅ QA-001→009 cerrados |
 | Mobile responsiveness | ✅ QA-015→018 cerrados; ajustes ciclo 4 QA-019→025 cerrados |
 | Bloque cofinanciación (`project-funding.phtml`) | ✅ Ciclo 3 #8 — QA-022 cerrado |
+| Linked resources (rediseño) | ✅ Ciclo 4 #1 — filtro oculto, siempre expandido, tarjeta enriquecida |
 
 ---
 
@@ -775,5 +777,40 @@ El problema es una decisión de sistema visual, no una corrección técnica aisl
 - `orchestrator.md` refleja el estado real del proyecto: ciclo 3 cerrado, 25 QA cerrados.
 - El siguiente paso inmediato es publicar `v0.3.0` mediante el tag correspondiente.
 - Backlog del ciclo 4 a definir en la sesión de apertura.
+
+**Agente:** orchestrator
+
+---
+
+## [2026-05-21] BRIEFING — Ciclo 4: apertura
+
+### Ciclo 3 — Entregado
+
+| # | Área | Descripción | Resultado |
+|---|------|-------------|-----------|
+| 1 | Home | Tarjetas de audiencia (Profesorado, Alumnado, Familias) | ✅ QA-013/014 cerrados |
+| 2 | Browse grid | Grid de recursos con imagen, título, tipo y nivel | ✅ QA-010/011/012 cerrados |
+| 3 | Mobile | Auditoría y correcciones de responsividad | ✅ QA-015→018 cerrados |
+| 4 | QA | QA sobre instancia real del ciclo 2 + 3 | ✅ QA-001→025 cerrados |
+| 5 | Release | `v0.3.0` | ✅ Publicada [2026-05-21] |
+| 6 | Browse list | Vista lista del catálogo de recursos | ✅ |
+| 7 | Item-set browse | Grid editorial de colecciones | ✅ |
+| 8 | Cofinanciación | Bloque `schema:Project` en item/show | ✅ QA-022 cerrado |
+
+**Release entregada:** `v0.3.0` — incluye Home, Browse, Mobile y bloque de cofinanciación.
+
+---
+
+### Backlog — Ciclo 4
+
+| # | Área | Descripción | Impacto | Esfuerzo | Estado |
+|---|------|-------------|---------|----------|--------|
+| 1 | Linked resources | Rediseño de `linked-resources`: ocultar filtro, siempre expandido, tarjeta con thumbnail + título + badge LRT + descripción | UX / Visual | S | ✅ Implementado [2026-05-21] |
+
+**Prioridad sugerida:** QA sobre instancia real del ítem #1 tras despliegue en producción.
+
+**Decisiones pendientes:**
+- No se abren carriles de Arquitecto ni Diseñador para el ítem #1: la spec era suficientemente concreta para implementación directa.
+- El backlog de ciclo 4 queda abierto para nuevos ítems según avance el proyecto.
 
 **Agente:** orchestrator
