@@ -2,7 +2,7 @@
 
 _Documento operativo del proyecto. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-21 — Auditoría mobile ciclo 4 abierta. Próximo ID: QA-027.
+Última actualización: 2026-05-21 — Ciclo 4 cerrado. QA-027–032 validados en instancia real. Release v0.4.0 desbloqueada. Próximo ID: QA-033.
 
 ---
 
@@ -298,7 +298,7 @@ Compilado correctamente.
   1. Navegar a `/:site/item`.
   2. Observar el header y el toolbar superior del catálogo.
   3. Ver que el selector de orden ocupa demasiado ancho y se distribuye en varias líneas, rompiendo la jerarquía visual.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Desarrollador
 
 **Resolución:**
@@ -321,7 +321,7 @@ Pendiente de revalidación en instancia real.
   1. Navegar a `/:site/item`.
   2. Comparar la posición del chip de recuento con la vista `/:site/item-set`.
   3. Ver que en `item/browse` el contador aparece dentro del header, en lugar de colocarse en su propia línea sobre el listado.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Desarrollador
 
 **Resolución:**
@@ -344,7 +344,7 @@ Pendiente de revalidación en instancia real.
   1. Navegar a `/:site/item`.
   2. Observar la toolbar del catálogo y la franja independiente del contador sobre el listado.
   3. Ver que el chip de recuento no está integrado en la misma barra que el buscador y las acciones secundarias.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Desarrollador
 
 **Resolución:**
@@ -370,7 +370,7 @@ Pendiente de revalidación en instancia real.
   2. Inspeccionar los valores de color aplicados sobre las tarjetas `.audience-card`.
   3. Comprobar con una herramienta WCAG (p.ej. Colour Contrast Analyser) si el texto supera la ratio 4.5:1 sobre cada fondo.
   4. Cambiar `primary_color` en la configuración del tema y recargar para verificar si el aspecto visual se degrada.
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Diseñador
 
 **Resolución:**
@@ -392,7 +392,7 @@ Ficheros modificados: `asset/sass/components/home/_audience-rail.scss`, `asset/c
   1. En `Apariencia → Configurar tema`, dejar vacío el campo `Families card destination`.
   2. Recargar la home.
   3. Ver que la tarjeta de Familias sigue apareciendo (o que la rejilla queda desequilibrada si se suprime sin CSS adaptativo).
-- **Estado:** Resuelto
+- **Estado:** Cerrado
 - **Responsable:** Desarrollador
 
 **Resolución:**
@@ -634,6 +634,117 @@ Cambios en `asset/sass/components/item-show/_item-show.scss`:
 
 ---
 
+### QA-027 — `linked-resources.phtml`: `(string)` cast muestra URL en edLevel y about cuando el valor es un recurso enlazado
+
+- **Fecha:** 2026-05-21
+- **Severidad:** Alta
+- **Área:** Item show → bloque linked-resources
+- **Hallazgo:** En `view/common/linked-resources.phtml`, los campos `lrmi:educationalLevel` (`$edLevel`) y `schema:about` (`$about`) se renderizan con `(string) $edLevel` y `(string) $about` directamente. Cuando esos metadatos contienen un **valor de tipo recurso** (enlace a otro ítem Omeka-S), el cast devuelve la URL del ítem en lugar de su título — el mismo bug que corrigió QA-026 en `browse.phtml`. La corrección de QA-026 no se propagó a `linked-resources.phtml`.
+- **Reproducción mínima:**
+  1. Abrir la ficha de un recurso (`item/show`) que tenga recursos enlazados en el bloque linked-resources.
+  2. Que los ítems enlazados tengan `lrmi:educationalLevel` o `schema:about` apuntando a otro ítem Omeka-S (valor tipo recurso, no literal).
+  3. Ver que el pill de nivel o el campo "About" dentro de la tarjeta linked-resource muestra la URL del ítem enlazado en lugar de su título.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`view/common/linked-resources.phtml`: añadida closure `$displayValue($value)` (idéntica a la de `browse.phtml`) que comprueba `$value->type() === 'resource'` y llama a `$value->valueResource()->displayTitle(null, $valueLang)` cuando el valor es un recurso enlazado; si no, devuelve `(string) $value`. Los dos puntos de renderizado (`lrmi:educationalLevel` y `schema:about`) usan ahora `$displayValue()` en lugar del cast directo.
+
+---
+
+### QA-028 — `item/show` linked-resources mobile: `property-meta-group` no ocupa el ancho completo de la tarjeta
+
+- **Fecha:** 2026-05-21
+- **Severidad:** Media
+- **Área:** Item show → bloque linked-resources (375px, 320px)
+- **Hallazgo:** En `asset/sass/components/search-results/_search-results-list.scss`, el bloque `@media (max-width: $md)` de la tarjeta compartida actualiza `.property-meta-group` con `order: 6`, `margin-left: 0` y `flex-wrap: wrap`, pero **no redefine `flex`**. El valor heredado del escritorio es `flex: 0 0 auto` (no crece, basis automático), por lo que en mobile el meta-group ocupa solo el ancho de su contenido, dejando espacio vacío a la derecha en la misma línea flex. En la tarjeta linked-resource los pills de nivel, temática y badge quedan alineados a la izquierda como un bloque compacto sin extenderse al ancho total de la tarjeta.
+- **Reproducción mínima:**
+  1. Abrir `item/show` con el bloque linked-resources en un dispositivo o emulación de 375px.
+  2. Observar la fila del `property-meta-group` (nivel · sobre · badge tipo recurso) debajo del thumbnail+título.
+  3. Ver que los pills no llegan al borde derecho de la tarjeta, con espacio en blanco a su derecha.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`asset/sass/components/search-results/_search-results-list.scss`: añadido `flex: 0 0 100%` al bloque `@media (max-width: $md)` de `.property-meta-group`. El meta-group ocupa ahora el ancho completo de la tarjeta en mobile y los pills fluyen edge-to-edge con el wrapping interno ya existente.
+
+---
+
+### QA-029 — `item/browse` lista mobile ≤599px: imagen full-width con aspect-ratio 16:10 hace las filas excesivamente altas
+
+- **Fecha:** 2026-05-21
+- **Severidad:** Media
+- **Área:** Browse lista (375px, 320px)
+- **Hallazgo:** En `_resource-list.scss`, a `@media (max-width: 599px)` el `.resource-row` cambia a `flex-direction: column` y `.resource-row__media` pasa a `width: 100%; flex-basis: auto`. La `.resource-row__media-link` tiene `aspect-ratio: 16 / 10`, produciendo un bloque de imagen de ~234px de alto a 375px (200px a 320px). En vista lista mobile, cada fila empieza con una imagen de ancho completo del mismo peso visual que una tarjeta de grid, perdiendo la ventaja de densidad que justifica elegir la vista lista. A 375px con 10 resultados, el scroll es considerablemente mayor que en grid.
+- **Reproducción mínima:**
+  1. Navegar a `/:site/item?view=list` en un dispositivo o emulación de 375px.
+  2. Observar la altura de cada fila de resultado.
+  3. Ver que el bloque de imagen encabeza cada fila con ~234px de alto, similar a un card de grid.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`asset/sass/components/resources/_resource-list.scss`: en `@media (max-width: 599px)` se eliminó `flex-direction: column` del `.resource-row` (sustituido por `gap: 12px; align-items: flex-start` para mantener el layout horizontal) y se redujo `.resource-row__media` a `flex: 0 0 80px; width: 80px`. El `.resource-row__media-link` recibe `aspect-ratio: 1` en ese breakpoint, produciendo un thumbnail cuadrado de 80×80px alineado a la izquierda del texto.
+
+---
+
+### QA-030 — `resource-card__eyebrow` y `resource-row__eyebrow` sin control de overflow en mobile
+
+- **Fecha:** 2026-05-21
+- **Severidad:** Baja
+- **Área:** Browse grid y lista (375px, 320px)
+- **Hallazgo:** `.resource-card__eyebrow` (`_resource-grid.scss`) y `.resource-row__eyebrow` (`_resource-list.scss`) no tienen ningún control de overflow: sin `overflow: hidden`, `text-overflow: ellipsis`, ni `max-width` ni `-webkit-line-clamp`. En mobile a 320px (área de contenido ~256–288px), un valor `schema:about` largo (p.ej. "Matemáticas y Ciencias de la Naturaleza") puede renderizarse en 2–3 líneas, expandiendo inconsistentemente la altura de las tarjetas. Por contraste, en search results el mismo valor `schema:about` se trunca a 18ch como pill.
+- **Reproducción mínima:**
+  1. Asegurarse de que haya ítems con un valor `schema:about` de al menos 25 caracteres.
+  2. Navegar a `/:site/item` (grid o lista) en emulación de 320px.
+  3. Observar el eyebrow encima del título: el texto largo ocupa más de una línea mientras ítems con valores cortos muestran una sola línea, creando alturas de tarjeta dispares.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`asset/sass/components/resources/_resource-grid.scss` y `_resource-list.scss`: añadidos `overflow: hidden; white-space: nowrap; text-overflow: ellipsis` a `.resource-card__eyebrow` y `.resource-row__eyebrow` respectivamente. El eyebrow queda acotado a una sola línea con elipsis, garantizando alturas de tarjeta uniformes independientemente de la longitud del valor `schema:about`.
+
+---
+
+### QA-031 — `search/search.phtml` mobile: chips de `educationalLevel` y `about` desaparecen en ≤768px
+
+- **Fecha:** 2026-05-21
+- **Severidad:** Media
+- **Área:** Search results — `search/search.phtml` (375px, 320px)
+- **Hallazgo:** En mobile (≤768px), los pills de `lrmi:educationalLevel` y `schema:about` visibles en desktop desaparecen en los cards de resultados de búsqueda. La causa es el bloque de reset añadido en QA-024 en `_search-results-list.scss`: `display: inline; padding: 0; background: none; border: none; ...`. Ese reset fue diseñado para mostrar los valores como texto inline junto a la etiqueta `dt`, pero en la instancia real el resultado es que los chips desaparecen visualmente — el texto plano gris sobre fondo blanco no comunica la naturaleza de etiqueta/categoría que sí transmite el pill. Con el fix de QA-028 (`flex: 0 0 100%` en el meta-group mobile), los chips ya tienen espacio suficiente para fluir y no necesitan el reset.
+- **Reproducción mínima:**
+  1. Navegar a `/:site/search` en un dispositivo o emulación de 375px.
+  2. Buscar cualquier término con resultados que tengan `lrmi:educationalLevel` y `schema:about` informados.
+  3. Ver que en los cards de resultados, los pills de nivel y temática no aparecen: el texto plano gris es prácticamente invisible.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`asset/sass/components/search-results/_search-results-list.scss`: el bloque de reset de QA-024 (`display: inline; padding: 0; background: none; border: none; ...`) se sustituye por dos reglas que:
+1. Mantienen `dt { display: none }` para las propiedades chip (igual que desktop), anulando el `dt { display: inline }` genérico del meta-group mobile.
+2. Restauran `dd { display: inline-block }` para las propiedades chip, anulando el `dd { display: inline }` genérico del meta-group mobile.
+
+El resto del estilo pill (padding, background, border, border-radius, font-size, etc.) se conserva íntegramente desde el bloque desktop — no era necesario redefinirlo.
+
+---
+
+### QA-032 — Header mobile: toggle del menú se solapa con el nombre del sitio en estado no-scrolled
+
+- **Fecha:** 2026-05-21
+- **Severidad:** Media
+- **Área:** Header mobile (375px, 320px)
+- **Hallazgo:** En mobile (< `$lg`), el botón hamburguesa (`.main-navigation__toggle`) usa `margin: 20px auto`, lo que lo centra horizontalmente dentro del bloque `.main-navigation`. Ese bloque tiene `flex: 1 1 auto` y ocupa todo el espacio desde el borde derecho del site-title hasta el extremo derecho del main-bar. El resultado es que el toggle queda flotando en el centro de esa zona en lugar de anclarse al borde derecho del header, solapándose visualmente con el texto del nombre del sitio (especialmente cuando el nombre es largo o el viewport es estrecho). El solapamiento es más pronunciado en estado no-scrolled porque el site-name tiene su tamaño completo; al hacer scroll la fuente reduce a 14px y el solapamiento pasa desapercibido.
+- **Reproducción mínima:**
+  1. Abrir cualquier página del sitio en emulación de 375px.
+  2. Sin hacer scroll, observar el header: el toggle hamburguesa aparece centrado en la mitad derecha del header, solapándose con el nombre del sitio.
+- **Estado:** Cerrado
+- **Responsable:** Developer
+
+**Resolución:**
+`asset/sass/components/navigation/_navigation.scss`: `margin: 20px auto` → `margin: 20px 0 20px auto`. El `margin-left: auto` empuja el toggle al borde derecho del bloque `.main-navigation`, manteniéndolo siempre en el extremo derecho del header y fuera del área del site-title.
+
+---
+
 ## Resumen rápido
 
 | Estado | Conteo |
@@ -642,6 +753,6 @@ Cambios en `asset/sass/components/item-show/_item-show.scss`:
 | En análisis | 0 |
 | En curso | 0 |
 | Resuelto | 0 |
-| Cerrado | 26 |
+| Cerrado | 32 |
 | Diferido | 0 |
 | Rechazado | 0 |

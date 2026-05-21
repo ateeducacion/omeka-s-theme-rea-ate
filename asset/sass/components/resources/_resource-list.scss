@@ -39,7 +39,8 @@ body.item.resource.browse {
         }
 
         @media (max-width: 599px) {
-            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
         }
     }
 
@@ -53,8 +54,8 @@ body.item.resource.browse {
         }
 
         @media (max-width: 599px) {
-            width: 100%;
-            flex-basis: auto;
+            flex: 0 0 80px;
+            width: 80px;
         }
     }
 
@@ -65,6 +66,10 @@ body.item.resource.browse {
         overflow: hidden;
         border-radius: var(--ate-radius-lg);
         background: var(--ate-surface-card);
+
+        @media (max-width: 599px) {
+            aspect-ratio: 1;
+        }
     }
 
     .resource-row__media img,
@@ -115,6 +120,9 @@ body.item.resource.browse {
         letter-spacing: 1.2px;
         text-transform: uppercase;
         color: var(--ate-text-muted);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
 
     .resource-row__title {

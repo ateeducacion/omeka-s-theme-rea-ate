@@ -870,3 +870,24 @@ Los cambios que pueden afectar al mobile son:
 - Diferir el mobile a ciclo 5: descartado. Los cambios que generan las regresiones son del ciclo 4 y deben corregirse en el mismo ciclo.
 
 **Agente:** orchestrator
+
+---
+
+## [2026-05-21] ACEPTADA — Cierre del ciclo 4 y release v0.4.0
+
+**Contexto:** La auditoría mobile del ciclo 4 ha concluido. Los 6 hallazgos registrados (QA-027–032) han sido resueltos por el Developer y validados en instancia real por el agente QA. El criterio de salida del ciclo 4 se cumple: todos los hallazgos en estado Cerrado.
+
+**Hallazgos del ciclo 4 — auditoría mobile:**
+
+| ID | Severidad | Descripción |
+|----|-----------|-------------|
+| QA-027 | Alta | `linked-resources.phtml`: cast `(string)` mostraba URL en edLevel/about — `$displayValue()` añadida |
+| QA-028 | Media | `property-meta-group` sin `flex: 0 0 100%` en mobile — meta-group no ocupaba ancho completo |
+| QA-029 | Media | Lista mobile ≤599px: imagen full-width 16:10 → thumbnail 80×80px cuadrado |
+| QA-030 | Baja | Eyebrows sin overflow control → `white-space: nowrap; text-overflow: ellipsis` añadidos |
+| QA-031 | Media | Chips de nivel/about desaparecían en mobile — reset de QA-024 reemplazado por override de especificidad |
+| QA-032 | Media | Toggle hamburguesa se solapaba con site-name — `margin: 20px 0 20px auto` para anclarlo al borde derecho |
+
+**Decisión:** Publicar `v0.4.0`. El backlog del ciclo 5 queda abierto para nuevos ítems.
+
+**Agente:** orchestrator

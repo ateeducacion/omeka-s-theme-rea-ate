@@ -113,6 +113,9 @@ body.item.resource.browse {
         letter-spacing: 1.4px;
         text-transform: uppercase;
         color: var(--ate-text-muted);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
 
     .resource-card__title {

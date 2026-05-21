@@ -12,6 +12,15 @@ if ($this->status()->isSiteRequest()) {
     $valueLang = $filterLocale ? [$lang, ''] : null;
 }
 
+$displayValue = function ($value) use ($valueLang) {
+    if (!$value) return '';
+    if ($value->type() === 'resource') {
+        $linked = $value->valueResource();
+        return $linked ? $linked->displayTitle(null, $valueLang) : (string) $value;
+    }
+    return (string) $value;
+};
+
 $labelMap = [
     'items' => 'Items', // @translate
     'item_sets' => 'Item sets', // @translate
@@ -62,13 +71,13 @@ $escapeAttr = $this->plugin('escapeHtmlAttr');
                         <?php if ($edLevel): ?>
                             <div class="property" data-term="lrmi:educationalLevel">
                                 <dt><?php echo $escape($this->translate('Educational Level')); ?></dt>
-                                <dd class="value"><?php echo $escape((string) $edLevel); ?></dd>
+                                <dd class="value"><?php echo $escape($displayValue($edLevel)); ?></dd>
                             </div>
                         <?php endif; ?>
                         <?php if ($about): ?>
                             <div class="property" data-term="schema:about">
                                 <dt><?php echo $escape($this->translate('About')); ?></dt>
-                                <dd class="value"><?php echo $escape((string) $about); ?></dd>
+                                <dd class="value"><?php echo $escape($displayValue($about)); ?></dd>
                             </div>
                         <?php endif; ?>
                         <?php if ($lrt): ?>

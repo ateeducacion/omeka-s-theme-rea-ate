@@ -256,6 +256,7 @@ ul.resource-list.search-result-list.list > li.resource.item,
 
             .property-meta-group {
                 order: 6;
+                flex: 0 0 100%;
                 margin-left: 0;
                 flex-wrap: wrap;
                 gap: 0.25rem 0.5rem;
@@ -277,19 +278,16 @@ ul.resource-list.search-result-list.list > li.resource.item,
                 display: none;
             }
 
-            // Reset chip appearance — in mobile these properties show inline with dt label
+            // Chips keep their pill visual in mobile — override the generic dd:inline
+            // from the meta-group block above and hide the dt (same as desktop).
+            .property[data-term="lrmi:educationalLevel"] dt,
+            .property[data-term="schema:about"] dt {
+                display: none;
+            }
+
             .property[data-term="lrmi:educationalLevel"] dd,
             .property[data-term="schema:about"] dd {
-                display: inline;
-                padding: 0;
-                background: none;
-                border: none;
-                border-radius: 0;
-                max-width: none;
-                overflow: visible;
-                text-overflow: clip;
-                white-space: normal;
-                color: $color__gray-40;
+                display: inline-block;
             }
 
             .property[data-term="lrmi:teaches"],
