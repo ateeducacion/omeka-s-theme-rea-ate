@@ -172,6 +172,17 @@ const freedomScripts = () => {
         }
     });
 
+    // Prevent empty search form submission
+    document.querySelectorAll('.main-header__search-form form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            const input = form.querySelector('input[type="search"], input[name="fulltextsearch"]');
+            if (input && !input.value.trim()) {
+                e.preventDefault();
+                input.focus();
+            }
+        });
+    });
+
     // Collapsible facet groups
     document.querySelectorAll('.search-facets li.facet').forEach(function(facet) {
         const heading = facet.querySelector('h4');

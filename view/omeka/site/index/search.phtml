@@ -1,124 +1,185 @@
 <?php
-$translate = $this->plugin('translate');
-$escape = $this->plugin('escapeHtml');
-$hyperlink = $this->plugin('hyperlink');
-$url = $this->plugin('url');
-$this->inlineScript()->appendFile($this->assetUrl('js/minimasonry.min.js'));
+$translate  = $this->plugin('translate');
+$escape     = $this->plugin('escapeHtml');
+$escapeAttr = $this->plugin('escapeHtmlAttr');
+$hyperlink  = $this->plugin('hyperlink');
+$url        = $this->plugin('url');
+
 $this->inlineScript()->appendFile($this->assetUrl('js/browse.js'));
 $this->htmlElement('body')->appendAttribute('class', 'index search');
 
 $filterLocale = (bool) $this->siteSetting('filter_locale_values');
-$lang = $this->lang();
-$valueLang = $filterLocale ? [$lang, ''] : null;
+$lang         = $this->lang();
+$valueLang    = $filterLocale ? [$lang, ''] : null;
 
 $bodyTerm = $this->siteSetting('browse_body_property_term');
-$bodyTruncate = $this->themeSetting('truncate_body_property');
 
-$decoration = $this->themeSetting('image_decoration');
-$decorationClass = '';
+$getFirstValue = function ($resource, array $terms) {
+    foreach ($terms as $term) {
+        $v = $resource->value($term);
+        if ($v) return $v;
+    }
+    return null;
+};
 
-if (is_array($decoration) && in_array('media', $decoration)) {
-    $decorationClass = 'decoration';
-}
+$displayValue = function ($value) use ($valueLang) {
+    if (!$value) return '';
+    if ($value->type() === 'resource') {
+        $linked = $value->valueResource();
+        return $linked ? $linked->displayTitle(null, $valueLang) : (string) $value;
+    }
+    return (string) $value;
+};
+
+$itemResults = $results['items'] ?? null;
+$totalItems  = $itemResults ? (int) $itemResults['total'] : 0;
+$itemList    = $itemResults ? $itemResults['resources'] : [];
+
+$hasQuery = isset($query) && trim((string) $query) !== '';
 ?>
 
-<?php echo $this->pageTitle(sprintf($translate('Search results for “%s”'), $query)); ?>
+<section class="resource-browse-page">
 
-<?php if (empty($results)): ?>
-    <p><?php echo $translate('No result found'); ?></p>
-<?php else: ?>
-    <?php
-    $resourceLabels = [
-        'site_pages' => 'Site pages', // @translate
-        'items' => 'Items', // @translate
-        'item_sets' => 'Item sets', // @translate
-        'media' => 'Media', // @translate
-    ];
-    $resourceControllers = [
-        'site_pages' => 'page',
-        'items' => 'item',
-        'item_sets' => 'item-set',
-        'media' => 'media',
-    ];
-    ?>
-    <?php foreach ($results as $resourceName => $result): ?>
-        <div class="<?php echo $resourceName; ?> results">
-            <h2><?php echo $translate($resourceLabels[$resourceName]); ?></h2>
-            <ul class="resources resource-grid">
-                <?php foreach ($result['resources'] as $resource):
-                    $primaryMedia = $resource->primaryMedia();
-                    $thumbnail = $this->thumbnail($primaryMedia, 'large');
+    <header class="resource-browse-header">
+        <div class="resource-browse-header__title-group">
+            <h1 class="resource-browse-header__title">
+                <?php if ($hasQuery): ?>
+                    <?php echo $escape(sprintf($translate('Resultados para "%s"'), $query)); ?>
+                <?php else: ?>
+                    <?php echo $escape($translate('Buscar')); ?>
+                <?php endif; ?>
+            </h1>
+            <?php if ($hasQuery && $totalItems > 0): ?>
+                <p class="resource-browse-header__subtitle">
+                    <?php echo $escape(sprintf(
+                        $totalItems === 1 ? $translate('%s recurso encontrado') : $translate('%s recursos encontrados'),
+                        $totalItems
+                    )); ?>
+                </p>
+            <?php endif; ?>
+        </div>
+    </header>
 
-                    // Get body/description based on resource type
-                    if ($resourceName === 'items' && method_exists($resource, 'value')) {
-                        $body = $bodyTerm ? $resource->value($bodyTerm, ['lang' => ($valueLang)]) : $resource->displayDescription(null, ($valueLang));
-                    } else {
-                        $body = null;
-                    }
+    <?php if (!$hasQuery): ?>
+        <p><?php echo $escape($translate('Introduce un término de búsqueda.')); ?></p>
+
+    <?php elseif (empty($results) || (!$itemList && empty($results['site_pages']['resources']) && empty($results['item_sets']['resources']))): ?>
+        <p><?php echo $escape($translate('No result found')); ?></p>
+
+    <?php else: ?>
+
+        <?php if ($itemList): ?>
+            <ul class="resources resource-grid" data-disable-masonry="true">
+                <?php foreach ($itemList as $item): ?>
+                    <?php
+                    $title         = $item->displayTitle(null, $valueLang);
+                    $resourceUrl   = $item->siteUrl();
+                    $thumbnail     = $this->thumbnail($item, 'large');
+                    $resourceType  = $item->value('lrmi:learningResourceType');
+                    $eduLevel      = $getFirstValue($item, ['lrmi:educationalLevel', 'lom:educationalLevel']);
+                    $topic         = $getFirstValue($item, ['schema:about', 'dcterms:subject']);
+                    $body          = $bodyTerm
+                        ? $item->value($bodyTerm, ['lang' => $valueLang])
+                        : $item->displayDescription(null, $valueLang);
+                    $summary       = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $body)));
+                    $createdDate   = $item->created();
+                    $daysAgo       = ($createdDate instanceof DateTimeInterface)
+                        ? (new DateTimeImmutable('now'))->diff($createdDate)->days
+                        : null;
                     ?>
-                    <li class="item resource">
-                        <!-- Thumbnail -->
-                        <?php if ($thumbnail): ?>
-                            <div class="resource__thumbnail <?php echo $decorationClass; ?>">
-                                <?php echo $resource->linkRaw($thumbnail); ?>
-                            </div>
-                        <?php endif; ?>
+                    <li class="item resource resource-card">
+                        <div class="resource-card__media">
+                            <a class="resource-card__media-link" href="<?php echo $escapeAttr($resourceUrl); ?>">
+                                <?php if ($thumbnail): ?>
+                                    <?php echo $thumbnail; ?>
+                                <?php else: ?>
+                                    <span class="resource-card__media-fallback">
+                                        <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+                                    </span>
+                                <?php endif; ?>
+                            </a>
+                            <?php if ($resourceType): ?>
+                                <div class="resource-card__badge">
+                                    <?php echo $this->partial('common/resource-type-badge', [
+                                        'resourceTypeValue' => $resourceType,
+                                        'class'             => 'resource-type-badge--overlay',
+                                    ]); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
 
-                        <!-- Content -->
-                        <div class="resource__content">
-                            <!-- Metadata -->
-                            <div class="resource__meta">
-                                <?php
-                                if ($resourceName === 'site_pages') {
-                                    echo $resource->link($resource->title());
-                                } else {
-                                    echo $resource->link($resource->displayTitle(null, $valueLang));
-                                }
-                                ?>
-                                <?php if ($body): ?>
-                                    <div class="description <?php echo ($bodyTruncate) ? $bodyTruncate : ''; ?>"><?php echo $escape($body); ?></div>
+                        <div class="resource-card__body">
+                            <?php if ($topic): ?>
+                                <p class="resource-card__eyebrow"><?php echo $escape($displayValue($topic)); ?></p>
+                            <?php endif; ?>
+
+                            <h2 class="resource-card__title">
+                                <a href="<?php echo $escapeAttr($resourceUrl); ?>"><?php echo $escape($title); ?></a>
+                            </h2>
+
+                            <div class="resource-card__meta">
+                                <?php if ($eduLevel): ?>
+                                    <span class="resource-level-pill"><?php echo $escape($displayValue($eduLevel)); ?></span>
                                 <?php endif; ?>
                             </div>
-                            <?php
-                            // Only show days ago tag for items
-                            if ($resourceName === 'items' && method_exists($resource, 'created')):
-                                // Calculate days since creation
-                                $createdDate = $resource->created();
-                                $now = new DateTime();
-                                $diff = $now->diff($createdDate);
-                                $daysAgo = $diff->days;
 
-                                // Get resource tags output
-                                $resourceTagsHtml = $this->ResourceTags($resource);
+                            <?php if ($summary !== ''): ?>
+                                <p class="resource-card__summary"><?php echo $escape($summary); ?></p>
+                            <?php endif; ?>
 
-                                // Create days ago tag
-                                $daysAgoTag = '<div class="resource-tag days-ago-tag">'
-                                    . $escape(sprintf($translate($daysAgo == 1 ?  '%s day ago' : '%s days ago'), $daysAgo))
-                                    . '</div>';
-
-                                // If resource tags exist, inject our tag inside; otherwise create wrapper
-                                if (!empty($resourceTagsHtml)) {
-                                    // Remove the closing </div> and add our tag before closing
-                                    echo substr($resourceTagsHtml, 0, -6) . $daysAgoTag . '</div>';
-                                } else {
-                                    // Create our own resource-tags wrapper
-                                    echo '<div class="resource-tags">' . $daysAgoTag . '</div>';
-                                }
-                            endif;
-                            ?>
+                            <?php if ($daysAgo !== null): ?>
+                                <div class="resource-catalog-footer">
+                                    <span class="resource-days-ago">
+                                        <?php echo $escape(sprintf(
+                                            $translate($daysAgo === 1 ? '%s day ago' : '%s days ago'),
+                                            $daysAgo
+                                        )); ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </li>
                 <?php endforeach; ?>
             </ul>
-                <?php echo $hyperlink(
-                    sprintf($translate('View all results (%s total)'), $result['total']),
-                    $url(
-                        'site/resource',
-                        ['controller' => $resourceControllers[$resourceName], 'action' => 'browse'],
-                        ['query' => ['fulltext_search' => $query]],
-                        true
-                    )
-                ); ?>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
+
+            <?php if ($totalItems > count($itemList)): ?>
+                <p class="search-view-all">
+                    <?php echo $hyperlink(
+                        sprintf($translate('Ver todos los resultados (%s recursos)'), $totalItems),
+                        $url(
+                            'site/resource',
+                            ['controller' => 'item', 'action' => 'browse'],
+                            ['query' => ['fulltext_search' => $query]],
+                            true
+                        )
+                    ); ?>
+                </p>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php foreach (['site_pages' => 'Páginas del sitio', 'item_sets' => 'Colecciones'] as $type => $label):
+            if (empty($results[$type]['resources'])) continue; ?>
+            <section class="search-resource-group">
+                <h2 class="search-resource-group__title"><?php echo $escape($translate($label)); ?></h2>
+                <ul class="search-resource-group__list">
+                    <?php foreach ($results[$type]['resources'] as $resource): ?>
+                        <li><?php echo $resource->link($resource->displayTitle(null, $valueLang) ?: $resource->title()); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php if ($results[$type]['total'] > count($results[$type]['resources'])): ?>
+                    <p><?php echo $hyperlink(
+                        sprintf($translate('Ver todos (%s)'), $results[$type]['total']),
+                        $url(
+                            'site/resource',
+                            ['controller' => $type === 'site_pages' ? 'page' : 'item-set', 'action' => 'browse'],
+                            ['query' => ['fulltext_search' => $query]],
+                            true
+                        )
+                    ); ?></p>
+                <?php endif; ?>
+            </section>
+        <?php endforeach; ?>
+
+    <?php endif; ?>
+
+</section>
