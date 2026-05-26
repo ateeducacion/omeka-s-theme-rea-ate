@@ -2,16 +2,16 @@
 
 _Documento operativo del proyecto. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-05-21 — Ciclo 5 en curso. QA-033 cerrado. JSON-LD implementado. Próximo ID: QA-034.
+Última actualización: 2026-05-26 — Ciclo 6 cerrado. Búsqueda avanzada rediseñada. QA sobre instancia real pendiente (ciclo 7). Próximo ID: QA-034.
 
 ---
 
 ## Alcance actual
 
-**Ciclo 5 — JSON-LD + correcciones enlace (IDs desde QA-033):**
+**Ciclo 5 — Cerrado:**
 
 - `view/common/header.phtml`: enlace "Advanced search" apuntaba a `/item/search` (formulario nativo) en lugar de `/search` (módulo AdvancedSearch). — ✅ cerrado (QA-033)
-- `view/omeka/site/item/show.phtml`: bloque JSON-LD Schema.org `LearningResource` inyectado en `<head>` vía `headScript()->appendScript()`. — ✅ implementado
+- `view/omeka/site/item/show.phtml`: bloque JSON-LD Schema.org `LearningResource` inyectado en `<head>` vía `headScript()->appendScript()`. — ✅ validado en instancia real (0 errores, 0 advertencias en validator.schema.org)
 
 **Ciclo 4 — Cerrado:**
 

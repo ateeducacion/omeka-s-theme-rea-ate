@@ -1,17 +1,467 @@
 <?php
-$translate = $this->plugin('translate');
+$translate  = $this->plugin('translate');
+$escape     = $this->plugin('escapeHtml');
 $this->inlineScript()->appendFile($this->assetUrl('js/advanced-search.js'));
-$this->htmlElement('body')->appendAttribute('class', 'items search');
+$this->htmlElement('body')->appendAttribute('class', 'items search advanced-search-edu');
+
+$query = $this->params()->fromQuery();
+
+// Property ID lookups — installation-independent.
+$eduPropTerms = [
+    'lrmi:educationalLevel'     => 'Nivel educativo',
+    'lrmi:learningResourceType' => 'Tipo de recurso',
+    'schema:about'              => 'Materia o tema',
+    'lrmi:educationalRole'      => 'Audiencia destinataria',
+    'lrmi:timeRequired'         => 'Duración',
+];
+$eduProps = [];
+foreach (array_keys($eduPropTerms) as $term) {
+    try {
+        $prop = $this->api()->searchOne('properties', ['term' => $term])->getContent();
+        if ($prop) $eduProps[$term] = $prop->id();
+    } catch (\Exception $e) {}
+}
+
+// Build prop-id → array of text values from the incoming query (supports multi-value).
+$existingPropValues = [];
+foreach ($query['property'] ?? [] as $ep) {
+    $pid = (int) ($ep['property'] ?? 0);
+    if ($pid && isset($ep['text']) && $ep['text'] !== '') {
+        $existingPropValues[$pid][] = $ep['text'];
+    }
+}
+
+// Returns all existing text values for a property term (array).
+$propVals = function (string $term) use ($eduProps, $existingPropValues): array {
+    return isset($eduProps[$term]) ? ($existingPropValues[$eduProps[$term]] ?? []) : [];
+};
+
+// Pre-select lrmi:LearningResource class unless already set by the user.
+$lrmiClassId = null;
+if (empty($query['resource_class_id'])) {
+    try {
+        $cls = $this->api()->searchOne('resource_classes', ['term' => 'lrmi:LearningResource'])->getContent();
+        if ($cls) {
+            $lrmiClassId = $cls->id();
+            $query['resource_class_id'] = [$lrmiClassId];
+        }
+    } catch (\Exception $e) {}
+} else {
+    $lrmiClassId = (int) ($query['resource_class_id'][0] ?? 0) ?: null;
+}
+
+// Total resources for count badge.
+$totalResources = null;
+if ($lrmiClassId) {
+    try {
+        $totalResources = $this->api()->search('items', [
+            'resource_class_id' => [$lrmiClassId], 'limit' => 0,
+        ])->getTotalResults();
+    } catch (\Exception $e) {}
+}
+
+// Available item sets for the collections filter.
+$availableItemSets = [];
+try {
+    $availableItemSets = $this->api()->search('item_sets', [
+        'sort_by' => 'dcterms:title', 'sort_order' => 'asc', 'limit' => 100,
+    ])->getContent();
+} catch (\Exception $e) {}
+$selectedItemSets = array_map('intval', $query['item_set_id'] ?? []);
+$itemSetTitles    = [];
+foreach ($availableItemSets as $_is) {
+    $itemSetTitles[$_is->id()] = $_is->displayTitle();
+}
+
+// Chip option lists.
+$levelChips = [
+    'Educación Infantil', 'Educación Primaria',
+    '1º ESO', '2º ESO', '3º ESO', '4º ESO',
+    '1º Bachillerato', '2º Bachillerato',
+    'FP Básica', 'FP Grado Medio', 'FP Grado Superior',
+];
+$typeChips = [
+    ['v' => 'Vídeo',                    'i' => 'play_circle'],
+    ['v' => 'SCORM',                    'i' => 'interactive_space'],
+    ['v' => 'PDF',                      'i' => 'picture_as_pdf'],
+    ['v' => 'Texto',                    'i' => 'description'],
+    ['v' => 'Infografía',               'i' => 'image'],
+    ['v' => 'Situación de aprendizaje', 'i' => 'account_tree'],
+    ['v' => 'Objeto de aprendizaje',    'i' => 'school'],
+];
+$audienceChips = ['Alumnado', 'Docente', 'Familias', 'NEAE', 'Centros educativos'];
+
+// Pre-selected chip values per group (arrays for multi-select).
+$lvlVals      = $propVals('lrmi:educationalLevel');
+$typeVals     = $propVals('lrmi:learningResourceType');
+$audienceVals = $propVals('lrmi:educationalRole');
+$subjectVals  = $propVals('schema:about');   // multi-value pills
+
+// Duration range: Omeka-S only supports eq/in/sw/ew/res/ex/dt for property queries.
+// gte/lte are silently ignored. Workaround: build OR conditions for each matching
+// integer value from the actual stored data. Values are passed to JS as JSON array.
+// Display uses custom dur_min/dur_max params (unknown to Omeka, just for UI state).
+$durPropId  = $eduProps['lrmi:timeRequired'] ?? 0;
+$durationMin = (string) ($query['dur_min'] ?? '');
+$durationMax = (string) ($query['dur_max'] ?? '');
+
+// Query distinct integer values for this property via Omeka-S API.
+// Used by JS to build exact OR-eq conditions (Omeka doesn't support gte/lte on literals).
+$durValues = null; // null → JS falls back to multiples-of-5
+if ($durPropId) {
+    try {
+        $durItems = $this->api()->search('items', [
+            'property' => [['property' => (int) $durPropId, 'type' => 'ex']],
+            'limit'    => 500,
+        ])->getContent();
+        $durValSet = [];
+        foreach ($durItems as $dItem) {
+            $dVal = $dItem->value('lrmi:timeRequired');
+            if ($dVal) {
+                $txt = trim($dVal->value());
+                if (ctype_digit($txt) && (int) $txt > 0) {
+                    $durValSet[(int) $txt] = true;
+                }
+            }
+        }
+        ksort($durValSet);
+        $durValues = array_keys($durValSet);
+    } catch (\Throwable $e) {
+        $durValues = null;
+    }
+}
+
+// Subject options for dropdown.
+$subjectOptions = [
+    'Biología y Geología', 'Matemáticas', 'Lengua Castellana y Literatura',
+    'Lengua extranjera Inglés', 'Lengua extranjera Francés',
+    'Geografía e Historia', 'Historia de Canarias',
+    'Literatura Canaria', 'Medio Natural Canario',
+    'Física y Química', 'Tecnología e Ingeniería', 'Economía',
+    'Filosofía', 'Educación Física', 'Música', 'Artes Plásticas',
+];
+
+$sortBy    = $escape($query['sort_by'] ?? '');
+$sortOrder = $escape($query['sort_order'] ?? 'desc');
 ?>
 
-<h2><?php echo $translate('Advanced item search'); ?></h2>
-<form id="advanced-search" method="get" action="<?php echo $this->escapeHtml($this->url(null, ['action' => 'browse'], true)); ?>">
-<?php echo $this->partial(
-    'common/advanced-search',
-    ['query' => $this->params()->fromQuery(), 'resourceType' => 'item']
-); ?>
-<div id="page-actions">
-    <input type="submit" name="submit" value="<?php echo $this->escapeHtml($translate('Search')); ?>">
-    <input type="reset" value="<?php echo $this->escapeHtml($translate('Reset')); ?>" name="reset" class="reset-button btn--secondary" />
+<?php /* ── Page header ─────────────────────────────────────────────── */ ?>
+<div class="bs-page-header">
+    <div class="bs-page-header__left">
+        <p class="bs-page-header__eyebrow"><?php echo $translate('Recursos Educativos Abiertos'); ?></p>
+        <h2 class="bs-page-header__title">
+            <?php echo $translate('Búsqueda avanzada de'); ?>
+            <em><?php echo $translate('recursos educativos'); ?></em>
+        </h2>
+    </div>
+    <?php if ($totalResources !== null): ?>
+    <span class="bs-page-header__count">
+        <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
+        <strong><?php echo number_format((int) $totalResources, 0, ',', '.'); ?></strong>
+        <?php echo $translate('recursos disponibles'); ?>
+    </span>
+    <?php endif; ?>
 </div>
+
+<form id="advanced-search" method="get"
+      action="<?php echo $escape($this->url(null, ['action' => 'browse'], true)); ?>">
+
+    <?php /* Container where JS will inject property[n][...] inputs for chip groups */ ?>
+    <div id="bs-chip-inputs" aria-hidden="true"
+         data-dur-prop-id="<?php echo $escape((string) $durPropId); ?>"
+         data-dur-values="<?php echo $escape(json_encode($durValues)); ?>"></div>
+
+    <?php /* ── Preselected class badge ──────────────────────────────── */ ?>
+    <?php if ($lrmiClassId): ?>
+    <div class="bs-preselected" id="bs-preselected">
+        <div class="bs-preselected__icon">
+            <span class="material-symbols-outlined" aria-hidden="true">school</span>
+        </div>
+        <div class="bs-preselected__text">
+            <div class="bs-preselected__label"><?php echo $translate('Buscando dentro de'); ?></div>
+            <div class="bs-preselected__value">
+                <?php echo $translate('Recursos de aprendizaje'); ?>
+                <code>lrmi:LearningResource</code>
+            </div>
+        </div>
+        <input type="hidden" name="resource_class_id[]"
+               value="<?php echo $escape((string) $lrmiClassId); ?>">
+    </div>
+    <?php endif; ?>
+
+    <?php /* ── Hero search ──────────────────────────────────────────── */ ?>
+    <section class="bs-hero-search">
+        <div class="bs-hero-search__legend"><?php echo $translate('Búsqueda por texto'); ?></div>
+        <p class="bs-hero-search__caption">
+            <?php echo $translate('Escribe una palabra clave, un título, un autor o una frase exacta entre comillas.'); ?>
+        </p>
+        <div class="bs-hero-search__row">
+            <span class="bs-hero-search__icon">
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+            </span>
+            <input class="bs-hero-search__input" type="text" name="search"
+                   id="edu-search"
+                   value="<?php echo $escape($query['search'] ?? ''); ?>"
+                   placeholder="<?php echo $escape($translate('P. ej. «ecosistemas de Canarias» o «laurisilva»…')); ?>">
+            <button class="bs-hero-search__submit" type="submit">
+                <?php echo $translate('Buscar'); ?>
+                <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </button>
+        </div>
+    </section>
+
+    <?php /* ── Main filters ──────────────────────────────────────────── */ ?>
+    <section class="bs-filter-section">
+
+        <div class="bs-filter-section__head">
+            <div class="bs-filter-section__legend">
+                <?php echo $translate('Filtros principales'); ?>
+            </div>
+            <span class="bs-filter-section__hint">
+                <?php echo $translate('Acota por nivel, tipo, materia y colección'); ?>
+            </span>
+        </div>
+
+        <?php /* Level chips — multi-select; JS generates property[n][...] on submit */ ?>
+        <?php if (isset($eduProps['lrmi:educationalLevel'])): ?>
+        <div class="bs-filter-row">
+            <div class="bs-filter-row__label">
+                <?php echo $translate('Nivel educativo'); ?>
+                <small><?php echo $translate('Uno o varios'); ?></small>
+            </div>
+            <div class="bs-filter-row__control">
+                <div class="bs-chip-group"
+                     data-prop-id="<?php echo $escape((string) $eduProps['lrmi:educationalLevel']); ?>"
+                     data-prop-type="in">
+                    <?php foreach ($levelChips as $lc): ?>
+                    <button type="button"
+                            class="bs-chip<?php echo in_array($lc, $lvlVals, true) ? ' selected' : ''; ?>"
+                            data-value="<?php echo $escape($lc); ?>">
+                        <?php echo $escape($lc); ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php /* Type chips — multi-select */ ?>
+        <?php if (isset($eduProps['lrmi:learningResourceType'])): ?>
+        <div class="bs-filter-row">
+            <div class="bs-filter-row__label">
+                <?php echo $translate('Tipo de recurso'); ?>
+                <small><?php echo $translate('Uno o varios'); ?></small>
+            </div>
+            <div class="bs-filter-row__control">
+                <div class="bs-chip-group"
+                     data-prop-id="<?php echo $escape((string) $eduProps['lrmi:learningResourceType']); ?>"
+                     data-prop-type="in">
+                    <?php foreach ($typeChips as $tc): ?>
+                    <button type="button"
+                            class="bs-chip bs-type-chip<?php echo in_array($tc['v'], $typeVals, true) ? ' selected' : ''; ?>"
+                            data-value="<?php echo $escape($tc['v']); ?>">
+                        <span class="bs-type-chip__icon">
+                            <span class="material-symbols-outlined" aria-hidden="true"><?php echo $escape($tc['i']); ?></span>
+                        </span>
+                        <?php echo $escape($tc['v']); ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php /* Subject — dropdown + multi-value pills; JS generates property[n][...] on submit */ ?>
+        <?php if (isset($eduProps['schema:about'])): ?>
+        <div class="bs-filter-row">
+            <div class="bs-filter-row__label">
+                <?php echo $translate('Materia o tema'); ?>
+                <small><?php echo $translate('Una o varias'); ?></small>
+            </div>
+            <div class="bs-filter-row__control">
+                <div class="bs-subject-picker">
+                    <div class="bs-subject-picker__select-wrap">
+                        <div class="bs-select">
+                            <select id="subject-add-select"
+                                    data-pills-target="subject-pills"
+                                    aria-label="<?php echo $escape($translate('Seleccionar materia')); ?>">
+                                <option value=""><?php echo $escape($translate('Seleccionar materia…')); ?></option>
+                                <?php foreach ($subjectOptions as $so): ?>
+                                <option value="<?php echo $escape($so); ?>"><?php echo $escape($so); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bs-selected-pills"
+                         id="subject-pills"
+                         data-prop-id="<?php echo $escape((string) $eduProps['schema:about']); ?>"
+                         data-prop-type="in">
+                        <?php foreach ($subjectVals as $sv): ?>
+                        <span class="bs-selected-pill" data-value="<?php echo $escape($sv); ?>">
+                            <?php echo $escape($sv); ?>
+                            <button type="button" class="bs-selected-pill__remove"
+                                    aria-label="<?php echo $escape($translate('Quitar')); ?> <?php echo $escape($sv); ?>">
+                                <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                            </button>
+                        </span>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php /* Collections */ ?>
+        <?php if ($availableItemSets): ?>
+        <div class="bs-filter-row">
+            <div class="bs-filter-row__label">
+                <?php echo $translate('Colecciones'); ?>
+                <small><?php echo $translate('Filtrar por colección'); ?></small>
+            </div>
+            <div class="bs-filter-row__control">
+                <div class="bs-subject-picker">
+                    <div class="bs-subject-picker__select-wrap">
+                        <div class="bs-select">
+                            <select id="collection-add-select"
+                                    data-pills-target="collection-pills"
+                                    aria-label="<?php echo $escape($translate('Seleccionar colección…')); ?>">
+                                <option value=""><?php echo $escape($translate('Seleccionar colección…')); ?></option>
+                                <?php foreach ($availableItemSets as $is): ?>
+                                <option value="<?php echo $escape((string) $is->id()); ?>">
+                                    <?php echo $escape($is->displayTitle()); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bs-selected-pills" id="collection-pills"
+                         data-item-set-pills="true">
+                        <?php foreach ($selectedItemSets as $isId): ?>
+                        <?php if (isset($itemSetTitles[$isId])): ?>
+                        <span class="bs-selected-pill"
+                              data-value="<?php echo $escape((string) $isId); ?>">
+                            <?php echo $escape($itemSetTitles[$isId]); ?>
+                            <button type="button" class="bs-selected-pill__remove"
+                                    aria-label="<?php echo $escape($translate('Quitar') . ' ' . $itemSetTitles[$isId]); ?>">
+                                <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                            </button>
+                        </span>
+                        <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php /* More filters toggle */ ?>
+        <button type="button" class="bs-more-toggle" id="moreFiltersToggle"
+                aria-expanded="false" aria-controls="moreFilters">
+            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+            <?php echo $translate('Más filtros'); ?>
+        </button>
+
+        <?php /* More filters panel */ ?>
+        <div class="bs-more-filters" id="moreFilters">
+
+            <?php /* Audience chips — multi-select */ ?>
+            <?php if (isset($eduProps['lrmi:educationalRole'])): ?>
+            <div class="bs-filter-row">
+                <div class="bs-filter-row__label">
+                    <?php echo $translate('Audiencia destinataria'); ?>
+                    <small><?php echo $translate('Una o varias'); ?></small>
+                </div>
+                <div class="bs-filter-row__control">
+                    <div class="bs-chip-group"
+                         data-prop-id="<?php echo $escape((string) $eduProps['lrmi:educationalRole']); ?>"
+                         data-prop-type="in">
+                        <?php foreach ($audienceChips as $ac): ?>
+                        <button type="button"
+                                class="bs-chip<?php echo in_array($ac, $audienceVals, true) ? ' selected' : ''; ?>"
+                                data-value="<?php echo $escape($ac); ?>">
+                            <?php echo $escape($ac); ?>
+                        </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php /* Duration range — OR eq conditions built by JS from known values */ ?>
+            <?php if ($durPropId): ?>
+            <div class="bs-filter-row">
+                <div class="bs-filter-row__label">
+                    <?php echo $translate('Duración estimada'); ?>
+                    <small><?php echo $translate('Minutos'); ?></small>
+                </div>
+                <div class="bs-filter-row__control">
+                    <div class="bs-duration-range">
+                        <label for="duration-min"><?php echo $translate('De'); ?></label>
+                        <input type="number"
+                               id="duration-min"
+                               name="dur_min"
+                               class="bs-text-input bs-text-input--number"
+                               value="<?php echo $escape($durationMin); ?>"
+                               min="0" placeholder="0">
+                        <label for="duration-max"><?php echo $translate('a'); ?></label>
+                        <input type="number"
+                               id="duration-max"
+                               name="dur_max"
+                               class="bs-text-input bs-text-input--number"
+                               value="<?php echo $escape($durationMax); ?>"
+                               min="0" placeholder="120">
+                        <span class="bs-duration-range__unit"><?php echo $translate('min'); ?></span>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php /* Sort */ ?>
+            <div class="bs-filter-row">
+                <div class="bs-filter-row__label">
+                    <?php echo $translate('Ordenar resultados'); ?>
+                    <small><?php echo $translate('Campo y sentido'); ?></small>
+                </div>
+                <div class="bs-filter-row__control">
+                    <div class="bs-order-combo">
+                        <div class="bs-select">
+                            <select name="sort_by" aria-label="<?php echo $escape($translate('Ordenar por')); ?>">
+                                <option value="" <?php echo $sortBy === '' ? 'selected' : ''; ?>><?php echo $translate('Relevancia'); ?></option>
+                                <option value="dcterms:title" <?php echo $sortBy === 'dcterms:title' ? 'selected' : ''; ?>><?php echo $translate('Título'); ?></option>
+                                <option value="created" <?php echo $sortBy === 'created' ? 'selected' : ''; ?>><?php echo $translate('Fecha de creación'); ?></option>
+                                <option value="modified" <?php echo $sortBy === 'modified' ? 'selected' : ''; ?>><?php echo $translate('Última modificación'); ?></option>
+                            </select>
+                        </div>
+                        <div class="bs-select">
+                            <select name="sort_order" aria-label="<?php echo $escape($translate('Sentido')); ?>">
+                                <option value="desc" <?php echo $sortOrder === 'desc' ? 'selected' : ''; ?>><?php echo $translate('Descendente'); ?></option>
+                                <option value="asc" <?php echo $sortOrder === 'asc' ? 'selected' : ''; ?>><?php echo $translate('Ascendente'); ?></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><?php /* /moreFilters */ ?>
+
+    </section><?php /* /bs-filter-section */ ?>
+
+    <?php /* ── Action bar ───────────────────────────────────────────── */ ?>
+    <div class="bs-actions">
+        <span class="bs-actions__hint">
+            <span class="material-symbols-outlined" aria-hidden="true">bolt</span>
+            <?php echo $translate('Pulsa'); ?> <strong>Enter</strong> <?php echo $translate('en cualquier campo para buscar'); ?>
+        </span>
+        <div class="bs-actions__group">
+            <button type="reset" class="bs-btn bs-btn--secondary" id="edu-reset">
+                <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+                <?php echo $translate('Restablecer'); ?>
+            </button>
+            <button type="submit" class="bs-btn bs-btn--primary">
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                <?php echo $translate('Buscar recursos'); ?>
+            </button>
+        </div>
+    </div>
+
 </form>

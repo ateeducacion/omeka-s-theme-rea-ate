@@ -7,7 +7,7 @@ $navDepth = (int) $this->themeSetting('nav_depth') ? (int) $this->themeSetting('
 
 	<div class="main-header__top-bar container">
 		<div class="main-header__search-area main-header__search-area--top">
-			<a class="main-header__advanced-search" href="<?php echo $site->url() . '/search'; ?>"><?php echo $translate('Advanced search'); ?></a>
+			<a class="main-header__advanced-search" href="<?php echo $this->url('site/resource', ['site-slug' => $site->slug(), 'controller' => 'item', 'action' => 'search']); ?>"><?php echo $translate('Advanced search'); ?></a>
 			<div class="main-header__search-form">
 				<?php echo $this->partial('common/search-form'); ?>
 			</div>

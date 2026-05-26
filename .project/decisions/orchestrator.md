@@ -911,3 +911,85 @@ Los cambios que pueden afectar al mobile son:
 **Criterio de salida del ciclo 5:** validación del JSON-LD en `validator.schema.org` + confirmación del enlace Advanced Search funcional en instancia real.
 
 **Agente:** orchestrator
+
+---
+
+## [2026-05-22] ACEPTADA — Cierre del ciclo 5 y release v0.5.0
+
+**Contexto:** El criterio de salida del ciclo 5 se ha cumplido:
+- JSON-LD validado en `validator.schema.org` sobre ítem real de la instancia: **0 errores, 0 advertencias**. Campos presentes en la validación: `name`, `url`, `description`, `learningResourceType`, `educationalLevel`, `teaches` (multi-valor), `assesses` (multi-valor), `keywords`, `thumbnailUrl`, `isPartOf`, `about`.
+- Enlace "Advanced search" (`QA-033`) confirmado funcional en instancia real.
+
+**Nota técnica:** `isPartOf` está tipado como `LearningResource` en lugar de `Project`. El validator lo acepta (ambos son `CreativeWork`). Se deja diferido para ciclo 6 si se decide alinear el tipo con `schema:Project`.
+
+**Decisión:** Publicar `v0.5.0`. El backlog del ciclo 6 queda abierto para nuevos ítems.
+
+**Agente:** orchestrator
+
+---
+
+## [2026-05-25] ACEPTADA — Apertura ciclo 6: rediseño Búsqueda Avanzada
+
+**Contexto:** Se recibe un handoff de diseño desde Claude Design (`Búsqueda Avanzada.html`) con especificaciones completas para rediseñar la página `/item/search`. El diseño resuelve 6 problemas documentados en el brief: jerarquía visual débil, campo de texto sin protagonismo, grid de filtros con aspecto de backoffice, botones flotantes extraños en desktop, clase preseleccionada invisible, y falta de ayuda contextual.
+
+**Decisión:** Asignar implementación directamente al Desarrollador. El diseño está completamente especificado (CSS, HTML, JS) en el bundle de Claude Design, incluyendo un `IMPLEMENTATION_PROMPT.md` con instrucciones concretas. No se requiere decisión previa de Arquitecto ni Diseñador.
+
+**Alcance del ciclo 6 #1 (Desarrollador):**
+
+| Fichero | Cambio |
+|---------|--------|
+| `view/omeka/site/item/search.phtml` | Rediseño completo: hero search, badge clase preseleccionada, chips nivel/tipo, combo materia, colecciones en filtros principales, "Más filtros" con audiencia/duración/ordenar, barra de acciones limpia |
+| `asset/sass/components/advanced-search/_advanced-search.scss` | Nuevos componentes: `.hero-search`, `.preselected`, `.filter-section`, `.filter-row`, `.chip-group`, `.chip`, `.combo-field`, `.selected-pills`, `.more-filters-toggle`, `.more-filters`, `.in-not-toggle`, `.duration-range`, `.order-combo`, `.actions` |
+| `asset/js/advanced-search.js` | Guard para `#property-queries`, chip toggle (single-select), "Más filtros" toggle, hint chips, limpieza de inputs vacíos en submit |
+
+**Fuente de diseño:** `https://api.anthropic.com/v1/design/h/ATrb4qDkXQ2pfdakR33rMA?open_file=B%C3%BAsqueda+Avanzada.html`
+
+**Alternativas descartadas:** Derivar al Diseñador para spec adicional — descartado; el bundle de Claude Design incluye especificación completa con tokens ATE, comportamientos JS y estructura HTML final.
+
+**Agente:** orchestrator
+
+---
+
+## [2026-05-26] CIERRE CICLO 6 — Búsqueda Avanzada
+
+**Contexto:** El ciclo 6 tenía un único ítem de backlog: el rediseño completo de `/item/search` a partir del handoff de Claude Design (`Búsqueda Avanzada.html`). Durante la implementación se descubrieron y resolvieron varias limitaciones técnicas de Omeka-S no documentadas previamente.
+
+**Implementado:**
+
+| Fichero | Cambio |
+|---------|--------|
+| `view/omeka/site/item/search.phtml` | Rediseño completo: hero search, badge clase preseleccionada, chips multi-select nivel/tipo, subject picker dropdown+pills, collections picker dropdown+pills (igual que materia), duración rango numérico, audiencia chips, ordenar |
+| `asset/sass/components/advanced-search/_advanced-search.scss` | Sistema `bs-*` completo: `.bs-page-header`, `.bs-preselected`, `.bs-hero-search`, `.bs-filter-section`, `.bs-filter-row`, `.bs-chip-group`, `.bs-chip`, `.bs-selected-pills`, `.bs-selected-pill`, `.bs-subject-picker`, `.bs-duration-range`, `.bs-select`, `.bs-text-input`, `.bs-more-toggle`, `.bs-more-filters`, `.bs-order-combo`, `.bs-actions`, `.bs-btn` |
+| `asset/js/advanced-search.js` | Chip toggle multi-select, dropdown→pill (materia y colecciones), submit handler con OR `eq` conditions para chips/pills/duración, `item_set_id[]` para colecciones, reset completo |
+
+**Hallazgos técnicos resueltos durante el ciclo:**
+
+1. **`gte`/`lte` ignorados por Omeka-S core** — `AbstractResourceEntityAdapter` solo acepta `eq`, `in`, `sw`, `ew`, `res`, `ex`, `dt`. Cualquier otro tipo ejecuta `continue` y el filtro desaparece. Solución: generar condiciones `eq` OR por cada valor conocido dentro del rango.
+2. **`numeric[dur][gt/lt]` no aplica a `literal`** — NumericDataTypes solo actúa sobre valores almacenados con su propio tipo de dato. `lrmi:timeRequired` se almacena como entero literal, no como `numeric:duration`. Solución: mismo patrón OR `eq`.
+3. **`getServiceLocator()` deprecado en Laminas 3** — Sustituido por `$this->api()->search('items', ...)` (vía oficial Omeka-S) para obtener valores distintos de duración.
+4. **`id="page-actions"` conflicto CSS** — El selector `#advanced-search #page-actions` del tema aplicaba `margin-right: -140px` flotante. Resuelto usando clase `.bs-actions` sin id.
+
+**Decisión de cierre:** Ciclo 6 completado. Preparar `v0.6.0`.
+
+**Próximo ciclo:** Queda pendiente QA sobre instancia real del formulario rediseñado. Posible ciclo 7 con ajustes post-QA.
+
+**Agente:** orchestrator
+
+---
+
+## Estado actual del proyecto
+
+| Aspecto | Estado |
+|---------|--------|
+| Fase | CICLO 6 — CERRADO |
+| Release v0.1.0 | ✅ Publicada |
+| Release v0.2.0 | ✅ Publicada [2026-05-06] |
+| Release v0.3.0 | ✅ Publicada [2026-05-21] |
+| Release v0.4.0 | ✅ Publicada [2026-05-21] |
+| Release v0.5.0 | ✅ Publicada |
+| Release v0.6.0 | ⏳ Pendiente |
+| JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias) |
+| Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
+| QA ciclo 6 — instancia real | ⏳ Pendiente (ciclo 7) |
+
+**Agente:** orchestrator
