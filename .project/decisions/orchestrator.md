@@ -981,7 +981,7 @@ Los cambios que pueden afectar al mobile son:
 
 **Contexto:** `v0.6.0` publicada. El rediseño de `/item/search` está implementado pero no validado sobre instancia real. El ciclo 7 se abre con QA como único ítem confirmado; nuevas implementaciones quedan bloqueadas hasta que el formulario esté estabilizado.
 
-**Decisión:** Iniciar ciclo 7 con QA sobre instancia real del formulario rediseñado. El Desarrollador queda disponible para correcciones que emerjan del QA.
+**Decisión:** Ciclo 7 abierto con QA pendiente. El ítem queda en backlog hasta que se disponga de tiempo para validar sobre instancia real.
 
 **Backlog ciclo 7:**
 
@@ -1006,6 +1006,6 @@ Los cambios que pueden afectar al mobile son:
 | Release v0.6.0 | ✅ Publicada [2026-05-26] |
 | JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias) |
 | Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
-| QA ciclo 7 — búsqueda avanzada | 🔵 EN CURSO |
+| QA ciclo 7 — búsqueda avanzada | ⏳ Pendiente |
 
 **Agente:** orchestrator
