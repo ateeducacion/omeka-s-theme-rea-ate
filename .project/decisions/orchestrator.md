@@ -977,19 +977,35 @@ Los cambios que pueden afectar al mobile son:
 
 ---
 
+## [2026-05-26] ACEPTADA — Apertura ciclo 7: QA búsqueda avanzada
+
+**Contexto:** `v0.6.0` publicada. El rediseño de `/item/search` está implementado pero no validado sobre instancia real. El ciclo 7 se abre con QA como único ítem confirmado; nuevas implementaciones quedan bloqueadas hasta que el formulario esté estabilizado.
+
+**Decisión:** Iniciar ciclo 7 con QA sobre instancia real del formulario rediseñado. El Desarrollador queda disponible para correcciones que emerjan del QA.
+
+**Backlog ciclo 7:**
+
+| # | Ítem | Descripción | Tipo | Prioridad |
+|---|------|-------------|------|-----------|
+| 1 | QA búsqueda avanzada | Validar en instancia real: chips, pills materia/colecciones, rango duración, submit, reset, paginación, estados sin resultados, responsive | Calidad | Alta |
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | CICLO 6 — CERRADO |
+| Fase | CICLO 7 — EN CURSO |
 | Release v0.1.0 | ✅ Publicada |
 | Release v0.2.0 | ✅ Publicada [2026-05-06] |
 | Release v0.3.0 | ✅ Publicada [2026-05-21] |
 | Release v0.4.0 | ✅ Publicada [2026-05-21] |
 | Release v0.5.0 | ✅ Publicada |
-| Release v0.6.0 | ⏳ Pendiente |
+| Release v0.6.0 | ✅ Publicada [2026-05-26] |
 | JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias) |
 | Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
-| QA ciclo 6 — instancia real | ⏳ Pendiente (ciclo 7) |
+| QA ciclo 7 — búsqueda avanzada | 🔵 EN CURSO |
 
 **Agente:** orchestrator
