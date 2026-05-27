@@ -295,6 +295,56 @@
                 }
             }
         }
+        // ---- Grupos de faceta (<details>/<summary>) ----
+        .facet-group {
+            border: none;
+            margin: 0 0 0.1rem;
+
+            &-summary {
+                list-style: none;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.35rem;
+                padding: 0.3rem 0.45rem;
+                border-radius: 4px;
+                font-size: 0.82rem;
+                font-weight: 600;
+                color: $color__gray-46;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                cursor: pointer;
+                user-select: none;
+                transition: background 0.12s ease;
+
+                &::-webkit-details-marker { display: none; }
+                &::marker { content: none; }
+
+                &::after {
+                    content: '\25B6'; // triángulo derecha (plegado)
+                    font-size: 0.6rem;
+                    color: $color__gray-58;
+                    transition: transform 0.2s ease;
+                    flex-shrink: 0;
+                }
+
+                &:hover {
+                    background: $color__gray-95;
+                }
+            }
+
+            &[open] > .facet-group-summary::after {
+                transform: rotate(90deg); // triángulo apunta abajo (desplegado)
+            }
+
+            &-elements {
+                padding: 0.25rem 0 0.35rem 0.5rem;
+            }
+
+            &-ungrouped {
+                padding-top: 0.25rem;
+            }
+        }
     }
 
     // ---- Results header (thin toolbar) ----

@@ -1,0 +1,313 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\SiteRepresentation|null $site
+ * @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig
+ * @var \AdvancedSearch\Query $query
+ * @var \AdvancedSearch\Response $response
+ * @var \Omeka\Api\Representation\ItemSetRepresentation|null $itemSet
+ *
+ * Override del tema: agrupa ciertas facetas por el DefinedTermSet al que
+ * pertenecen sus valores. Configuración: Appearance → REA ATE → Advanced
+ * Search Settings.
+ */
+
+if (!isset($response)) return;
+
+$searchFacets = $searchConfig->subSetting('facet', 'facets', []);
+if (!count($searchFacets)) return;
+
+$plugins = $this->getHelperPluginManager();
+$escape = $plugins->get('escapeHtml');
+$translate = $plugins->get('translate');
+$escapeAttr = $plugins->get('escapeHtmlAttr');
+$partial = $plugins->get('partial');
+
+$facets = $response->getFacetCounts();
+$activeFacets = $response->getActiveFacets();
+
+$facets = array_filter($facets);
+
+$isFacetModeButton = !in_array($searchConfig->subSetting('facet', 'mode'), ['link', 'js']);
+$displayActive = (bool) $searchConfig->subSetting('facet', 'display_active', true);
+$displayRefine = (bool) $searchConfig->subSetting('facet', 'display_refine', true);
+$labelRefine = $displayRefine ? $searchConfig->subSetting('facet', 'label_refine', 'Refine search') : null;
+$displayFacetButton = $isFacetModeButton && ($displayActive || !empty($facets));
+$displaySubmit = $displayFacetButton ? $searchConfig->subSetting('facet', 'display_submit', 'above') : 'none';
+$labelSubmit = $displaySubmit ? $searchConfig->subSetting('facet', 'label_submit', 'Apply facets') : null;
+$displayReset = $searchConfig->subSetting('facet', 'display_reset', 'above');
+$labelReset = $displayReset ? $searchConfig->subSetting('facet', 'label_reset', 'Reset facets') : null;
+
+$facetActives = $plugins->get('facetActives');
+$facetElements = $plugins->get('facetElements');
+
+if (!empty($itemSet)) {
+    unset($facets['item_set_id']);
+    unset($activeFacets['item_set_id']);
+}
+
+// --- Agrupación por DefinedTermSet (theme settings) ---
+$rawGroupedFacets = $this->themeSetting('advancedsearch_grouped_facets', '');
+$termsetProperty = trim((string) $this->themeSetting('advancedsearch_termset_property', 'schema:inDefinedTermSet'))
+    ?: 'schema:inDefinedTermSet';
+// Lista de facetas a agrupar (una por línea; ignora vacías y comentarios).
+$groupedFacetNames = [];
+if ($rawGroupedFacets) {
+    foreach (explode("\n", $rawGroupedFacets) as $line) {
+        $line = trim($line);
+        if ($line !== '' && $line[0] !== '#') {
+            $groupedFacetNames[] = $line;
+        }
+    }
+}
+
+// Construye el mapa termTitle → { label, order } recorriendo el árbol por IDs:
+//
+//   1) Encontrar todos los items de clase schema:DefinedTermSet (1 query, ~5 items).
+//   2) Para cada uno, encontrar sus DefinedTerms hijos vía filtro
+//      schema:inDefinedTermSet con type=res sobre el ID del TermSet
+//      (índice sobre value_resource_id → consulta rápida).
+//   3) Mapear cada DefinedTerm → { etiqueta del TermSet, id del TermSet }.
+//
+// El mapa se construye una sola vez y se reutiliza para todas las facetas
+// listadas en advancedsearch_grouped_facets.
+$facetGroupsMaps = [];
+if (!empty($groupedFacetNames)) {
+    $api = $plugins->get('api');
+
+    $globalValueMap = [];
+    try {
+        $termsets = $api->search('items', [
+            'resource_class_term' => 'schema:DefinedTermSet',
+        ])->getContent();
+    } catch (\Exception $e) {
+        $termsets = [];
+    }
+
+    foreach ($termsets as $ts) {
+        $tsId    = $ts->id();
+        $tsLabel = $ts->displayTitle();
+        $tsPosV  = $ts->value('schema:position');
+        $tsPos   = $tsPosV !== null ? (int) $tsPosV->value() : null;
+        try {
+            $children = $api->search('items', [
+                'resource_class_term' => 'schema:DefinedTerm',
+                'property' => [[
+                    'property' => $termsetProperty,
+                    'type'     => 'res',
+                    'text'     => (string) $tsId,
+                ]],
+            ])->getContent();
+        } catch (\Exception $e) {
+            $children = [];
+        }
+        foreach ($children as $child) {
+            $globalValueMap[$child->displayTitle()] = [
+                'label'    => $tsLabel,
+                'order'    => $tsId,
+                'position' => $tsPos,
+            ];
+        }
+    }
+
+    // Filtrar el mapa global a los valores presentes en cada faceta configurada.
+    foreach ($groupedFacetNames as $groupedFacetName) {
+        if (empty($facets[$groupedFacetName])) continue;
+        $valueMap = [];
+        foreach ($facets[$groupedFacetName] as $fv) {
+            $title = $fv['value'] ?? null;
+            if ($title !== null && isset($globalValueMap[$title])) {
+                $valueMap[$title] = $globalValueMap[$title];
+            }
+        }
+        if (!empty($valueMap)) {
+            $facetGroupsMaps[$groupedFacetName] = $valueMap;
+        }
+    }
+}
+
+// Mapa tipo-de-faceta → template parcial para renderizado manual por grupos.
+// Solo estos tipos son compatibles con agrupación; el resto usa el render normal.
+$facetPartialByType = [
+    ''              => 'search/facet-checkboxes',
+    'Checkbox'      => 'search/facet-checkboxes',
+    'CheckboxFilter'=> 'search/facet-checkboxes-filter',
+    'Link'          => 'search/facet-links',
+];
+?>
+
+<div id="search-facets" class="facets">
+
+    <?php if ($label = $searchConfig->subSetting('facet', 'label', 'Facets')): ?>
+    <h3><?= $escape($translate($label)) ?></h3>
+    <?php endif; ?>
+
+    <?php if ($displayActive && count($activeFacets)): ?>
+    <?php if ($label = $searchConfig->subSetting('facet', 'label_active_facets', 'Active facets')): ?>
+    <h4><?= $escape($translate($label)) ?></h4>
+    <?php endif; ?>
+    <?= $facetActives(null, $activeFacets, $searchConfig->setting('facet')) ?>
+    <?php endif; ?>
+
+    <form id="facets-form">
+
+        <?php if ($displayFacetButton): ?>
+        <?= $this->hiddenInputsFromFilteredQuery(null, ['facet', 'refine', 'page', 'limit', 'offset', 'per_page']) ?>
+        <?php endif; ?>
+
+        <?php $displayButtonReset = $displayReset === 'above' || $displayReset === 'both'; ?>
+        <?php $displayButtonSubmit = $displayFacetButton && ($displaySubmit === 'above' || $displaySubmit === 'both'); ?>
+        <?php if ($displayButtonReset || $displayButtonSubmit): ?>
+        <div class="facets-actions facets-actions-top">
+            <?php if ($displayButtonSubmit): ?>
+            <button id="facets-apply" class="button facets-apply" type="submit"><?= $escape($translate($labelSubmit)) ?></button>
+            <?php endif; ?>
+            <?php if ($displayButtonReset): ?>
+            <button id="facets-reset" class="button facets-reset" type="reset"><?= $escape($translate($labelReset)) ?></button>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($displayRefine): ?>
+        <div class="facets-refine">
+            <?php if ($labelRefine): ?>
+            <h4><label for="search-refine"><?= $escape($translate($labelRefine)) ?></label></h4>
+            <?php endif; ?>
+            <?php
+            $url = $plugins->get('url');
+            $suggestUrl = $site
+                ? $url('search-page-' . $searchConfig->slug(), ['site-slug' => $site->slug()])
+                : $url('search-admin-page-' . $searchConfig->slug());
+            $suggestUrl .= '/suggest';
+            ?>
+            <input id="search-refine" name="refine" class="search-refine autosuggest" autocomplete="off" data-autosuggest-url="<?= $escapeAttr($suggestUrl) ?>" data-autosuggest-fill-input="1" value="<?= $escape($query->getQueryRefine()) ?>"<?= $labelRefine ? ' data-placeholder="' . $escapeAttr($translate($labelRefine)) . '"' : '' ?>/>
+            <?php if (!$displayButtonSubmit): ?>
+            <button id="search-refine-submit" class="button search-refine" type="submit"><?= $escape($translate('Submit')) ?></button>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if (empty($facets) && empty($activeFacets)): ?>
+        <?php if ($label = $searchConfig->subSetting('facet', 'label_no_facets', 'No facets')): ?>
+        <p><?= $escape($translate($label)) ?></p>
+        <?php endif; ?>
+        <?php else: ?>
+        <ul class="facets-list">
+            <?php foreach ($facets as $name => $facetValues): ?>
+            <?php $facetParams = $searchFacets[$name]; ?>
+            <?php $hasState = in_array($facetParams['state'] ?? '', ['expand', 'collapse', 'collapse_unless_set']); ?>
+            <li class="facet<?= empty($facetParams['attributes']['class']) ? '' : ' ' . $escapeAttr($facetParams['attributes']['class']) ?>">
+                <?php if ($hasState): ?>
+                <?php $stateExpand = $facetParams['state'] === 'expand' || ($facetParams['state'] === 'collapse_unless_set' && !empty($activeFacets[$name])); ?>
+                <button type="button" class="button facet-button <?= $stateExpand ? 'collapse' : 'expand' ?>" aria-label="<?= $translate($stateExpand ? 'Collapse' : 'Expand') ?>" data-label-expand="<?= $translate('Expand') ?>" data-label-collapse="<?= $translate('Collapse') ?>"><?= $escape($translate($facetParams['label'] ?? $name)) ?></button>
+                <?php else: ?>
+                <h4><?= $escape($translate($facetParams['label'] ?? $name)) ?></h4>
+                <?php endif; ?>
+                <div class="facet-elements<?= $hasState ? ' collapsible' : '' ?>"<?= $hasState && $facetParams['state'] === 'collapse' ? ' hidden="hidden"' : '' ?>>
+                    <?php
+                    $valueMap = $facetGroupsMaps[$name] ?? null;
+                    $facetType = $facetParams['type'] ?? '';
+                    $facetPartialName = $valueMap ? ($facetPartialByType[$facetType] ?? null) : null;
+
+                    if ($facetPartialName):
+                        // --- Renderizado con agrupación por DefinedTermSet ---
+                        //
+                        // AbstractFacet usa static $facetsData por campo: si llamáramos
+                        // $facetElements varias veces para el mismo campo ($name), las
+                        // llamadas 2ª y siguientes devolverían los datos de la 1ª (cache
+                        // estático). Solución: llamar UNA sola vez con $asData=true para
+                        // obtener los valores preparados (active, url, label), luego
+                        // renderizar cada subconjunto con $partial() directamente.
+                        $allFacetData = $facetElements($name, $facetValues, $facetParams, true);
+                        $preparedValues = $allFacetData['facetValues'] ?? [];
+
+                        // Particionar por grupo.
+                        $grouped = [];
+                        $usedValues = [];
+                        foreach ($preparedValues as $fv) {
+                            $info = $valueMap[$fv['value']] ?? null;
+                            if ($info) {
+                                $tsKey = $info['order'];
+                                $grouped[$tsKey]['label']    = $info['label'];
+                                $grouped[$tsKey]['position'] = $info['position'];
+                                $grouped[$tsKey]['values'][] = $fv;
+                                $usedValues[] = $fv['value'];
+                            }
+                        }
+                        // Ordenar: schema:position del DefinedTermSet primero;
+                        // si no tiene position (null) va al final, desempate por ID.
+                        uksort($grouped, function ($a, $b) use ($grouped) {
+                            $posA = $grouped[$a]['position'] ?? PHP_INT_MAX;
+                            $posB = $grouped[$b]['position'] ?? PHP_INT_MAX;
+                            return $posA !== $posB ? $posA - $posB : $a - $b;
+                        });
+
+                        foreach ($grouped as $group):
+                            $groupHasActive = !empty(array_filter(
+                                $group['values'], fn($fv) => !empty($fv['active'])
+                            ));
+                    ?>
+                    <details class="facet-group" <?= $groupHasActive ? 'open' : '' ?>>
+                        <summary class="facet-group-summary"><?= $escape($group['label']) ?></summary>
+                        <div class="facet-group-elements">
+                            <?= $partial($facetPartialName, [
+                                'name'        => $name,
+                                'facetValues' => $group['values'],
+                                'options'     => $facetParams,
+                                'tree'        => null,
+                            ]) ?>
+                        </div>
+                    </details>
+                    <?php
+                        endforeach;
+
+                        // Valores sin DefinedTermSet (literales sueltos u huérfanos).
+                        $ungroupedValues = array_values(array_filter(
+                            $preparedValues,
+                            fn($fv) => !in_array($fv['value'], $usedValues, true)
+                        ));
+                        if (!empty($ungroupedValues)):
+                    ?>
+                    <div class="facet-group-ungrouped">
+                        <?= $partial($facetPartialName, [
+                            'name'        => $name,
+                            'facetValues' => $ungroupedValues,
+                            'options'     => $facetParams,
+                            'tree'        => null,
+                        ]) ?>
+                    </div>
+                    <?php
+                        endif;
+
+                    else:
+                        // --- Renderizado normal (faceta sin agrupación) ---
+                    ?>
+                    <?= $facetElements($name, $facetValues, $facetParams) ?>
+                    <?php if (($facetParams['more'] ?? '') !== '' && in_array($facetParams['type'] ?? '', ['', 'Checkbox', 'CheckboxFilter', 'Link', 'Tree', 'TreeLink', 'Thesaurus', 'ThesaurusLink']) && count($facetValues) > (int) $facetParams['more']): ?>
+                    <div class="facet-see-more">
+                        <button type="button" class="button facet-see-more-or-less expand" data-default-count="<?= (int) $facetParams['more'] ?>" data-more-count="<?= count($facetValues) - (int) $facetParams['more'] ?>" data-per-page="<?= (int) ($facetParams['per_page'] ?? 0) ?>" data-label-see-more="<?= $escapeAttr($translate('See more')) ?>" data-label-see-less="<?= $escapeAttr($translate('See less')) ?>" data-label-page="<?= $escapeAttr($translate('Page')) ?>" data-label-page-prev="<?= $escapeAttr($translate('Previous page')) ?>" data-label-page-next="<?= $escapeAttr($translate('Next page')) ?>"><?= $escape($translate('See more')) ?></button>
+                    </div>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
+
+        <?php $displayButtonReset = $displayReset === 'below' || $displayReset === 'both'; ?>
+        <?php $displayButtonSubmit = $displayFacetButton && ($displaySubmit === 'below' || $displaySubmit === 'both'); ?>
+        <?php if ($displayButtonReset || $displayButtonSubmit): ?>
+        <div class="facets-actions facets-actions-bottom">
+            <?php if ($displayButtonSubmit): ?>
+            <button id="facets-apply" class="button facets-apply" type="submit"><?= $escape($translate($labelSubmit)) ?></button>
+            <?php endif; ?>
+            <?php if ($displayButtonReset): ?>
+            <button id="facets-reset" class="button facets-reset" type="reset"><?= $escape($translate($labelReset)) ?></button>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+    </form>
+
+</div>
