@@ -603,4 +603,4 @@ msgstr "Entidades colaboradoras"
 
 #: view/common/resource-values.phtml:36
 msgid "Teaches"
-msgstr "Enseña"
+msgstr "Saberes básicos"
