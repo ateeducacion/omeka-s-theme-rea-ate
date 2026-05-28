@@ -536,3 +536,67 @@ msgstr "Siguiente"
 #: view/common/pagination.phtml:45
 msgid "0 results"
 msgstr "0 resultados"
+
+#: view/common/user-bar.phtml:9
+msgid "Admin Panel"
+msgstr "Panel de administración"
+
+#: view/common/home-audience-rail.phtml:30
+msgid "Recursos para enseñar"
+msgstr "Recursos para enseñar"
+
+#: view/common/home-audience-rail.phtml:31
+msgid "Profesorado"
+msgstr "Profesorado"
+
+#: view/common/home-audience-rail.phtml:32
+msgid "Secuencias, guías y materiales listos para llevar al aula."
+msgstr "Secuencias, guías y materiales listos para llevar al aula."
+
+#: view/common/home-audience-rail.phtml:33
+msgid "Explorar recursos"
+msgstr "Explorar recursos"
+
+#: view/common/home-audience-rail.phtml:39
+msgid "Aprender por materias"
+msgstr "Aprender por materias"
+
+#: view/common/home-audience-rail.phtml:40
+msgid "Alumnado"
+msgstr "Alumnado"
+
+#: view/common/home-audience-rail.phtml:41
+msgid "Contenidos visuales e interactivos para descubrir y practicar."
+msgstr "Contenidos visuales e interactivos para descubrir y practicar."
+
+#: view/common/home-audience-rail.phtml:42
+msgid "Descubrir recursos"
+msgstr "Descubrir recursos"
+
+#: view/common/home-audience-rail.phtml:48
+msgid "Acompañar el aprendizaje"
+msgstr "Acompañar el aprendizaje"
+
+#: view/common/home-audience-rail.phtml:49
+msgid "Familias"
+msgstr "Familias"
+
+#: view/common/home-audience-rail.phtml:50
+msgid "Recursos accesibles para reforzar el trabajo en casa."
+msgstr "Recursos accesibles para reforzar el trabajo en casa."
+
+#: view/common/home-audience-rail.phtml:51
+msgid "Ver recursos"
+msgstr "Ver recursos"
+
+#: view/common/home-audience-rail.phtml:63
+msgid "Explora el repositorio según tu perfil"
+msgstr "Explora el repositorio según tu perfil"
+
+#: view/common/home-audience-rail.phtml:65
+msgid "Accesos directos para encontrar recursos, colecciones o búsquedas adaptadas a cada audiencia."
+msgstr "Accesos directos para encontrar recursos, colecciones o búsquedas adaptadas a cada audiencia."
+
+#: view/common/logos-bar.phtml:31
+msgid "Entidades colaboradoras"
+msgstr "Entidades colaboradoras"
