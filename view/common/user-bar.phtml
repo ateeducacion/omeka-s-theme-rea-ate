@@ -7,7 +7,7 @@ if ($user):
 ?>
 <div id="user-bar" class="main-header__user-bar">
     <a href="<?php echo $url; ?>" class="user-account-link" title="<?php echo $translate('Admin Panel'); ?>">
-        <span class="material-symbols-outlined" style="font-size:35px;">account_circle</span>
+        <span class="material-symbols-outlined user-bar__icon">account_circle</span>
     </a>
     <div class="user-bar__info">
         <span class="user-bar__name"><?php echo $hyperlink($user->getName(), $url); ?></span>
@@ -35,7 +35,7 @@ document.getElementById('logout-button').addEventListener('click', function(e) {
 <?php else: ?>
 <div id="user-bar" class="main-header__user-bar">
     <a href="<?php echo $this->url('login'); ?>" class="user-account-link" title="<?php echo $translate('Login'); ?>">
-        <span class="material-symbols-outlined" style="font-size:35px;">login</span>
+        <span class="material-symbols-outlined user-bar__icon">login</span>
     </a>
     <div class="user-bar__info">
         <a href="<?php echo $this->url('login'); ?>" class="button user-bar__logout"><?php echo $translate('Login'); ?></a>

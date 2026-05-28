@@ -32,7 +32,7 @@ input[type="submit"] {
         }
 
         &:disabled,
-        &[disabled]
+        &[disabled],
         &.disabled {
             color: $color__disabled;
         }

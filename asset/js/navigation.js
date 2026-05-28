@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	// Exit early if collection is empty or the toggle button is undefined
 	if ( 0 === collection.length || null === mmToggli || 'undefined' === typeof mmToggli ) {
-		console.log( 'Mobile navigation skipped' );
 		return;
 	}
 
@@ -357,14 +356,4 @@ function backerContext() {
  */
 function scrollMenuToTop() {
 	mmDrawer.scrollTo( 0, 0 );
-}
-
-/**
- * Sets or removes .focus class on an element.
- */
-function toggleFocus( menuItem ) {
-	mmDrawer.querySelectorAll( '.focus' ).forEach( focusItem => function() {
-		focusItem.classList.remove( 'focus' );
-	} );
-	menuItem.closest( 'li' ).classList.add( 'focus' );
 }
