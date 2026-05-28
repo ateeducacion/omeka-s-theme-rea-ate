@@ -599,3 +599,7 @@ msgstr ""
 #: view/common/logos-bar.phtml:31
 msgid "Entidades colaboradoras"
 msgstr ""
+
+#: view/common/resource-values.phtml:36
+msgid "Teaches"
+msgstr ""

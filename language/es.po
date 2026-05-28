@@ -600,3 +600,7 @@ msgstr "Accesos directos para encontrar recursos, colecciones o búsquedas adapt
 #: view/common/logos-bar.phtml:31
 msgid "Entidades colaboradoras"
 msgstr "Entidades colaboradoras"
+
+#: view/common/resource-values.phtml:36
+msgid "Teaches"
+msgstr "Enseña"
