@@ -129,11 +129,13 @@ $this->htmlElement('body')->appendAttribute('class', 'user-bar');
 		<?php echo $this->partial('common/banner'); ?>
 
 		<div id="main-content" class="container" role="main">
+			<?php echo $this->content; ?>
 			<?php if ($isHomePage): ?>
 				<?php echo $this->partial('common/home-audience-rail', ['site' => $site]); ?>
 			<?php endif; ?>
-			<?php echo $this->content; ?>
 		</div>
+
+		<?php echo $this->partial('common/logos-bar'); ?>
 
 		<?php echo $this->partial('common/footer'); ?>
 

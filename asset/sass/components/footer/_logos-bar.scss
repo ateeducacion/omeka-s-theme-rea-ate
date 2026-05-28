@@ -1,0 +1,48 @@
+.logos-bar {
+    background-color: $color__white;
+    border-top: 1px solid $color__gray-87;
+    padding: 20px 0;
+
+    @media (min-width: $lg) {
+        padding: 28px 0;
+    }
+
+    &__container {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 24px 40px;
+        justify-content: center;
+
+        @media (min-width: $lg) {
+            gap: 24px 56px;
+        }
+    }
+
+    &__item {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+
+        &:hover,
+        &:focus {
+            opacity: 1;
+            outline-offset: 4px;
+        }
+
+        img {
+            display: block;
+            height: 48px;
+            width: auto;
+            max-width: 160px;
+            object-fit: contain;
+
+            @media (min-width: $lg) {
+                height: 56px;
+                max-width: 180px;
+            }
+        }
+    }
+}

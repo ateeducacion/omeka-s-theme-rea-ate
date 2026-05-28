@@ -1,0 +1,52 @@
+<?php
+/**
+ * Logos Bar — barra de logos de entidades colaboradoras.
+ * Posicionada encima del footer principal (via layout.phtml).
+ *
+ * Configuración: theme settings "Logos Bar"
+ *   logos_bar_logo_N  (Omeka\Form\Element\Asset)  — imagen del logo
+ *   logos_bar_link_N  (Laminas\Form\Element\Url)  — URL de destino (opcional)
+ */
+$escAttr = $this->plugin('escapeHtmlAttr');
+
+$logos = [];
+
+for ($i = 1; $i <= 8; $i++) {
+    $logoUrl = $this->themeSettingAssetUrl("logos_bar_logo_$i");
+    if (!$logoUrl) {
+        continue;
+    }
+    $logos[] = [
+        'logoUrl' => $logoUrl,
+        'linkUrl' => $this->themeSetting("logos_bar_link_$i") ?: null,
+        'alt'     => '',
+    ];
+}
+
+if (empty($logos)) {
+    return;
+}
+?>
+
+<div class="logos-bar" role="complementary" aria-label="<?php echo $escAttr($this->translate('Entidades colaboradoras')); ?>">
+    <div class="container logos-bar__container">
+        <?php foreach ($logos as $logo): ?>
+            <?php if ($logo['linkUrl']): ?>
+                <a href="<?php echo $escAttr($logo['linkUrl']); ?>"
+                   class="logos-bar__item"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    <img src="<?php echo $escAttr($logo['logoUrl']); ?>"
+                         alt="<?php echo $escAttr($logo['alt']); ?>"
+                         loading="lazy">
+                </a>
+            <?php else: ?>
+                <span class="logos-bar__item">
+                    <img src="<?php echo $escAttr($logo['logoUrl']); ?>"
+                         alt="<?php echo $escAttr($logo['alt']); ?>"
+                         loading="lazy">
+                </span>
+            <?php endif; ?>
+        <?php endforeach; ?>
+    </div>
+</div>

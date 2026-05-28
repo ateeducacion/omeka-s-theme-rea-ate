@@ -7,8 +7,6 @@ $footerSiteInfo  = $this->themeSetting( 'footer_site_info' );
 $footerMenu      = $this->themeSetting( 'footer_menu' );
 $footerMenuDepth = $this->themeSetting('footer_menu_depth');
 $footerContent   = $this->themeSetting( 'footer_content' );
-$socialNetworks  = array( 'facebook', 'twitter', 'linkedin', 'instagram', 'youtube', 'mastodon' );
-
 $additional_classes = '';
 
 if ( ! $footerMenu ) {
@@ -22,15 +20,6 @@ if ( $footerMenu && ( $footerLogo || $footerSiteInfo ) && $footerContent ) {
 
 	if ( $footerMenuDepth > 1 ) {
 		$additional_classes .= ' menu-depth-2';
-	}
-}
-
-$hasSocialNetworks = false;
-
-foreach ( $socialNetworks as $social_network ) {
-	if ( $this->themeSetting( "{$social_network}_url" ) ) {
-		$hasSocialNetworks = true;
-		break;
 	}
 }
 ?>
@@ -92,21 +81,7 @@ foreach ( $socialNetworks as $social_network ) {
 
 	<!-- Footer Bottom -->
 	<div class="main-footer__bottom">
-		<div class="container main-footer__bottom-container <?php echo $hasSocialNetworks ? 'has-social-networks' : ''; ?>">
-
-			<!-- Social Networks -->
-			<?php if ($hasSocialNetworks) : ?>
-				<div class="main-footer__social-network">
-					<?php foreach ( $socialNetworks as $social_network ) : ?>
-						<?php if ( $social_network_url = $this->themeSetting( "{$social_network}_url" ) ) : ?>
-							<a href="<?php echo $social_network_url; ?>">
-								<img src="<?php echo $this->assetUrl( "img/{$social_network}.svg" ); ?>"
-									alt="<?php echo $escAttr( $social_network ); ?>">
-							</a>
-						<?php endif; ?>
-					<?php endforeach; ?>
-				</div>
-			<?php endif; ?>
+		<div class="container main-footer__bottom-container">
 
 			<!-- Copyright -->
 			<div class="main-footer__copyright">
