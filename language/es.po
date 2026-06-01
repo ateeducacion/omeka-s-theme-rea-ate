@@ -604,3 +604,7 @@ msgstr "Entidades colaboradoras"
 #: view/common/resource-values.phtml:36
 msgid "Teaches"
 msgstr "Saberes básicos"
+
+#: view/omeka/site/item/browse.phtml
+msgid "%s min"
+msgstr "%s min"

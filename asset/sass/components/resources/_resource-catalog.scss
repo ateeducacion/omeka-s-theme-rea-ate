@@ -94,6 +94,26 @@ body.index.search {
         border: 1px solid var(--ate-hairline);
     }
 
+    .resource-duration-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        min-height: 28px;
+        padding: 5px 10px;
+        border-radius: var(--ate-radius-pill);
+        border: 1px solid var(--ate-hairline);
+        background: var(--ate-surface-soft);
+        color: var(--ate-text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+
+        .material-symbols-outlined {
+            font-size: 14px;
+        }
+    }
+
     .resource-topic-pill {
         background: var(--ate-surface-yellow);
         color: var(--ate-text-on-yellow);

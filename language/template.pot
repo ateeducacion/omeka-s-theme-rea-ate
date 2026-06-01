@@ -603,3 +603,7 @@ msgstr ""
 #: view/common/resource-values.phtml:36
 msgid "Teaches"
 msgstr ""
+
+#: view/omeka/site/item/browse.phtml
+msgid "%s min"
+msgstr ""

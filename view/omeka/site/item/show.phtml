@@ -52,11 +52,13 @@ foreach ([
     'inLanguage'    => 'dcterms:language',
     'license'       => 'dcterms:rights',
     'datePublished' => 'dcterms:date',
-    'timeRequired'  => 'lrmi:timeRequired',
 ] as $_prop => $_term) {
     $_v = $item->value($_term);
     if ($_v) $_jl[$_prop] = (string) $_v;
 }
+$_trv = $item->value('lrmi:timeRequired');
+if ($_trv) { $_trMins = (int)(string)$_trv; if ($_trMins > 0) $_jl['timeRequired'] = 'PT' . $_trMins . 'M'; unset($_trMins); }
+unset($_trv);
 
 foreach ([
     'learningResourceType' => 'lrmi:learningResourceType',
@@ -224,7 +226,7 @@ if ($mainHasBlocks || $leftSidebarHasBlocks || $hasRightSidebar):
     $csrfElement = new \Laminas\Form\Element\Csrf('confirmform_csrf');
     $csrfToken = $csrfElement->getCsrfValidator()->getHash(true);
 ?>
-<div id="delete-confirm-modal" class="delete-confirm-modal" style="display:none;"
+<div id="delete-confirm-modal" class="delete-confirm-modal" hidden
      data-csrf-token="<?php echo $escape($csrfToken); ?>"
      data-admin-base-path="<?php echo $escape($this->url('admin')); ?>">
     <div class="delete-confirm-modal__overlay"></div>

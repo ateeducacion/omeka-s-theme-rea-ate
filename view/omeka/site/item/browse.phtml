@@ -235,6 +235,8 @@ $displayValue = function ($value) use ($valueLang) {
             $resourceType = $item->value('lrmi:learningResourceType');
             $educationalLevel = $getFirstValue($item, ['lrmi:educationalLevel', 'lom:educationalLevel']);
             $topic = $getFirstValue($item, ['schema:about', 'dcterms:subject']);
+            $durationVal = $item->value('lrmi:timeRequired');
+            $durationMinutes = $durationVal ? (int)(string)$durationVal : 0;
             $body = $bodyTerm ? $item->value($bodyTerm, ['lang' => $valueLang]) : $item->displayDescription(null, $valueLang);
             $summary = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $body)));
 
@@ -279,6 +281,12 @@ $displayValue = function ($value) use ($valueLang) {
                         <div class="resource-card__meta">
                             <?php if ($educationalLevel): ?>
                                 <span class="resource-level-pill"><?php echo $escape($displayValue($educationalLevel)); ?></span>
+                            <?php endif; ?>
+                            <?php if ($durationMinutes > 0): ?>
+                                <span class="resource-duration-chip">
+                                    <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                                    <?php echo $escape(sprintf($translate('%s min'), $durationMinutes)); ?>
+                                </span>
                             <?php endif; ?>
                         </div>
 
@@ -335,6 +343,12 @@ $displayValue = function ($value) use ($valueLang) {
                             <?php if ($educationalLevel): ?>
                                 <span class="resource-row__level-pill"><?php echo $escape($displayValue($educationalLevel)); ?></span>
                             <?php endif; ?>
+                            <?php if ($durationMinutes > 0): ?>
+                                <span class="resource-duration-chip">
+                                    <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                                    <?php echo $escape(sprintf($translate('%s min'), $durationMinutes)); ?>
+                                </span>
+                            <?php endif; ?>
                         </div>
 
                         <?php if ($topic): ?>
@@ -387,7 +401,7 @@ $displayValue = function ($value) use ($valueLang) {
     $csrfElement = new \Laminas\Form\Element\Csrf('confirmform_csrf');
     $csrfToken = $csrfElement->getCsrfValidator()->getHash(true);
 ?>
-<div id="delete-confirm-modal" class="delete-confirm-modal" style="display:none;"
+<div id="delete-confirm-modal" class="delete-confirm-modal" hidden
      data-csrf-token="<?php echo $escapeAttr($csrfToken); ?>"
      data-admin-base-path="<?php echo $escapeAttr($this->url('admin')); ?>">
     <div class="delete-confirm-modal__overlay"></div>
