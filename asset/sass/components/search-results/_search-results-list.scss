@@ -119,6 +119,22 @@ ul.resource-list.search-result-list.list > li.resource.item,
                 dt { display: none; }
                 dd { margin: 0; padding: 0; }
             }
+
+            .resource-duration-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                padding: 2px 8px;
+                border-radius: var(--ate-radius-pill);
+                border: 1px solid var(--ate-hairline);
+                background: var(--ate-surface-soft);
+                color: var(--ate-text-muted);
+                font-size: 0.75rem;
+                font-weight: 600;
+                white-space: nowrap;
+
+                .material-symbols-outlined { font-size: 14px; }
+            }
         }
 
         .property[data-term="lrmi:educationalLevel"],

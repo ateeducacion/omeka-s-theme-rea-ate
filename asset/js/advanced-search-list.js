@@ -31,6 +31,12 @@
         'tema':                   'schema:about',
         'subject':                'dcterms:subject',
         'materia':                'dcterms:subject',
+
+        'time required':          'lrmi:timeRequired',
+        'timerequired':           'lrmi:timeRequired',
+        'duración':               'lrmi:timeRequired',
+        'duracion':               'lrmi:timeRequired',
+        'tiempo requerido':       'lrmi:timeRequired',
     };
 
     function extractTerm(href) {
@@ -126,6 +132,23 @@
         return badge;
     }
 
+    function upgradeDurationProperty(property) {
+        var dd = property.querySelector('dd.value .value-content');
+        if (!dd) return;
+        var mins = parseInt(dd.textContent.trim(), 10);
+        if (!mins || mins <= 0) return;
+        dd.textContent = '';
+        var chip = document.createElement('span');
+        chip.className = 'resource-duration-chip';
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = 'schedule';
+        chip.appendChild(icon);
+        chip.appendChild(document.createTextNode(' ' + mins + ' min'));
+        dd.appendChild(chip);
+    }
+
     function upgradeLrtProperty(property) {
         property.querySelectorAll('dd.value .value-content').forEach(function (vc) {
             if (vc.querySelector('.resource-type-badge')) return; // already a badge
@@ -154,7 +177,7 @@
         var dl = item.querySelector('dl.properties');
         if (!dl) return;
 
-        var terms = ['lrmi:educationalLevel', 'schema:about', 'lrmi:learningResourceType'];
+        var terms = ['lrmi:educationalLevel', 'schema:about', 'lrmi:learningResourceType', 'lrmi:timeRequired'];
         var props = terms.map(function (t) {
             return dl.querySelector('.property[data-term="' + t + '"]');
         }).filter(Boolean);
@@ -186,6 +209,10 @@
 
             if (prop.dataset.term === 'lrmi:learningResourceType') {
                 upgradeLrtProperty(prop);
+            }
+
+            if (prop.dataset.term === 'lrmi:timeRequired') {
+                upgradeDurationProperty(prop);
             }
 
             if (prop.dataset.term === 'lrmi:teaches' || prop.dataset.term === 'dcterms:relation') {
