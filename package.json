@@ -1,7 +1,7 @@
 {
-  "name": "freedom-theme",
-  "version": "1.0.7",
-  "description": "An Omeka S Theme.",
+  "name": "rea-ate-theme",
+  "version": "0.11.0",
+  "description": "Tema Omeka S para el Repositorio de Recursos Educativos Abiertos (REA) del Canal REA ATE. Derivado de Freedom S Theme (RRCHNM).",
   "main": "gulpfile.js",
   "scripts": {
     "start": "gulp",
@@ -9,20 +9,15 @@
     "compile-translations": "node compile-translations.js",
     "extract-strings": "echo 'Run: grep -rho \"\\$this->translate([\\'\\\"].*[\\'\\\"])\" view --include=\"*.phtml\" | sort -u'"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nelsonamaya82/theme-freedom.git"
-  },
   "keywords": [
     "omeka-s",
-    "theme"
+    "theme",
+    "rea",
+    "lrmi",
+    "educacion"
   ],
-  "author": "RRCHNM",
+  "author": "Consejería de Educación, Gobierno de Canarias",
   "license": "GPL-3.0",
-  "bugs": {
-    "url": "https://github.com/nelsonamaya82/theme-freedom/issues"
-  },
-  "homepage": "https://github.com/nelsonamaya82/theme-freedom#readme",
   "devDependencies": {
     "autoprefixer": "^9.2.1",
     "gettext-parser": "^8.0.0",

@@ -1,5 +1,5 @@
 {
-    "name": "omeka-s-themes/freedom",
+    "name": "gobierno-de-canarias/omeka-s-theme-rea-ate",
     "type": "omeka-s-theme",
     "require": {
         "omeka/omeka-s": "*"
