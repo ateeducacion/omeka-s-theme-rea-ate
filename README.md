@@ -1,7 +1,7 @@
 # REA ATE — Tema Omeka S
 
 Tema Omeka S para el **Repositorio de Recursos Educativos Abiertos (REA)** del Canal REA ATE,
-desarrollado por la **Área de Tecnología Educativa, Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias**.
+desarrollado por la **Área de Tecnología Educativa (ATE), Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias**.
 
 Este tema es una obra derivada de [Freedom S Theme](https://github.com/omeka-s-themes/freedom),
 desarrollado por el Roy Rosenzweig Center for History and New Media (RRCHNM) y publicado bajo
@@ -215,6 +215,6 @@ Las modificaciones realizadas sobre el tema original comprenden, entre otras:
 - Traducciones al español (es-ES)
 - Correcciones de accesibilidad (skip link, atributos ARIA, `hidden` en modales)
 
-Copyright © 2024–2026 Área de Tecnología Educativa, Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias.
+Copyright © 2024–2026 Área de Tecnología Educativa (ATE), Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias.
 
 Distribuido bajo [GNU General Public License v3.0](LICENSE).

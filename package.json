@@ -16,7 +16,7 @@
     "lrmi",
     "educacion"
   ],
-  "author": "Área de Tecnología Educativa, Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias",
+  "author": "Área de Tecnología Educativa (ATE), Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias",
   "license": "GPL-3.0",
   "devDependencies": {
     "autoprefixer": "^9.2.1",
