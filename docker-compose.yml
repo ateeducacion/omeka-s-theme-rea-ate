@@ -1,0 +1,70 @@
+services:
+
+  omekas:
+    image: erseco/alpine-omeka-s:develop
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    ports:
+      - "8080:8080"
+    environment:
+      # Database
+      DB_HOST: mariadb
+      DB_NAME: omeka
+      DB_USER: omeka
+      DB_PASSWORD: omeka
+      DB_PORT: 3306
+
+      # Admin + site
+      OMEKA_ADMIN_EMAIL: admin@example.com
+      OMEKA_ADMIN_NAME: "Site Administrator"
+      OMEKA_ADMIN_PASSWORD: PLEASE_CHANGEME
+      OMEKA_SITE_TITLE: "REA ATE Sample Site"
+      # App environment and base URL
+      APPLICATION_ENV: development
+      SITE_URL: http://localhost:8080
+
+      # Make this theme (mounted below) available, plus the default theme
+      OMEKA_THEMES: |
+        default
+        rea-ate
+      # AdvancedSearch (and its Common dependency) power the theme's faceted search
+      OMEKA_MODULES: |
+        Common
+        AdvancedSearch
+        EasyAdmin
+        Adminer
+        Log
+
+      # Hooks to finish configuration on first boot
+      PRE_CONFIGURE_COMMANDS: |
+        echo 'Pre-configure hook'
+      POST_CONFIGURE_COMMANDS: |
+        # Ensure AdvancedSearch is installed (best effort)
+        omeka-s-cli module:install AdvancedSearch || true
+        # Apply the REA ATE theme to the default site (best effort)
+        omeka-s-cli site:theme default rea-ate || true
+
+    volumes:
+      - omekas_data:/var/www/html/volume:Z
+      - ./:/var/www/html/volume/themes/rea-ate
+
+  mariadb:
+    image: mariadb:latest
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: omeka
+      MYSQL_DATABASE: omeka
+      MYSQL_USER: omeka
+      MYSQL_PASSWORD: omeka
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-homariadb", "-uomeka", "-pomeka"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mariadb_data:
+  omekas_data:
