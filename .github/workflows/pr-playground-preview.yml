@@ -1,0 +1,27 @@
+---
+name: PR Playground Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post or update playground preview comment
+        uses: ateeducacion/action-omeka-s-playground-pr-preview@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          zip-url: https://github.com/${{ github.repository }}/archive/refs/heads/${{ github.head_ref }}.zip
+          addon-type: theme
+          addon-name: rea-ate
+          extra-modules: '[{"name":"Common","state":"activate","source":{"type":"omeka.org","slug":"Common"}},{"name":"AdvancedSearch","state":"activate","source":{"type":"omeka.org","slug":"AdvancedSearch"}}]'
+          site-json: '{"title":"REA ATE Demo","slug":"demo","theme":"rea-ate","summary":"Minimal install to preview the REA ATE theme (with AdvancedSearch) in Omeka S Playground.","isPublic":true,"setAsDefault":true}'
+          site-locale: es
+          landing-page: /admin
+          debug-enabled: 'true'

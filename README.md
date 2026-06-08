@@ -1,5 +1,10 @@
 # REA ATE — Tema Omeka S
 
+<a href="https://ateeducacion.github.io/omeka-s-playground/?blueprint=https%3A%2F%2Fraw.githubusercontent.com%2Fateeducacion%2Fomeka-s-theme-rea-ate%2Frefs%2Fheads%2Fmaster%2Fblueprint.json">
+  <img src="https://raw.githubusercontent.com/ateeducacion/omeka-s-theme-rea-ate/refs/heads/master/.github/assets/playground-preview-button.svg" alt="Try REA ATE in your browser" width="224">
+</a><br>
+<small><a href="https://ateeducacion.github.io/omeka-s-playground/?blueprint=https%3A%2F%2Fraw.githubusercontent.com%2Fateeducacion%2Fomeka-s-theme-rea-ate%2Frefs%2Fheads%2Fmaster%2Fblueprint.json">Try in your browser</a></small>
+
 Tema Omeka S para el **Repositorio de Recursos Educativos Abiertos (REA)** del Canal REA ATE,
 desarrollado por la **Área de Tecnología Educativa (ATE), Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias**.
 
