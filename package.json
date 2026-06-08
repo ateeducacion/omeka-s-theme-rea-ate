@@ -19,10 +19,10 @@
   "author": "Área de Tecnología Educativa (ATE), Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias",
   "license": "GPL-3.0",
   "devDependencies": {
-    "autoprefixer": "^9.2.1",
+    "autoprefixer": "^10.5.0",
     "gettext-parser": "^8.0.0",
     "gulp": "^4.0.2",
-    "gulp-postcss": "^8.0.0",
+    "gulp-postcss": "^10.0.0",
     "gulp-sass": "^5.0.0"
   },
   "browserslist": [
