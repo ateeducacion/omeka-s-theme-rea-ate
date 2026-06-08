@@ -9,6 +9,11 @@
         "squizlabs/php_codesniffer": "*",
         "phpunit/phpunit": "*"
     },
+    "config": {
+        "platform": {
+            "php": "8.3"
+        }
+    },
     "autoload-dev": {
         "psr-4": {
             "ReaAteTest\\": "test/"
