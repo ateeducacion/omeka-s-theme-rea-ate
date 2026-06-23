@@ -1,7 +1,22 @@
 {
     "name": "gobierno-de-canarias/omeka-s-theme-rea-ate",
     "type": "omeka-s-theme",
+    "license": "GPL-3.0-or-later",
     "require": {
-        "omeka/omeka-s": "*"
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "*",
+        "phpunit/phpunit": "*"
+    },
+    "config": {
+        "platform": {
+            "php": "8.3"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ReaAteTest\\": "test/"
+        }
     }
 }

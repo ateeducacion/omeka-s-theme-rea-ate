@@ -26,7 +26,75 @@ else
     SYSTEM_OS := unix
 endif
 
-# Generate the freedom-ate-X.X.X.zip package
+# Check if Docker is running
+check-docker:
+ifeq ($(SYSTEM_OS),windows)
+	@echo "Detected system: Windows (cmd, powershell)"
+	@docker version > NUL 2>&1 || (echo. & echo Error: Docker is not running. Please make sure Docker is installed and running. & echo. & exit 1)
+else
+	@echo "Detected system: Unix (Linux/macOS/Cygwin/MinGW)"
+	@docker version > /dev/null 2>&1 || (echo "" && echo "Error: Docker is not running. Please make sure Docker is installed and running." && echo "" && exit 1)
+endif
+
+# Start Docker containers in interactive mode
+up: check-docker
+	docker compose up --remove-orphans
+
+# Start Docker containers in background mode (daemon)
+upd: check-docker
+	docker compose up --detach --remove-orphans
+
+# Stop and remove Docker containers
+down: check-docker
+	docker compose down
+
+# Pull the latest images from the registry
+pull: check-docker
+	docker compose -f docker-compose.yml pull
+
+# Build or rebuild Docker containers
+build: check-docker
+	docker compose build
+
+# Open a shell inside the omekas container
+shell: check-docker
+	docker compose exec omekas sh
+
+# Tail container logs
+logs: check-docker
+	docker compose logs -f --tail=200
+
+# Show container status
+ps: check-docker
+	docker compose ps
+
+# Clean up and stop Docker containers, removing volumes and orphan containers
+clean: check-docker
+	docker compose down -v --remove-orphans
+
+# Clean volumes and start again (fresh DB)
+fresh: clean upd
+
+# Run the linter to check PHP code style
+lint: deps-update
+	"vendor/bin/phpcs" . --standard=PSR2 --ignore=vendor/,asset/,node_modules/,view/,language/,test/Stubs/ --colors --extensions=php
+
+# Automatically fix PHP code style issues
+fix: deps-update
+	"vendor/bin/phpcbf" . --standard=PSR2 --ignore=vendor/,asset/,node_modules/,view/,language/,test/Stubs/ --colors --extensions=php
+
+# Run unit tests
+.PHONY: test
+test: deps-update
+	@echo "Running unit tests..."
+	"vendor/bin/phpunit" -c test/phpunit.xml
+
+# Compile theme assets (SASS -> CSS) using the npm toolchain
+build-assets:
+	npm ci
+	npm run build
+
+# Generate the rea-ate-X.X.X.zip package
 package:
 	@if [ -z "$(VERSION)" ]; then \
 		echo "Error: VERSION not specified. Use 'make package VERSION=1.2.3'"; \
@@ -133,6 +201,28 @@ i18n: generate-pot update-po check-untranslated compile-mo
 help:
 	@echo ""
 	@echo "Usage: make <command>"
+	@echo ""
+	@echo "Docker management:"
+	@echo "  up                - Start Docker containers in interactive mode"
+	@echo "  upd               - Start Docker containers in background mode (detached)"
+	@echo "  down              - Stop and remove Docker containers"
+	@echo "  build             - Build or rebuild Docker containers"
+	@echo "  pull              - Pull the latest images from the registry"
+	@echo "  logs              - Tail container logs"
+	@echo "  ps                - Show container status"
+	@echo "  clean             - Stop containers and remove volumes and orphans"
+	@echo "  fresh             - Clean volumes and start again (fresh DB)"
+	@echo "  shell             - Open a shell inside the omekas container"
+	@echo ""
+	@echo "Code quality:"
+	@echo "  lint              - Run PHP linter (PHP_CodeSniffer)"
+	@echo "  fix               - Automatically fix PHP code style issues"
+	@echo ""
+	@echo "Testing:"
+	@echo "  test              - Run unit tests with PHPUnit"
+	@echo ""
+	@echo "Assets:"
+	@echo "  build-assets      - Compile theme SASS into CSS (npm ci + npm run build)"
 	@echo ""
 	@echo "Packaging:"
 	@echo "  package           - Generate a .zip package of the theme with version tag"
