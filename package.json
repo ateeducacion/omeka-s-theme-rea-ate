@@ -20,7 +20,7 @@
   "license": "GPL-3.0",
   "devDependencies": {
     "autoprefixer": "^10.5.2",
-    "gettext-parser": "^9.0.2",
+    "gettext-parser": "^9.1.1",
     "gulp": "^5.0.1",
     "gulp-postcss": "^10.0.0",
     "gulp-sass": "^6.0.1"
