@@ -21,7 +21,7 @@ use Laminas\View\Helper\AbstractHelper;
  * allowlist is the next best thing and is far safer than regex stripping.
  *
  * Usage in templates:
- *   <?php echo $this->htmlAllowlist($this->themeSetting('footer_content')); ?>
+ *   <?php echo $this->HtmlAllowlist($this->themeSetting('footer_content')); ?>
  */
 class HtmlAllowlist extends AbstractHelper
 {
@@ -189,8 +189,8 @@ class HtmlAllowlist extends AbstractHelper
     private function filterAttributes(\DOMElement $element, array $allowed)
     {
         $view = $this->getView();
-        $safeUrl = $view->plugin('safeUrl');
-        $cssToken = $view->plugin('cssToken');
+        $safeUrl = $view->plugin('SafeUrl');
+        $cssToken = $view->plugin('CssToken');
 
         foreach (iterator_to_array($element->attributes) as $attribute) {
             $name = strtolower($attribute->nodeName);

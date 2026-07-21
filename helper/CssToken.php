@@ -15,8 +15,8 @@ use Laminas\View\Helper\AbstractHelper;
  * The helper returns itself so templates can chain a named method, which keeps the
  * intent readable at the call site:
  *
- *   --primary: <?php echo $this->cssToken()->color($this->themeSetting('primary_color'), '#0C2C84'); ?>;
- *   height: <?php echo $this->cssToken()->length($bannerHeight, '20vh'); ?>;
+ *   --primary: <?php echo $this->CssToken()->color($this->themeSetting('primary_color'), '#0C2C84'); ?>;
+ *   height: <?php echo $this->CssToken()->length($bannerHeight, '20vh'); ?>;
  */
 class CssToken extends AbstractHelper
 {

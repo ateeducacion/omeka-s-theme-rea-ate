@@ -16,11 +16,11 @@ use Laminas\View\Helper\AbstractHelper;
  * omit the link entirely, fall back to a safe default, or render a plain <span>.
  *
  * Usage in templates:
- *   $href = $this->safeUrl($this->themeSetting('logos_bar_link_1'));
+ *   $href = $this->SafeUrl($this->themeSetting('logos_bar_link_1'));
  *   if ($href !== null): ?><a href="<?php echo $escAttr($href); ?>">…</a><?php endif;
  *
  *   // Site-relative paths only (no absolute URLs at all):
- *   $href = $this->safeUrl($value, []);
+ *   $href = $this->SafeUrl($value, []);
  */
 class SafeUrl extends AbstractHelper
 {

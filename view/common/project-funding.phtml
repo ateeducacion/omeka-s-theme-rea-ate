@@ -5,7 +5,7 @@ if (!isset($projectItem) || $projectItem === null) { return; }
 $escape    = $this->plugin('escapeHtml');
 $escAttr   = $this->plugin('escapeHtmlAttr');
 $translate = $this->plugin('translate');
-$safeUrl   = $this->plugin('safeUrl');
+$safeUrl   = $this->plugin('SafeUrl');
 
 $name        = $projectItem->value('schema:name');
 $description = $projectItem->value('schema:description');

@@ -10,7 +10,7 @@ $defaultBrowseUrl = $this->url(
     true
 );
 
-$safeUrl = $this->plugin('safeUrl');
+$safeUrl = $this->plugin('SafeUrl');
 
 $resolveAudienceUrl = function (string $settingName) use ($site, $safeUrl): ?string {
     $value = trim((string) $this->themeSetting($settingName));
