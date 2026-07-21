@@ -306,24 +306,54 @@
         return span ? span.textContent.replace(/\(\d+\)\s*$/, '').trim() : cb.value;
     }
 
+    // Facet URLs come from a data attribute, so they are a DOM sink: assigning an
+    // unvalidated value to .href would honour "javascript:". Only same-origin
+    // destinations are accepted.
+    function safeHref(url) {
+        if (!url) return '#';
+        try {
+            var resolved = new URL(url, window.location.href);
+            if (resolved.origin !== window.location.origin) return '#';
+            if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') return '#';
+            return resolved.href;
+        } catch (e) {
+            return '#';
+        }
+    }
+
+    function makeSpan(className, text) {
+        var span = document.createElement('span');
+        span.className = className;
+        span.textContent = text;
+        return span;
+    }
+
     function buildFilterChips() {
         var bar = document.getElementById('active-filter-chips');
         if (!bar) return;
 
-        bar.innerHTML = '';
+        bar.replaceChildren();
         var checked = document.querySelectorAll('.search-facets input[type="checkbox"]:checked');
         if (!checked.length) return;
 
         checked.forEach(function (cb) {
             var chip = document.createElement('a');
             chip.className = 'filter-chip';
-            chip.href = cb.dataset.url || '#';
+            chip.href = safeHref(cb.dataset.url);
+
+            // Group names and facet values are catalogue metadata: build them as text
+            // nodes so markup inside a facet value can never be interpreted.
             var group = getGroupName(cb);
-            var value = getValueText(cb);
-            chip.innerHTML =
-                (group ? '<span class="filter-chip__group">' + group + ':</span> ' : '') +
-                '<span class="filter-chip__value">' + value + '</span>' +
-                '<span class="filter-chip__remove" aria-hidden="true">✕</span>';
+            if (group) {
+                chip.appendChild(makeSpan('filter-chip__group', group + ':'));
+                chip.appendChild(document.createTextNode(' '));
+            }
+            chip.appendChild(makeSpan('filter-chip__value', getValueText(cb)));
+
+            var remove = makeSpan('filter-chip__remove', '✕');
+            remove.setAttribute('aria-hidden', 'true');
+            chip.appendChild(remove);
+
             bar.appendChild(chip);
         });
 

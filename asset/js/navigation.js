@@ -80,8 +80,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	document.querySelectorAll( '.main-navigation .nav-menu > li.menu-item-has-children/*, .menu-drawer .navigation > li.menu-item-has-children*/' ).forEach( item => {
 		const activatingA = item.querySelector('a');
-		const btn = '<button class="submenu-btn"><span><span class="screen-reader-text">show submenu for “' + activatingA.text + '”</span></span></button>';
-		activatingA.insertAdjacentHTML('afterend', btn);
+
+		// Menu titles are site content: build the button with DOM APIs so a title
+		// containing markup cannot be interpreted.
+		const submenuBtn = document.createElement('button');
+		submenuBtn.className = 'submenu-btn';
+		const btnOuterSpan = document.createElement('span');
+		const btnLabel = document.createElement('span');
+		btnLabel.className = 'screen-reader-text';
+		btnLabel.textContent = 'show submenu for “' + activatingA.text + '”';
+		btnOuterSpan.appendChild(btnLabel);
+		submenuBtn.appendChild(btnOuterSpan);
+		activatingA.after(submenuBtn);
 
 		const itemLink = item.querySelector('a');
 		const itemButton = item.querySelector('button');
@@ -156,7 +166,13 @@ document.addEventListener("DOMContentLoaded", function() {
 		if (ul) {
 			const submenuHeader = document.createElement('li');
 			submenuHeader.setAttribute('class', 'menu-header');
-			submenuHeader.innerHTML = item.innerHTML;
+
+			// Cloning the existing nodes copies exactly what innerHTML used to copy, but
+			// without round-tripping site-authored menu titles through the HTML parser.
+			Array.from(item.childNodes).forEach(child => {
+				submenuHeader.appendChild(child.cloneNode(true));
+			});
+
 			ul.prepend(submenuHeader);
 		}
 
@@ -343,11 +359,13 @@ function slideMenus( target ) {
 }
 
 function backerContext() {
+	// previousText/closeText come from the translation catalogue via menu-drawer.phtml;
+	// they are labels, not markup.
 	if( mmTargets.length > 0 ) {
-		mmBacker.innerHTML = previousText;
+		mmBacker.textContent = previousText;
 	}
 	else {
-		mmBacker.innerHTML = closeText;
+		mmBacker.textContent = closeText;
 	}
 }
 

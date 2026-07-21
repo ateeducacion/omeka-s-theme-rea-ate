@@ -4,6 +4,21 @@ const resourceLinkInfoScript = () => {
     // the linked resource's description as an inline accordion panel.
     // Uses MutationObserver to also handle links injected dynamically (e.g. faceted-browse AJAX).
 
+    // Base path for the API, rendered by layout.phtml so the theme keeps working when
+    // Omeka is installed in a subdirectory. Falls back to the root-relative path.
+    const apiBase = document.body.dataset.apiItemsBase || '/api/items';
+
+    // Item descriptions are catalogue metadata: they are authored content and must never
+    // be treated as markup. Everything below builds DOM nodes and assigns textContent.
+    const REQUEST_TIMEOUT_MS = 8000;
+
+    function renderMessage(panel, text, className) {
+        const p = document.createElement('p');
+        p.className = className;
+        p.textContent = text;
+        panel.replaceChildren(p);
+    }
+
     function processLink(link) {
         // Skip if already processed
         if (link.closest('.resource-link-info')) return;
@@ -42,7 +57,7 @@ const resourceLinkInfoScript = () => {
         // Create the accordion panel
         const panel = document.createElement('div');
         panel.className = 'resource-link-info__panel';
-        panel.innerHTML = '<span class="resource-link-info__loading">…</span>';
+        renderMessage(panel, '…', 'resource-link-info__loading');
         wrapper.appendChild(panel);
 
         let loaded = false;
@@ -73,22 +88,44 @@ const resourceLinkInfoScript = () => {
 
                 if (!loaded) {
                     loaded = true;
-                    fetch('/api/items/' + itemId)
-                        .then(function (res) { return res.json(); })
+
+                    const controller = new AbortController();
+                    const timeout = setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS);
+
+                    fetch(apiBase + '/' + encodeURIComponent(itemId), {
+                        headers: { 'Accept': 'application/json' },
+                        signal: controller.signal
+                    })
+                        .then(function (res) {
+                            if (!res.ok) {
+                                throw new Error('HTTP ' + res.status);
+                            }
+                            const contentType = res.headers.get('Content-Type') || '';
+                            if (contentType.indexOf('application/json') === -1) {
+                                throw new Error('Unexpected content type');
+                            }
+                            return res.json();
+                        })
                         .then(function (data) {
                             const descriptions = data['dcterms:description'];
-                            let html = '';
-                            if (descriptions && descriptions.length > 0) {
-                                descriptions.forEach(function (desc) {
-                                    html += '<p>' + (desc['@value'] || '') + '</p>';
-                                });
-                            } else {
-                                html = '<p class="resource-link-info__empty">—</p>';
+                            if (!descriptions || !descriptions.length) {
+                                renderMessage(panel, '—', 'resource-link-info__empty');
+                                return;
                             }
-                            panel.innerHTML = html;
+
+                            const fragment = document.createDocumentFragment();
+                            descriptions.forEach(function (desc) {
+                                const p = document.createElement('p');
+                                p.textContent = desc['@value'] || '';
+                                fragment.appendChild(p);
+                            });
+                            panel.replaceChildren(fragment);
                         })
                         .catch(function () {
-                            panel.innerHTML = '<p class="resource-link-info__error">Error loading info.</p>';
+                            renderMessage(panel, 'Error loading info.', 'resource-link-info__error');
+                        })
+                        .finally(function () {
+                            clearTimeout(timeout);
                         });
                 }
             }

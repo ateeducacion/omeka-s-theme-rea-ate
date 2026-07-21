@@ -48,6 +48,10 @@ $this->jsTranslate();
 $this->trigger('view.layout');
 
 $this->htmlElement('body')->appendAttribute('class', 'user-bar');
+
+// Expose the API base path so resource-link-info.js does not have to hardcode
+// "/api/items", which breaks whenever Omeka is installed in a subdirectory.
+$this->htmlElement('body')->setAttribute('data-api-items-base', $this->basePath('/api/items'));
 ?>
 
 <?php echo $this->doctype(); ?>

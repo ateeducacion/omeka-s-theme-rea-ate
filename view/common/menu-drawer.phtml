@@ -1,6 +1,14 @@
 <?php
+$escHtml = $this->plugin('escapeHtml');
+$escAttr = $this->plugin('escapeHtmlAttr');
+
 $closeText = $this->translate('Close');
 $previousText = $this->translate('Previous');
+
+// Inside a <script> block, json_encode() alone is not enough: a string containing
+// "</script>" would close the block and let the rest of the catalogue entry be parsed
+// as markup. The HEX flags encode <, >, &, ' and " so no delimiter can survive.
+$jsonFlags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE;
 ?>
 <nav id="menu-drawer" class="menu-drawer" aria-hidden="true" inert style="display: none;">
 	<div class="wrap">
@@ -9,10 +17,10 @@ $previousText = $this->translate('Previous');
 			<a href="."
 				id="menu-backer"
 				class="menu-backer is-empty"
-				aria-label="<?php echo $closeText; ?>"
-				title="<?php echo $closeText; ?>"
+				aria-label="<?php echo $escAttr($closeText); ?>"
+				title="<?php echo $escAttr($closeText); ?>"
 			>
-                <?php echo $closeText; ?>
+                <?php echo $escHtml($closeText); ?>
 			</a>
 		</div><!-- .navigation-controls -->
 
@@ -28,6 +36,6 @@ $previousText = $this->translate('Previous');
 </nav><!-- menu-drawer -->
 
 <script>
-    const closeText = <?php echo json_encode($closeText); ?>;
-    const previousText = <?php echo json_encode($previousText); ?>;
+    const closeText = <?php echo json_encode($closeText, $jsonFlags); ?>;
+    const previousText = <?php echo json_encode($previousText, $jsonFlags); ?>;
 </script>
