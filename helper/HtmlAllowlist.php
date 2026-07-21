@@ -33,7 +33,7 @@ class HtmlAllowlist extends AbstractHelper
      * silently deleting a paragraph of the footer.
      */
     private const ALLOWED_TAGS = [
-        'a' => ['href', 'title', 'class', 'lang'],
+        'a' => ['href', 'title', 'class', 'lang', 'target', 'rel'],
         'p' => ['class', 'lang'],
         'span' => ['class', 'lang'],
         'div' => ['class', 'lang'],
@@ -53,6 +53,17 @@ class HtmlAllowlist extends AbstractHelper
         'h5' => ['class'],
         'h6' => ['class'],
     ];
+
+    /**
+     * Link targets that may be kept. _parent and _top are dropped: footer prose has no
+     * legitimate reason to escape a frame.
+     */
+    private const ALLOWED_TARGETS = ['_blank', '_self'];
+
+    /**
+     * Link relationship tokens that may be kept. Anything else is dropped.
+     */
+    private const ALLOWED_REL_TOKENS = ['noopener', 'noreferrer', 'nofollow', 'external', 'me'];
 
     /**
      * Tags removed together with their entire subtree.
@@ -160,7 +171,32 @@ class HtmlAllowlist extends AbstractHelper
             }
 
             $this->filterAttributes($child, self::ALLOWED_TAGS[$tag]);
+
+            if ($tag === 'a') {
+                $this->enforceLinkSafety($child);
+            }
         }
+    }
+
+    /**
+     * Guarantee that a link opening in a new tab cannot reach back through window.opener.
+     *
+     * Modern browsers imply noopener for target="_blank", but older ones do not, and the
+     * sanitiser should not depend on the reader's browser version for a security property.
+     *
+     * @param \DOMElement $element
+     * @return void
+     */
+    private function enforceLinkSafety(\DOMElement $element)
+    {
+        if ($element->getAttribute('target') !== '_blank') {
+            return;
+        }
+
+        $tokens = preg_split('/\s+/', $element->getAttribute('rel'), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $tokens = array_unique(array_merge($tokens, ['noopener', 'noreferrer']));
+
+        $element->setAttribute('rel', implode(' ', $tokens));
     }
 
     /**
@@ -211,6 +247,26 @@ class HtmlAllowlist extends AbstractHelper
                     $element->removeAttribute($attribute->nodeName);
                 } else {
                     $element->setAttribute('href', $safe);
+                }
+                continue;
+            }
+
+            if ($name === 'target') {
+                if (!in_array($value, self::ALLOWED_TARGETS, true)) {
+                    $element->removeAttribute($attribute->nodeName);
+                }
+                continue;
+            }
+
+            if ($name === 'rel') {
+                $tokens = array_values(array_intersect(
+                    preg_split('/\s+/', strtolower(trim($value)), -1, PREG_SPLIT_NO_EMPTY) ?: [],
+                    self::ALLOWED_REL_TOKENS
+                ));
+                if ($tokens) {
+                    $element->setAttribute('rel', implode(' ', $tokens));
+                } else {
+                    $element->removeAttribute($attribute->nodeName);
                 }
                 continue;
             }

@@ -120,7 +120,16 @@ check('null input',            $htmlAllowlist(null), '');
 check('br kept',               $htmlAllowlist('a<br>b'), 'a<br>b');
 check('list kept',             $htmlAllowlist('<ul><li>a</li><li>b</li></ul>'), '<ul><li>a</li><li>b</li></ul>');
 check('svg dropped',           $htmlAllowlist('<svg onload="alert(1)"><circle/></svg>z'), 'z');
-check('target dropped',        $htmlAllowlist('<a href="https://e.org" target="_blank">e</a>'), '<a href="https://e.org">e</a>');
+// target/rel: the real footer_copyright in production uses target="_blank" plus
+// rel="noreferrer noopener", so stripping them would be a visible regression.
+check('target _blank kept + rel forced', $htmlAllowlist('<a href="https://e.org" target="_blank">e</a>'), '<a href="https://e.org" target="_blank" rel="noopener noreferrer">e</a>');
+check('existing rel preserved', $htmlAllowlist('<a href="https://e.org" target="_blank" rel="noreferrer noopener">e</a>'), '<a href="https://e.org" target="_blank" rel="noreferrer noopener">e</a>');
+check('target _self kept',     $htmlAllowlist('<a href="https://e.org" target="_self">e</a>'), '<a href="https://e.org" target="_self">e</a>');
+check('target _top dropped',   $htmlAllowlist('<a href="https://e.org" target="_top">e</a>'), '<a href="https://e.org">e</a>');
+check('target frame dropped',  $htmlAllowlist('<a href="https://e.org" target="evilframe">e</a>'), '<a href="https://e.org">e</a>');
+check('bogus rel token dropped', $htmlAllowlist('<a href="https://e.org" rel="stylesheet">e</a>'), '<a href="https://e.org">e</a>');
+check('rel nofollow kept',     $htmlAllowlist('<a href="https://e.org" rel="nofollow">e</a>'), '<a href="https://e.org" rel="nofollow">e</a>');
+check('rel filtered, _blank forced', $htmlAllowlist('<a href="https://e.org" target="_blank" rel="stylesheet nofollow">e</a>'), '<a href="https://e.org" target="_blank" rel="nofollow noopener noreferrer">e</a>');
 
 printf("\n%d passed, %d failed\n", $pass, $fail);
 exit($fail === 0 ? 0 : 1);
