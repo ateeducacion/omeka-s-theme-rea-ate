@@ -109,6 +109,7 @@ package:
 	rsync -av \
 		--exclude='tmpzip' \
 		--exclude='.git' \
+		--exclude='.claude' \
 		--exclude='.github' \
 		--exclude='.project' \
 		--exclude='*.zip' \

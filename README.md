@@ -158,6 +158,45 @@ Tags de recurso basados en Tipo de recurso o Clase de recurso.
 
 ---
 
+## Seguridad
+
+### HTML permitido en los ajustes del footer
+
+Los ajustes `footer_site_info`, `footer_content` y `footer_copyright` aceptan HTML, pero el tema
+lo reduce a una allowlist de prosa antes de imprimirlo (`helper/HtmlAllowlist.php`):
+
+- **Se conservan:** `a` (con `href` `http`, `https` o `mailto`), `p`, `span`, `div`, `br`, `hr`,
+  `strong`, `b`, `em`, `i`, `small`, `ul`, `ol`, `li`, `h2`–`h6`, y los atributos `title`, `class`
+  y `lang`.
+- **Se eliminan por completo:** `script`, `style`, `iframe`, `object`, `embed`, `form`, `svg` y
+  elementos de formulario, junto con su contenido.
+- **Se descartan siempre:** los atributos `on*` (`onclick`, `onerror`, …), `style`, y cualquier
+  `href` cuyo esquema no esté permitido (`javascript:`, `data:`, …).
+- Las etiquetas no reconocidas se *desenvuelven*: se pierde la etiqueta, pero no el texto.
+
+Si necesita incrustar un `iframe` o un script en el footer, hágalo desde un bloque de página o
+desde un módulo, no desde estos ajustes.
+
+Estos campos sólo deberían ser editados por `global_admin` o por editores del sitio: aunque el
+purificador impide la ejecución de scripts, siguen permitiendo introducir enlaces y texto en todas
+las páginas públicas del sitio.
+
+### Validación de ajustes que llegan a CSS o a URLs
+
+Los ajustes que se interpolan en CSS (colores, alturas del banner) o en atributos `href`/`src`
+(enlaces de la barra de logos, tarjetas de audiencia) se validan contra su gramática en
+`helper/CssToken.php` y `helper/SafeUrl.php`, con reserva a un valor por defecto seguro. Escapar no
+basta en esos contextos: `escapeHtmlAttr()` no impide un `href="javascript:…"` ni que un valor CSS
+cierre el bloque `<style>`.
+
+### Pruebas de los helpers de seguridad
+
+```bash
+php .project/tests/security-helpers-test.php
+```
+
+---
+
 ## Desarrollo
 
 ### Compilar CSS
