@@ -1,3 +1,12 @@
+// Guards against parsing a response that is not JSON at all (a proxy error page, a
+// login redirect). Omeka S serves its API as JSON-LD, so the check must accept the
+// whole "+json" structured-suffix family, not just application/json.
+function isJsonMediaType(contentType) {
+    const mediaType = String(contentType || '').split(';')[0].trim().toLowerCase();
+    // RFC 6839 structured syntax suffix: application/json and application/<x>+json.
+    return /^application\/([\w.+-]+\+)?json$/.test(mediaType);
+}
+
 const resourceLinkInfoScript = () => {
 
     // Adds a '+' button next to each .resource-link that fetches and shows
@@ -93,15 +102,14 @@ const resourceLinkInfoScript = () => {
                     const timeout = setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS);
 
                     fetch(apiBase + '/' + encodeURIComponent(itemId), {
-                        headers: { 'Accept': 'application/json' },
+                        headers: { 'Accept': 'application/ld+json, application/json' },
                         signal: controller.signal
                     })
                         .then(function (res) {
                             if (!res.ok) {
                                 throw new Error('HTTP ' + res.status);
                             }
-                            const contentType = res.headers.get('Content-Type') || '';
-                            if (contentType.indexOf('application/json') === -1) {
+                            if (!isJsonMediaType(res.headers.get('Content-Type'))) {
                                 throw new Error('Unexpected content type');
                             }
                             return res.json();
