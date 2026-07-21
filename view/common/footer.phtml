@@ -1,12 +1,17 @@
 <?php
 $escHtml = $this->plugin('escapeHtml');
 $escAttr = $this->plugin('escapeHtmlAttr');
+$htmlAllowlist = $this->plugin('htmlAllowlist');
 
+// These three settings are HtmlTextarea fields, so they are meant to contain markup and
+// cannot simply be escaped. They are reduced to a prose allowlist instead: formatting and
+// http(s)/mailto links survive, script/iframe/form subtrees, on* handlers and style
+// attributes do not. See helper/HtmlAllowlist.php and the README security note.
 $footerLogo      = $this->themeSetting( 'footer_logo' );
-$footerSiteInfo  = $this->themeSetting( 'footer_site_info' );
+$footerSiteInfo  = $htmlAllowlist( $this->themeSetting( 'footer_site_info' ) );
 $footerMenu      = $this->themeSetting( 'footer_menu' );
 $footerMenuDepth = $this->themeSetting('footer_menu_depth');
-$footerContent   = $this->themeSetting( 'footer_content' );
+$footerContent   = $htmlAllowlist( $this->themeSetting( 'footer_content' ) );
 $additional_classes = '';
 
 if ( ! $footerMenu ) {
@@ -37,7 +42,7 @@ if ( $footerMenu && ( $footerLogo || $footerSiteInfo ) && $footerContent ) {
 					<div class="main-footer__col1">
 						<?php if ( $footerLogo ): ?>
 							<img
-								src="<?php echo $this->themeSettingAssetUrl( 'footer_logo' ); ?>"
+								src="<?php echo $escAttr( $this->themeSettingAssetUrl( 'footer_logo' ) ); ?>"
 								alt="<?php echo $escHtml( $site->title() ); ?>"
 								<?php if ($footerSiteInfo): ?>class="main-footer__logo--with-info"<?php endif; ?> />
 						<?php endif; ?>
@@ -85,7 +90,7 @@ if ( $footerMenu && ( $footerLogo || $footerSiteInfo ) && $footerContent ) {
 
 			<!-- Copyright -->
 			<div class="main-footer__copyright">
-				<?php if ( $footer_copyright = $this->themeSetting( 'footer_copyright' ) ) : ?>
+				<?php if ( $footer_copyright = $htmlAllowlist( $this->themeSetting( 'footer_copyright' ) ) ) : ?>
 					<?php echo $footer_copyright; ?>
 				<?php else: ?>
 					<?php echo $this->translate( 'Powered by Omeka S' ); ?>

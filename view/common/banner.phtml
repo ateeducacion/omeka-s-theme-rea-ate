@@ -1,16 +1,24 @@
 <?php
 $escHtml = $this->plugin('escapeHtml');
 $escAttr = $this->plugin('escapeHtmlAttr');
+$cssToken = $this->plugin('cssToken');
 
 $banner = $this->themeSettingAsset('banner');
-$bannerWidth = $this->themeSetting('banner_width') ?? '';
-$bannerHeight = $this->themeSetting('banner_height') ?? '';
-$bannerVerticalPosition = ($this->themeSetting('banner_v_position')) ?? 'center';
-$bannerHorizontalPosition = ($this->themeSetting('banner_h_position')) ?? 'center';
+
+// Every setting below ends up inside a CSS declaration or a class attribute, where
+// HTML escaping offers no protection. The Select-backed settings are already
+// constrained by the admin form, so validating them here is defence in depth against
+// values written straight to the database or through the API; banner_height is a free
+// text field, so for it this is the only validation there is.
+// Allowlists mirror the value_options declared in config/theme.ini.
+$bannerWidth = $cssToken->keyword($this->themeSetting('banner_width'), ['container', 'alignfull'], '');
+$bannerHeight = $cssToken->length($this->themeSetting('banner_height'), '');
+$bannerVerticalPosition = $cssToken->keyword($this->themeSetting('banner_v_position'), ['center', 'top', 'bottom'], 'center');
+$bannerHorizontalPosition = $cssToken->keyword($this->themeSetting('banner_h_position'), ['center', 'left', 'right'], 'center');
 
 $bannerHeading = $this->themeSetting('banner_heading');
 $bannerDescription = $this->themeSetting('banner_description');
-$bannerContentPosition = $this->themeSetting('banner_content_position') ?? 'left';
+$bannerContentPosition = $cssToken->keyword($this->themeSetting('banner_content_position'), ['left', 'center', 'right'], 'left');
 
 $bannerHeightProperty = $bannerHeading || $bannerDescription ? 'min-height' : 'height';
 
@@ -26,18 +34,20 @@ if ($bannerHeight) {
 $imageInlineStyles .= "object-position: {$bannerHorizontalPosition} {$bannerVerticalPosition};";
 
 $class = ['banner'];
-$class[] = $bannerWidth;
+if ($bannerWidth) {
+    $class[] = $bannerWidth;
+}
 if ($bannerHeading || $bannerDescription) {
     $class[] = 'has-text';
 }
 ?>
 
 <?php if ($banner) : ?>
-    <div class="<?php echo implode(' ', $class); ?>" style="<?php echo $escAttr($bannerInlineStyles); ?>">
+    <div class="<?php echo $escAttr(implode(' ', $class)); ?>" style="<?php echo $escAttr($bannerInlineStyles); ?>">
 
         <?php echo $this->thumbnail($banner, 'large', ['style' => $imageInlineStyles, 'role' => 'presentation', 'aria-hidden' => 'true']); ?>
 
-        <div class="banner__content banner__content--<?php echo $bannerContentPosition; ?>">
+        <div class="banner__content banner__content--<?php echo $escAttr($bannerContentPosition); ?>">
             <?php if($bannerHeading) : ?>
                 <h2 class="banner__heading"><?php echo $escHtml($bannerHeading); ?></h2>
             <?php endif; ?>
