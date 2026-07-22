@@ -10,4 +10,24 @@ namespace Laminas\View\Helper;
  */
 abstract class AbstractHelper
 {
+    /** @var mixed */
+    protected $view;
+
+    /**
+     * @param mixed $view
+     * @return $this
+     */
+    public function setView($view)
+    {
+        $this->view = $view;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getView()
+    {
+        return $this->view;
+    }
 }

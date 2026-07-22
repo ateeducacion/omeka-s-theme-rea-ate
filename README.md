@@ -191,8 +191,12 @@ cierre el bloque `<style>`.
 
 ### Pruebas de los helpers de seguridad
 
+Los helpers están cubiertos por la suite PHPUnit del proyecto
+(`test/ReaAteTest/Helper/{SafeUrl,CssToken,HtmlAllowlist}Test.php`):
+
 ```bash
-php .project/tests/security-helpers-test.php
+make test    # suite completa
+make lint    # PSR2
 ```
 
 ---

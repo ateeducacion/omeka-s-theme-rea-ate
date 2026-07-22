@@ -28,7 +28,8 @@ Datos de la instancia usados en los ejemplos:
 Sin navegador y sin tocar la instancia:
 
 ```bash
-php .project/tests/security-helpers-test.php    # SafeUrl, CssToken, HtmlAllowlist
+make test                                       # PHPUnit: SafeUrl, CssToken, HtmlAllowlist y el resto
+make lint                                       # PSR2
 node .project/tests/api-content-type-test.js    # guarda de Content-Type de la API
 grep -rn "innerHTML\|insertAdjacentHTML" asset/js/ | grep -v minimasonry   # debe salir vacío
 npm run build                                   # compila Sass sin errores
