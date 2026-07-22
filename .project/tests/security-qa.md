@@ -34,56 +34,56 @@ Cubren los puntos **11** y **12** del plan, más la lógica de los tres helpers.
 
 ---
 
-## B. Requieren navegador
+## B. Pruebas 1–4: automatizadas con el banco XSS
 
-Abra la consola de DevTools en todas ellas: el criterio es **que no salte ningún `alert`
-y que no aparezca ningún error de JS**.
+Las cuatro pruebas de XSS en JavaScript están cubiertas por
+`asset/tests/xss-harness.html`, que carga los ficheros **reales** de `asset/js/`, monta los
+fixtures DOM que cada script espera, inyecta los payloads y comprueba el resultado.
+Intercepta `window.alert`, así que un fallo de defensa se detecta solo: no hay que vigilar
+la pantalla.
 
-### 1. XSS en descripción de ítem (C1 — crítico)
-
-1. Admin → Items → Add. En `dcterms:description` ponga:
-   `<img src=x onerror=alert('XSS')>`
-2. Cree un segundo ítem con una propiedad de tipo *resource* (p. ej. `dcterms:relation`)
-   que enlace al primero, y añádalo al sitio `ceiplajares`.
-3. Abra el segundo ítem en el sitio público y pulse el botón `+` del enlace.
-
-**Esperado:** se muestra el texto literal `<img src=x onerror=alert('XSS')>`. No salta alert.
-En el inspector, el contenido del `<p>` debe ser un nodo `#text`, no un `<img>`.
-
-> Si sale «Error loading info.», compruebe primero que la API responde:
-> `curl -D - http://localhost:8080/api/items/2759 -o /dev/null`
-> Debe devolver `200` y `Content-Type: application/ld+json`.
-
-### 2. XSS en chips de faceta (A1)
-
-1. Cree un ítem cuyo valor de una propiedad facetada (p. ej. `schema:about`) sea
-   `<script>alert('facet')</script>`.
-2. Vaya a la búsqueda avanzada del sitio y marque esa faceta.
-
-**Esperado:** el chip muestra el texto con los `<script>` visibles como texto. No salta alert.
-
-### 3. XSS en pills de búsqueda educativa (A2)
-
-1. Cree una colección (item set) cuyo título contenga `<img src=x onerror=alert('pill')>`.
-2. En el formulario de búsqueda educativa, selecciónela en el desplegable de colecciones.
-
-**Esperado:** la pill muestra el título como texto plano y el `aria-label` del botón de
-quitar es correcto. No salta alert.
-
-### 4. href malicioso en chips (N3) — sin preparación
-
-En cualquier página de resultados con facetas, pegue en la consola:
-
-```js
-const cb = document.querySelector('.search-facets input[type="checkbox"]');
-cb.dataset.url = 'javascript:alert("href")';
-cb.checked = true;
-// Fuerza la reconstrucción de los chips
-document.dispatchEvent(new Event('DOMContentLoaded'));
-document.querySelectorAll('.filter-chip').forEach(c => console.log(c.getAttribute('href')));
+```bash
+./.project/tests/run-xss-harness.sh              # Chrome headless, sale 0 si todo pasa
+./.project/tests/run-xss-harness.sh http://otro-host:8080
 ```
 
-**Esperado:** el `href` impreso es `#`, nunca `javascript:...`.
+O ábralo en el navegador para inspeccionarlo a mano:
+
+    http://localhost:8080/themes/rea-ate/asset/tests/xss-harness.html
+
+El banco se sirve desde la propia instancia de Omeka para correr en el mismo origen
+(`fetch` y `sessionStorage` reales). Está excluido del ZIP de release.
+
+**Control negativo** (comprobar que el banco de verdad detecta fallos): reintroduzca el
+sink vulnerable en `advanced-search-list.js` sustituyendo la construcción de chips por
+`chip.innerHTML = ...` y `chip.href = cb.dataset.url || '#'`. El banco debe pasar a
+`HARNESS-FAIL` con 5 fallos, incluido `alerts: facet` — es decir, el XSS se ejecuta de
+verdad. Restaure después con `git checkout asset/js/advanced-search-list.js`.
+
+### Cobertura del banco
+
+| Prueba | Qué verifica |
+|--------|--------------|
+| 1 (C1) | La descripción de la API se pinta como texto; no hay nodos inyectados; no sale «Error loading info.» |
+| 2 (A1) | El valor y el nombre de grupo de la faceta no se interpretan como markup |
+| 3 (A2) | La etiqueta de colección y el `aria-label` de la pill son texto plano |
+| 4 (N3) | Un `data-url="javascript:..."` se neutraliza a `href="#"` |
+| global | Ningún `alert()` llegó a ejecutarse |
+
+### Verificación end-to-end en la aplicación real (opcional)
+
+El banco prueba el JavaScript de forma aislada con un `fetch` interceptado. Para la
+comprobación completa contra datos reales, cree en el admin un ítem con
+`dcterms:description` = `<img src=x onerror=alert('XSS')>`, enlácelo desde otro ítem con
+una propiedad de tipo *resource* y pulse el botón `+` en el sitio público. Debe verse el
+texto literal y ningún alert.
+
+---
+
+## B-bis. Prueba 10: requiere navegador y persona
+
+Es la única que no se puede automatizar de forma útil. Criterio en todas: **que no salte
+ningún `alert` y que no haya errores en la consola de DevTools**.
 
 ### 10. No regresión funcional
 

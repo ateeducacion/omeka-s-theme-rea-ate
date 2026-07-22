@@ -116,6 +116,7 @@ package:
 		--exclude='node_modules' \
 		--exclude='.DS_Store' \
 		--exclude='asset/sass' \
+		--exclude='asset/tests' \
 		--exclude='asset/css/*.map' \
 		--exclude='package.json' \
 		--exclude='package-lock.json' \

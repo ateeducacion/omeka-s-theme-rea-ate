@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>REA ATE — banco de pruebas XSS</title>
+<style>
+    body { font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; margin: 2rem; max-width: 60rem; }
+    h1 { font-size: 1.2rem; }
+    #summary { padding: .75rem 1rem; border-radius: 6px; font-weight: 700; margin: 1rem 0; }
+    #summary.pass { background: #dcfce7; color: #14532d; }
+    #summary.fail { background: #fee2e2; color: #7f1d1d; }
+    #results li { list-style: none; padding: .2rem 0; border-bottom: 1px solid #eee; }
+    .ok::before  { content: "ok   "; color: #16a34a; font-weight: 700; }
+    .bad::before { content: "FAIL "; color: #dc2626; font-weight: 700; }
+    .detail { color: #6b7280; }
+    #fixtures { display: none; }
+</style>
+</head>
+<body>
+
+<h1>Banco de pruebas XSS — JavaScript del tema REA ATE</h1>
+<p>Ejecuta las pruebas 1–4 del plan de verificación contra los ficheros reales de
+<code>asset/js/</code>. Si alguna defensa falla, el payload dispara <code>alert()</code>: el banco
+intercepta <code>window.alert</code> y lo cuenta como fallo, así que no hay que vigilar la pantalla.</p>
+
+<div id="summary">ejecutando…</div>
+<ul id="results"></ul>
+
+<!--
+  Los scripts del tema se enganchan a DOMContentLoaded, así que los fixtures tienen que
+  existir en el DOM antes de que se carguen. Van ocultos: lo que importa es el DOM, no el aspecto.
+-->
+<div id="fixtures">
+
+    <!-- Prueba 2 y 4: chips de filtros activos (advanced-search-list.js) -->
+    <div id="active-filter-chips"></div>
+    <div class="search-facets">
+        <ul>
+            <li class="facet">
+                <h4>Materia &lt;script&gt;alert('grupo')&lt;/script&gt;</h4>
+                <ul>
+                    <li class="facet-item">
+                        <label>
+                            <input type="checkbox" value="payload"
+                                   data-url="javascript:alert('href')" checked>
+                            <span>&lt;img src=x onerror=alert('facet')&gt; (3)</span>
+                        </label>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Prueba 3: pills de búsqueda educativa (advanced-search.js) -->
+    <div class="bs-hero-search">
+        <div class="bs-chip-group" data-prop-id="1"></div>
+        <select id="collection-add-select" data-pills-target="test-pills">
+            <option value=""></option>
+            <option value="42">&lt;img src=x onerror=alert('pill')&gt;</option>
+        </select>
+        <div class="bs-selected-pills" id="test-pills"></div>
+    </div>
+
+    <!-- Prueba 1: panel de información de recurso enlazado (resource-link-info.js) -->
+    <dl class="properties">
+        <div class="property">
+            <dd class="value resource">
+                <a class="resource-link" href="/s/demo/item/999">
+                    <span class="o-icon-items"></span>Recurso enlazado
+                </a>
+            </dd>
+        </div>
+    </dl>
+
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Arnés: se instala ANTES que los scripts del tema para poder interceptar
+// alert() y fetch() en cuanto se ejecuten.
+// ---------------------------------------------------------------------------
+window.__alerts = [];
+window.alert = function (msg) { window.__alerts.push(String(msg)); };
+
+// La descripción maliciosa que "devolvería" la API. Es el escenario exacto del
+// hallazgo C1: metadatos de catálogo con HTML.
+window.__XSS_DESCRIPTION = '<img src=x onerror=alert(\'description\')><b>negrita</b>';
+
+const realFetch = window.fetch.bind(window);
+window.__apiCalls = [];
+window.fetch = function (url, opts) {
+    window.__apiCalls.push(String(url));
+    // Sólo se intercepta la llamada del panel de info; cualquier otra pasa de largo.
+    if (String(url).indexOf('/api/items/') !== -1) {
+        return Promise.resolve(new Response(
+            JSON.stringify({ 'dcterms:description': [{ '@value': window.__XSS_DESCRIPTION }] }),
+            { status: 200, headers: { 'Content-Type': 'application/ld+json' } }
+        ));
+    }
+    return realFetch(url, opts);
+};
+</script>
+
+<!-- Ficheros REALES del tema, sin modificar -->
+<script src="../js/advanced-search-list.js"></script>
+<script src="../js/advanced-search.js"></script>
+<script src="../js/resource-link-info.js"></script>
+
+<script>
+// ---------------------------------------------------------------------------
+// Aserciones. Se registran después de los scripts del tema, así que su listener
+// de DOMContentLoaded corre después del de ellos y ve el DOM ya construido.
+// ---------------------------------------------------------------------------
+(function () {
+    const results = [];
+
+    function check(label, condition, detail) {
+        results.push({ label: label, ok: !!condition, detail: detail || '' });
+    }
+
+    // Un elemento es seguro si el payload aparece como TEXTO y no creó nodos reales.
+    function hasNoInjectedNodes(root) {
+        return root.querySelectorAll('img, script, iframe, svg').length === 0;
+    }
+
+    function render() {
+        const ul = document.getElementById('results');
+        let failed = 0;
+        results.forEach(function (r) {
+            if (!r.ok) failed++;
+            const li = document.createElement('li');
+            li.className = r.ok ? 'ok' : 'bad';
+            li.appendChild(document.createTextNode(r.label));
+            if (r.detail) {
+                const span = document.createElement('span');
+                span.className = 'detail';
+                span.textContent = '  — ' + r.detail;
+                li.appendChild(span);
+            }
+            ul.appendChild(li);
+        });
+
+        const summary = document.getElementById('summary');
+        summary.className = failed === 0 ? 'pass' : 'fail';
+        summary.textContent = failed === 0
+            ? 'TODO OK — ' + results.length + ' comprobaciones, 0 fallos'
+            : 'FALLOS: ' + failed + ' de ' + results.length;
+        // Marcador estable para el modo headless.
+        document.title = failed === 0 ? 'HARNESS-PASS' : 'HARNESS-FAIL';
+    }
+
+    function runAssertions() {
+        // ---- Prueba 2: chips de faceta (A1) ----
+        const bar = document.getElementById('active-filter-chips');
+        const chip = bar.querySelector('.filter-chip');
+        check('P2 · se construyó el chip de faceta', !!chip);
+        if (chip) {
+            check('P2 · el valor de faceta no se interpretó como markup',
+                hasNoInjectedNodes(chip),
+                'nodos inyectados: ' + chip.querySelectorAll('img,script,iframe').length);
+            check('P2 · el payload se conserva como texto visible',
+                chip.textContent.indexOf('<img src=x') !== -1,
+                JSON.stringify(chip.textContent.slice(0, 46)));
+            check('P2 · el nombre de grupo tampoco se interpretó',
+                chip.querySelector('.filter-chip__group') !== null
+                && chip.querySelector('.filter-chip__group').querySelectorAll('*').length === 0);
+
+            // ---- Prueba 4: href malicioso (N3) ----
+            const href = chip.getAttribute('href');
+            check('P4 · data-url "javascript:" neutralizado a "#"',
+                href === '#', 'href = ' + JSON.stringify(href));
+        }
+
+        // ---- Prueba 3: pills educativas (A2) ----
+        const sel = document.getElementById('collection-add-select');
+        sel.value = '42';
+        sel.dispatchEvent(new Event('change'));
+        const pill = document.querySelector('#test-pills .bs-selected-pill');
+        check('P3 · se construyó la pill', !!pill);
+        if (pill) {
+            check('P3 · la etiqueta de colección no se interpretó como markup',
+                hasNoInjectedNodes(pill),
+                'nodos inyectados: ' + pill.querySelectorAll('img,script,iframe').length);
+            check('P3 · el aria-label del botón es texto plano',
+                (pill.querySelector('.bs-selected-pill__remove') || {}).getAttribute
+                && pill.querySelector('.bs-selected-pill__remove')
+                       .getAttribute('aria-label').indexOf('<img') !== -1);
+        }
+
+        // ---- Prueba 1: panel de info (C1, crítico) ----
+        const btn = document.querySelector('.resource-link-info__btn');
+        check('P1 · se añadió el botón "+" al enlace de recurso', !!btn);
+        if (!btn) { render(); return; }
+
+        btn.click();  // dispara el fetch interceptado
+
+        // El fetch resuelve en microtareas; se da un respiro al event loop.
+        setTimeout(function () {
+            const panel = document.querySelector('.resource-link-info__panel');
+            check('P1 · la API se llamó con ruta relativa a basePath',
+                window.__apiCalls.some(function (u) { return u.indexOf('/api/items/') !== -1; }),
+                window.__apiCalls.join(', '));
+            check('P1 · la descripción NO se interpretó como markup',
+                hasNoInjectedNodes(panel),
+                'nodos inyectados: ' + panel.querySelectorAll('img,script,iframe').length);
+            check('P1 · la descripción se pintó como texto literal',
+                panel.textContent.indexOf('<img src=x') !== -1,
+                JSON.stringify(panel.textContent.slice(0, 46)));
+            check('P1 · no se mostró "Error loading info." (guarda ld+json)',
+                panel.textContent.indexOf('Error loading info') === -1,
+                JSON.stringify(panel.textContent.slice(0, 46)));
+
+            // ---- Veredicto global ----
+            check('GLOBAL · ningún alert() llegó a ejecutarse',
+                window.__alerts.length === 0,
+                window.__alerts.length ? 'alerts: ' + window.__alerts.join(', ') : 'ninguno');
+
+            render();
+        }, 300);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runAssertions);
+    } else {
+        runAssertions();
+    }
+})();
+</script>
+
+</body>
+</html>
