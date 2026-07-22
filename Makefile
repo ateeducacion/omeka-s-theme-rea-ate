@@ -109,12 +109,14 @@ package:
 	rsync -av \
 		--exclude='tmpzip' \
 		--exclude='.git' \
+		--exclude='.claude' \
 		--exclude='.github' \
 		--exclude='.project' \
 		--exclude='*.zip' \
 		--exclude='node_modules' \
 		--exclude='.DS_Store' \
 		--exclude='asset/sass' \
+		--exclude='asset/tests' \
 		--exclude='asset/css/*.map' \
 		--exclude='package.json' \
 		--exclude='package-lock.json' \

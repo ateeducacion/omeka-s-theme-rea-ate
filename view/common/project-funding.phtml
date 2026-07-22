@@ -3,7 +3,9 @@
 if (!isset($projectItem) || $projectItem === null) { return; }
 
 $escape    = $this->plugin('escapeHtml');
+$escAttr   = $this->plugin('escapeHtmlAttr');
 $translate = $this->plugin('translate');
+$safeUrl   = $this->plugin('SafeUrl');
 
 $name        = $projectItem->value('schema:name');
 $description = $projectItem->value('schema:description');
@@ -29,14 +31,18 @@ if (!$logoUrl) {
     }
 }
 
+// Both values come from item metadata (schema:logo, schema:url), which is catalogue
+// content: without a scheme allowlist a "javascript:" URI would execute on click.
+$logoUrl = $safeUrl($logoUrl);
+
 if (!$name && !$logoUrl) { return; }
 
 $urlStr = '';
 if ($url) {
-    $urlStr = $url->uri() ?: trim((string) $url);
+    $urlStr = $safeUrl($url->uri() ?: trim((string) $url)) ?? '';
 }
 ?>
-<aside class="project-funding" aria-label="<?php echo $escape($translate('Proyecto cofinanciador')); ?>">
+<aside class="project-funding" aria-label="<?php echo $escAttr($translate('Proyecto cofinanciador')); ?>">
 
     <span class="project-funding__eyebrow">
         <?php echo $escape($translate('Proyecto cofinanciador')); ?>
@@ -45,8 +51,8 @@ if ($url) {
     <?php if ($logoUrl): ?>
     <div class="project-funding__logo-area">
         <img class="project-funding__logo"
-             src="<?php echo $escape($logoUrl); ?>"
-             alt="<?php echo $escape($name ? (string) $name : $translate('Logo del proyecto')); ?>">
+             src="<?php echo $escAttr($logoUrl); ?>"
+             alt="<?php echo $escAttr($name ? (string) $name : $translate('Logo del proyecto')); ?>">
     </div>
     <?php endif; ?>
 
@@ -61,7 +67,7 @@ if ($url) {
 
         <?php if ($urlStr): ?>
         <a class="project-funding__link"
-           href="<?php echo $escape($urlStr); ?>"
+           href="<?php echo $escAttr($urlStr); ?>"
            target="_blank"
            rel="noopener noreferrer">
             <?php echo $escape($translate('Más información')); ?>

@@ -10,17 +10,24 @@ $defaultBrowseUrl = $this->url(
     true
 );
 
-$resolveAudienceUrl = function (string $settingName) use ($site): ?string {
+$safeUrl = $this->plugin('SafeUrl');
+
+$resolveAudienceUrl = function (string $settingName) use ($site, $safeUrl): ?string {
     $value = trim((string) $this->themeSetting($settingName));
     if ($value === '') {
         return null;
     }
 
-    if (preg_match('~^(https?:)?//~', $value) || str_starts_with($value, '/')) {
-        return $value;
+    // Absolute http(s) URLs and site-relative paths are honoured as written.
+    // Protocol-relative values ("//evil.example") used to be accepted here, which turned
+    // a theme setting into an open redirect; SafeUrl rejects them.
+    if (preg_match('~^https?://~', $value) || str_starts_with($value, '/')) {
+        return $safeUrl($value);
     }
 
-    return rtrim($site->siteUrl(), '/') . '/' . ltrim($value, '/');
+    // Anything else is treated as a path relative to the site root, so a value such as
+    // "item?fulltext_search=science" keeps working.
+    return $safeUrl(rtrim($site->siteUrl(), '/') . '/' . ltrim($value, '/'));
 };
 
 $cards = array_filter([

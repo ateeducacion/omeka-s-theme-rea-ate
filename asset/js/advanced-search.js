@@ -77,15 +77,26 @@ if (document.readyState === 'loading') {
                 // Use the option label as display text (handles IDs for collections).
                 const label = sel.options[sel.selectedIndex].textContent.trim();
 
+                // The label comes from an <option> whose text is catalogue-authored, so it
+                // is inserted as a text node and never as markup.
                 const pill = document.createElement('span');
                 pill.className = 'bs-selected-pill';
                 pill.dataset.value = val;
-                pill.innerHTML =
-                    label +
-                    '<button type="button" class="bs-selected-pill__remove" aria-label="Quitar ' + label + '">' +
-                    '<span class="material-symbols-outlined" aria-hidden="true">close</span>' +
-                    '</button>';
-                pill.querySelector('.bs-selected-pill__remove').addEventListener('click', function () {
+                pill.appendChild(document.createTextNode(label));
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'bs-selected-pill__remove';
+                removeBtn.setAttribute('aria-label', 'Quitar ' + label);
+
+                const removeIcon = document.createElement('span');
+                removeIcon.className = 'material-symbols-outlined';
+                removeIcon.setAttribute('aria-hidden', 'true');
+                removeIcon.textContent = 'close';
+                removeBtn.appendChild(removeIcon);
+                pill.appendChild(removeBtn);
+
+                removeBtn.addEventListener('click', function () {
                     pill.remove();
                 });
                 pillsContainer.appendChild(pill);
@@ -110,7 +121,7 @@ if (document.readyState === 'loading') {
                     c.classList.remove('selected');
                 });
                 document.querySelectorAll('.bs-selected-pills').forEach(function (c) {
-                    c.innerHTML = '';
+                    c.replaceChildren();
                 });
                 const collSel = document.getElementById('collection-add-select');
                 if (collSel) collSel.value = '';
@@ -130,7 +141,7 @@ if (document.readyState === 'loading') {
         form.addEventListener('submit', function () {
             const container = document.getElementById('bs-chip-inputs');
             if (container) {
-                container.innerHTML = '';
+                container.replaceChildren();
                 let idx = 0;
 
                 // 1. Chip groups (multi-select chips for level, type, audience).
