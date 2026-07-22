@@ -2,6 +2,10 @@
 
 Plan de pruebas de las correcciones de la auditoría (rama `security/audit-fixes`).
 
+> **Estado: las 12 pruebas verificadas el 2026-07-22.** Las 1-4 y las automatizadas son
+> reejecutables en cualquier momento; las 5-9 se ejecutaron contra la instancia Docker con
+> copia de seguridad y restauración verificada; la 10 se comprobó a mano.
+
 > **Aviso**: la instancia Docker de desarrollo contiene un volcado realista (12.609 ítems,
 > 4 sitios). Las pruebas 5–9 requieren poner valores maliciosos en ajustes del tema.
 > Haga siempre copia del blob de ajustes antes y restáurelo después (ver
@@ -87,6 +91,8 @@ Es la única que no se puede automatizar de forma útil. Criterio en todas: **qu
 ningún `alert` y que no haya errores en la consola de DevTools**.
 
 ### 10. No regresión funcional
+
+**Ejecutada 2026-07-22: PASA.**
 
 Recorra a mano, en escritorio y en móvil (DevTools responsive):
 
