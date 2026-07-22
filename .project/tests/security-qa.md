@@ -13,6 +13,7 @@ Datos de la instancia usados en los ejemplos:
 |------|-------|
 | Sitio | `ceiplajares` (site_id `1`) |
 | Ítem con descripción | `2759` |
+| Portada real | `/s/ceiplajares/page/home` (¡`/s/ceiplajares/` da **404**!) |
 | Panel de ajustes del tema | `http://localhost:8080/admin/site/s/ceiplajares/theme` |
 | Contenedor BD | `omeka-s-moduletemplate-mariadb-1` |
 
@@ -105,27 +106,44 @@ Estas se comprueban en el HTML servido, sin navegador. Requieren inyectar un pay
 
 ### Inyectar payloads
 
+El blob es JSON con barras invertidas escapadas, así que **leer y escribir en texto plano es una
+fuente segura de corrupción**. Use siempre hexadecimal (`HEX()` / `X'…'`), que es inmune al
+escapado en ambos sentidos:
+
 ```bash
-# 1. COPIA DE SEGURIDAD (imprescindible)
-docker exec omeka-s-moduletemplate-mariadb-1 mariadb -uomeka -pomeka omeka \
-  --skip-column-names --raw \
-  -e "SELECT value FROM site_setting WHERE id='theme_settings_rea-ate' AND site_id=1;" \
-  > /tmp/theme-settings-backup.json
-wc -c /tmp/theme-settings-backup.json   # debe ser > 0 antes de continuar
+DB="docker exec omeka-s-moduletemplate-mariadb-1 mariadb -uomeka -pomeka omeka"
+
+# 1. COPIA DE SEGURIDAD, en hex
+$DB --skip-column-names --raw \
+  -e "SELECT HEX(value) FROM site_setting WHERE id='theme_settings_rea-ate' AND site_id=1;" \
+  2>/dev/null > /tmp/backup.hex
+
+# VERIFICAR que no está vacía ANTES de tocar nada: un backup vacío pasa
+# silenciosamente cualquier comprobación que itere sobre sus filas.
+test -s /tmp/backup.hex || { echo "BACKUP VACÍO — ABORTAR"; exit 1; }
 
 # 2. Inyectar (ejemplo: banner_width)
-docker exec omeka-s-moduletemplate-mariadb-1 mariadb -uomeka -pomeka omeka -e \
-  "UPDATE site_setting
-     SET value = JSON_SET(value, '\$.banner_width', '\"><img src=x onerror=alert(1)>')
-   WHERE id='theme_settings_rea-ate' AND site_id=1;"
+$DB -e "UPDATE site_setting
+          SET value = JSON_SET(value, '\$.banner_width', '\"><img src=x onerror=alert(1)>')
+        WHERE id='theme_settings_rea-ate' AND site_id=1;"
 
 # 3. …ejecutar la comprobación…
 
-# 4. RESTAURAR
-docker exec -i omeka-s-moduletemplate-mariadb-1 mariadb -uomeka -pomeka omeka -e \
-  "UPDATE site_setting SET value = LOAD_FILE('/dev/stdin')
-   WHERE id='theme_settings_rea-ate' AND site_id=1;" < /tmp/theme-settings-backup.json
+# 4. RESTAURAR desde el hex y comprobar que coincide byte a byte
+$DB -e "UPDATE site_setting
+          SET value = CONVERT(X'$(cat /tmp/backup.hex)' USING utf8mb4)
+        WHERE id='theme_settings_rea-ate' AND site_id=1;"
+$DB --skip-column-names --raw \
+  -e "SELECT HEX(value) FROM site_setting WHERE id='theme_settings_rea-ate' AND site_id=1;" \
+  2>/dev/null > /tmp/now.hex
+diff -q /tmp/backup.hex /tmp/now.hex && echo "RESTAURADO IDÉNTICO" && rm -f /tmp/backup.hex /tmp/now.hex
 ```
+
+> **Cuidado con los `grep` sobre el HTML servido.** `escapeHtmlAttr()` codifica `:` y `/` como
+> entidades, así que `grep 'href="https://…"'` **no encuentra** un enlace legítimo que sí está
+> presente (aparece como `https&#x3A;&#x2F;&#x2F;…`). Al comprobar valores concretos, decodifique
+> las entidades antes de comparar. Lo mismo al contar payloads: acote la búsqueda al bloque
+> relevante del DOM, o contará formularios y scripts del propio tema.
 
 Los ajustes de tipo `Text` y `HtmlTextarea` (`banner_height`, `banner_height_mobile`,
 `home_audience_*_url`, `anclaje_div_class`, `footer_content`, `footer_site_info`,
@@ -137,7 +155,7 @@ que estos hallazgos son defensa en profundidad y no vulnerabilidades explotables
 
 ### 5. Breakout de CSS (A3)
 
-Ponga `banner_height_mobile` = `100px;}</style><script>alert(1)</script>` (panel de ajustes).
+**Ejecutada 2026-07-22: PASA.** Ponga `banner_height_mobile` = `100px;}</style><script>alert(1)</script>` (panel de ajustes).
 
 ```bash
 curl -s http://localhost:8080/s/ceiplajares/item/2759 | grep -c '</style><script>'   # → 0
@@ -149,12 +167,12 @@ fallback vacío y el bloque `@media` no se emite. Repita con `banner_height`.
 
 ### 6. Breakout de atributo (N1)
 
-Requiere un banner configurado (si `banner` está vacío, la plantilla no renderiza nada).
+**Ejecutada 2026-07-22: PASA.** Requiere un banner configurado (si `banner` está vacío, la plantilla no renderiza nada).
 Inyecte `banner_width` = `"><img src=x onerror=alert(1)>` por BD.
 
 ```bash
-curl -s http://localhost:8080/s/ceiplajares/ | grep -o 'class="banner[^"]*"'
-curl -s http://localhost:8080/s/ceiplajares/ | grep -c 'onerror=alert'   # → 0
+curl -s http://localhost:8080/s/ceiplajares/page/home | grep -o 'class="banner[^"]*"'
+curl -s http://localhost:8080/s/ceiplajares/page/home | grep -c 'onerror=alert'   # → 0
 ```
 
 **Esperado:** la clase queda en `banner` (el valor inválido se descarta por allowlist) y no
@@ -162,11 +180,11 @@ aparece ningún `<img onerror>`.
 
 ### 7. URL peligrosa (A5)
 
-`logos_bar_link_1` = `javascript:alert(1)` (por BD), con `logos_bar_logo_1` ya configurado:
+**Ejecutada 2026-07-22: PASA.** `logos_bar_link_1` = `javascript:alert(1)` (por BD), con `logos_bar_logo_1` ya configurado:
 
 ```bash
-curl -s http://localhost:8080/s/ceiplajares/ | grep -o '<a href="javascript[^"]*"'   # vacío
-curl -s http://localhost:8080/s/ceiplajares/ | grep -o '<span class="logos-bar__item">' | head -1
+curl -s http://localhost:8080/s/ceiplajares/page/home | grep -o '<a href="javascript[^"]*"'   # vacío
+curl -s http://localhost:8080/s/ceiplajares/page/home | grep -o '<span class="logos-bar__item">' | head -1
 ```
 
 **Esperado:** ningún `href="javascript:`; el logo se renderiza dentro de un `<span>`.
@@ -175,25 +193,46 @@ Para el open redirect, ponga `home_audience_teachers_url` = `//example.org` (pan
 ajustes) y compruebe en la **portada** del sitio:
 
 ```bash
-curl -s http://localhost:8080/s/ceiplajares/ | grep -o 'class="audience-card[^"]*" href="[^"]*"'
+curl -s http://localhost:8080/s/ceiplajares/page/home | grep -o 'class="audience-card[^"]*" href="[^"]*"'
 ```
 
 **Esperado:** ninguna tarjeta con `href="//example.org"`.
 
 ### 8. Catálogo de traducciones (N2)
 
-Requiere editar `language/es.po`, recompilar (`npm run compile-translations`) y reiniciar.
-Ponga como traducción de `Close` la cadena `</script><script>alert(1)</script>`.
+**Ejecutada 2026-07-22: PASA.** Requiere editar `language/es.po`, recompilar
+(`npm run compile-translations`) y reiniciar el contenedor. Ponga como traducción de `Close`
+la cadena `</script><script>alert(1)</script>`.
+
+El recuento de `<script>` con `grep` sale descuadrado y **no significa nada**: el
+`jsTranslations` que emite Omeka core incluye la traducción como texto dentro de una cadena
+JS. La comprobación válida es sobre el DOM ya parseado por un navegador:
 
 ```bash
-curl -s http://localhost:8080/s/ceiplajares/ | grep -o 'const closeText = .\{0,80\}'
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu \
+  --virtual-time-budget=8000 --dump-dom http://localhost:8080/s/ceiplajares/item/2759 > /tmp/dom.html
+python3 -c "
+import re
+d=open('/tmp/dom.html').read()
+rogue=[s for s in re.findall(r'<script[^>]*>(.*?)</script>', d, re.S) if s.strip()=='alert(1)']
+print('scripts fraudulentos:', len(rogue), '(esperado 0)')
+"
+```
+
+**Esperado:** cero elementos `<script>` fraudulentos. El payload aparece en tres formas, todas
+inertes: `\u003C\/script\u003E` en el bloque del drawer (los flags `JSON_HEX_*` del tema),
+`&lt;/script&gt;` en `aria-label`/`title` (escapado de atributos del tema), y `<\/script>`
+dentro del `jsTranslations` de core (core escapa `/`, no `<` — mitigación suya, no del tema).
+
+```bash
+curl -s http://localhost:8080/s/ceiplajares/page/home | grep -o 'const closeText = .\{0,80\}'
 ```
 
 **Esperado:** la cadena aparece escapada con `<`, sin cerrar el bloque `<script>`.
 
 ### 9. HTML del footer (M1)
 
-Ponga en `footer_content` (panel de ajustes) este bloque:
+**Ejecutada 2026-07-22: PASA.** Ponga en `footer_content` (panel de ajustes) este bloque:
 
 ```html
 <p>Texto <strong>legítimo</strong></p>
