@@ -214,10 +214,22 @@ de `facets-list.phtml`.
 
 ### 5.5 Degradación
 
-Si el vocabulario no responde al modelo (materias no enlazadas, sin niveles, o
-settings vacíos), el helper devuelve `null` y `results.phtml` renderiza las dos
-propiedades como hoy. El tema tiene que seguir siendo instalable en sitios sin
-este modelo de datos.
+El helper devuelve `null` —y `results.phtml` renderiza las dos propiedades como
+hoy— en dos casos: **cualquiera de los dos settings vacío**, o **el recurso no
+tiene ningún valor de materia**. El tema tiene que seguir siendo instalable en
+sitios sin este modelo de datos.
+
+Un recurso **con materias pero sin niveles declarados no es un caso de
+degradación**: sus materias se pintan como píldoras simples, sin zona derecha,
+exactamente igual que el grupo sin niveles de §6. Devolver `null` ahí sería
+incoherente con esa regla y, además, peor: la ruta de degradación renderiza las
+propiedades crudas, que se apoyan en el bloque de estilos de píldora heredado.
+
+Por eso el bloque SCSS existente de `.property[data-term="lrmi:educationalLevel"]`
+y `.property[data-term="schema:about"]` **se conserva**: es la ruta de
+degradación, no CSS muerto. Solo se le retira el `max-width: 18ch`, que es el
+truncado defectuoso. Convive sin solaparse con el componente nuevo, que se
+selecciona por clase (`.property--curriculum-anchor`) y no lleva `data-term`.
 
 ## 6. Markup y estilo
 

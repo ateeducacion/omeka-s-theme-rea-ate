@@ -747,7 +747,17 @@ if (!$rows) {
 
 - [ ] **Step 2: Sustituir el bloque de estilos**
 
-En `asset/sass/components/search-results/_search-results-list.scss`, **eliminar** el bloque que empieza en `.property[data-term="lrmi:educationalLevel"],` y su pareja `.property[data-term="schema:about"] {` (el que contiene `max-width: 18ch`), y poner en su lugar:
+En `asset/sass/components/search-results/_search-results-list.scss`, en el bloque que
+empieza en `.property[data-term="lrmi:educationalLevel"],` / `.property[data-term="schema:about"] {`
+(líneas 140-160), **borrar únicamente la línea `max-width: 18ch;`** y dejar el resto intacto.
+
+> **No borres el bloque entero.** Es la ruta de degradación de §5.5 de la spec: cuando el
+> helper devuelve `null`, `results.phtml` renderiza esas dos propiedades crudas y necesitan
+> conservar su estilo de píldora. No es CSS muerto. Convive sin solaparse con el componente
+> nuevo, que se selecciona por clase y no lleva `data-term`. Lo mismo vale para las reglas
+> de esos términos dentro del `@media (max-width: $md)` (líneas 297-307): **se conservan**.
+
+Y **añadir**, a continuación de ese bloque:
 
 ```scss
         // ---- Anclaje curricular: píldora compuesta materia | niveles ----
@@ -837,28 +847,9 @@ En `asset/sass/components/search-results/_search-results-list.scss`, **eliminar*
         }
 ```
 
-**Eliminar también el bloque muerto del media query.** Dentro de `@media (max-width: $md)`,
-en torno a las líneas 297-307, hay una segunda pareja de reglas para esos mismos términos:
-
-```scss
-            // Chips keep their pill visual in mobile — override the generic dd:inline
-            // from the meta-group block above and hide the dt (same as desktop).
-            .property[data-term="lrmi:educationalLevel"] dt,
-            .property[data-term="schema:about"] dt {
-                display: none;
-            }
-
-            .property[data-term="lrmi:educationalLevel"] dd,
-            .property[data-term="schema:about"] dd {
-                display: inline-block;
-            }
-```
-
-Esas dos reglas quedan sin sujeto: tras el override de `results.phtml` ya no existe ningún
-`.property[data-term="lrmi:educationalLevel"]` ni `.property[data-term="schema:about"]` en
-los resultados. Borrarlas, comentario incluido.
-
-Y en ese mismo bloque `@media (max-width: $md)`, añadir:
+Y dentro del bloque `@media (max-width: $md)`, **sin tocar** las reglas existentes de
+`lrmi:educationalLevel` / `schema:about` (líneas 297-307, que son la ruta de degradación),
+añadir:
 
 ```scss
             .property--curriculum-anchor {
