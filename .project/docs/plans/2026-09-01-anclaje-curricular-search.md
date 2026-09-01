@@ -16,6 +16,11 @@
 - El tema **no codifica valores** de vocabularios controlados; los lee del recurso.
 - Convención de commits: `type(scope): descripción en imperativo`, máx. 72 caracteres, sin punto final. Scopes de este trabajo: `php`, `sass`, `js`, `search`. Fuente: `.project/skills/process/git-commit-convention.md`.
 - Los view helpers del tema viven en `helper/<Nombre>.php`, namespace `OmekaTheme\Helper`, y se registran con `helpers[] = "<Nombre>"` en `config/theme.ini`.
+- **Los helpers del tema se invocan respetando exactamente las mayúsculas** del `theme.ini`:
+  `$this->CurriculumAnchor(...)`, no `$this->curriculumAnchor(...)`. Omeka los registra con
+  `setFactory($helper, ...)` usando la cadena literal (`application/src/Mvc/MvcListeners.php:372`)
+  y Laminas ServiceManager v3 no normaliza nombres, así que la minúscula lanza
+  `ServiceNotFoundException`. El tema ya sigue esta convención: `$this->SlugifyValues(...)`.
 - Todo texto visible pasa por `translate()` y lleva el comentario `// @translate` donde el extractor lo necesite.
 - Toda salida a HTML pasa por `escapeHtml` / `escapeHtmlAttr`. Ningún `echo` directo de valor de catálogo.
 - Degradación obligatoria: si el modelo de datos no encaja, el helper devuelve `null` y el template cae al renderizado original del módulo.
@@ -467,7 +472,7 @@ entradas que antes de empezar la tarea.
 
 **Interfaces:**
 - Consumes: `CurriculumAnchor::groupRows()` de la Tarea 1.
-- Produces: `$this->curriculumAnchor($resource): ?array` — invocable desde cualquier template. Devuelve las filas de `groupRows()` enriquecidas con `url` por nivel, o `null` si el modelo de datos no encaja.
+- Produces: `$this->CurriculumAnchor($resource): ?array` — invocable desde cualquier template. Devuelve las filas de `groupRows()` enriquecidas con `url` por nivel, o `null` si el modelo de datos no encaja.
   - Forma exacta: `[['label' => string, 'orphan' => bool, 'levels' => [['id' => int, 'label' => string, 'url' => string], ...]], ...]`
 
 - [ ] **Step 1: Añadir los settings a `config/theme.ini`**
@@ -708,7 +713,7 @@ git commit -m "feat(php): resolver materias y niveles por lotes en CurriculumAnc
 - Modify: `asset/sass/components/search-results/_search-results-list.scss:139-160`
 
 **Interfaces:**
-- Consumes: `$this->curriculumAnchor($resource)` de la Tarea 2.
+- Consumes: `$this->CurriculumAnchor($resource)` de la Tarea 2.
 - Produces: el partial `common/curriculum-anchor`, que espera la variable `$rows` (array del helper) y `$label` (string, rótulo de la fila). Emite un `<div class="property property--curriculum-anchor">`.
 
 - [ ] **Step 1: Crear el partial**
@@ -895,7 +900,7 @@ git commit -m "feat(sass): pildora compuesta materia y niveles en resultados"
 - Modify: `asset/js/advanced-search-list.js:194-224`
 
 **Interfaces:**
-- Consumes: el partial `common/curriculum-anchor` (Tarea 3) y el helper `curriculumAnchor` (Tarea 2).
+- Consumes: el partial `common/curriculum-anchor` (Tarea 3) y el helper `CurriculumAnchor` (Tarea 2).
 - Produces: nada consumido por tareas posteriores.
 
 - [ ] **Step 1: Copiar el template del módulo**
@@ -933,7 +938,7 @@ Añadir al principio del bloque de comentario `/** ... */` que ya trae el ficher
 Dentro del `foreach ($resources as $resource):`, justo después de la línea que calcula `$resourceThumbnail`, añadir:
 
 ```php
-        $curriculumRows = $showProperties ? $this->curriculumAnchor($resource) : null;
+        $curriculumRows = $showProperties ? $this->CurriculumAnchor($resource) : null;
         $curriculumTerms = $curriculumRows
             ? [
                 trim((string) $this->themeSetting('curriculum_anchor_subject_property')),
