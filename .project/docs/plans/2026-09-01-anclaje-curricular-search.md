@@ -240,8 +240,12 @@ class CurriculumAnchorTest extends TestCase
 
         $rows = CurriculumAnchor::groupRows($subjects, $declared, $stage, 'Otros niveles');
 
+        // Los dos grupos se quedan sin niveles, así que empatan en la clave de
+        // orden y desempatan alfabéticamente (§4.2): Física antes que
+        // Matemáticas, aunque el recurso las declare al revés. El orden de
+        // aparición no se respeta en ningún grupo, tenga niveles o no.
         $this->assertSame(
-            ['Matemáticas' => [], 'Física' => [], 'Otros niveles' => ['2º ESO']],
+            ['Física' => [], 'Matemáticas' => [], 'Otros niveles' => ['2º ESO']],
             $this->flatten($rows)
         );
     }
@@ -434,15 +438,24 @@ Expected: `No syntax errors detected`.
 
 - [ ] **Step 8: Commit en la rama de trabajo**
 
-La rama temporal solo sirve para ejecutar. El commit va a la rama real:
+La rama temporal solo sirve para ejecutar. El commit va a la rama real.
+
+> **Nada de `git stash` aquí.** Los dos ficheros son nuevos y sin seguimiento, y
+> `git stash push <rutas>` con rutas exclusivamente *untracked* **no guarda nada**
+> (hace falta `-u`), así que el `git stash pop` siguiente desapilaría un stash
+> ajeno del usuario y volcaría cambios no relacionados sobre la rama. No hace
+> falta: los ficheros no existen en ninguna de las dos ramas, así que sobreviven
+> al cambio de rama por sí solos.
 
 ```bash
-git stash push helper/CurriculumAnchor.php test/ReaAteTest/Helper/CurriculumAnchorTest.php
 git checkout feature/anclaje-curricular-search
-git stash pop
+git status --short   # → ?? helper/CurriculumAnchor.php  ?? test/
 git add helper/CurriculumAnchor.php test/ReaAteTest/Helper/CurriculumAnchorTest.php
 git commit -m "feat(php): agrupar materias y niveles con CurriculumAnchor::groupRows"
 ```
+
+Comprobar antes de commitear que `git stash list` sigue teniendo las mismas
+entradas que antes de empezar la tarea.
 
 ---
 
