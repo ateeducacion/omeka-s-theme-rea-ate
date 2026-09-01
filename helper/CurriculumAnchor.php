@@ -114,6 +114,52 @@ class CurriculumAnchor extends AbstractHelper
     }
 
     /**
+     * Rellena la caché de instancia de una sola pasada para todos los
+     * recursos de una página de resultados, para cumplir el presupuesto de
+     * tres consultas por lote por página (spec §5.4) en vez de hasta tres
+     * por recurso listado. Opcional: __invoke() funciona igual de correcto
+     * sin llamar antes a esto, solo que con más consultas (memoización caso
+     * a caso en vez de un lote único). No toca groupRows() ni el resultado.
+     *
+     * Mismo patrón que ya usa view/search/facets-list.phtml: recoger todos
+     * los IDs por adelantado y consultarlos una sola vez por lote.
+     *
+     * @param \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $resources
+     */
+    public function primeResources(array $resources): void
+    {
+        $view = $this->getView();
+        $subjectTerm = trim((string) $view->themeSetting('curriculum_anchor_subject_property'));
+        $levelTerm = trim((string) $view->themeSetting('curriculum_anchor_level_property'));
+        if ($subjectTerm === '' || $levelTerm === '') {
+            return;
+        }
+
+        $subjectIds = [];
+        $levelIds = [];
+        foreach ($resources as $resource) {
+            foreach ($resource->value($subjectTerm, ['all' => true]) ?: [] as $value) {
+                $linked = $this->linkedResource($value);
+                if ($linked) {
+                    $subjectIds[$linked->id()] = true;
+                }
+            }
+            foreach ($resource->value($levelTerm, ['all' => true]) ?: [] as $value) {
+                $linked = $this->linkedResource($value);
+                if ($linked) {
+                    $levelIds[$linked->id()] = true;
+                }
+            }
+        }
+
+        // Consulta por lote 1: todos los ítems asignatura de la página.
+        $this->fetchItems(array_keys($subjectIds));
+        // Consultas por lote 2 y 3: todos los niveles declarados de la
+        // página y los termsets a los que pertenecen.
+        $this->levelStages(array_keys($levelIds));
+    }
+
+    /**
      * Posición de la etapa de cada curso, para ordenar Infantil → Bachillerato.
      * Consultas por lote 2 y 3.
      *
