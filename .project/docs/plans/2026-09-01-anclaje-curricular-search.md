@@ -424,10 +424,13 @@ Expected: PASS, 9 tests.
 Run: `./vendor/bin/phpunit -c test/phpunit.xml`
 Expected: PASS, toda la suite en verde.
 
-- [ ] **Step 7: Comprobar el estilo de código**
+- [ ] **Step 7: Comprobar la sintaxis**
 
-Run: `./vendor/bin/phpcs helper/CurriculumAnchor.php`
-Expected: sin errores. Si los hay, corregirlos antes de commitear.
+Run: `php -l helper/CurriculumAnchor.php`
+Expected: `No syntax errors detected`.
+
+> No se ejecuta `phpcs`: el repositorio no tiene `phpcs.xml` ni ruleset, así que correría
+> contra el estándar por defecto de la máquina y daría ruido no accionable.
 
 - [ ] **Step 8: Commit en la rama de trabajo**
 
@@ -869,15 +872,20 @@ git commit -m "feat(sass): pildora compuesta materia y niveles en resultados"
 
 - [ ] **Step 1: Copiar el template del módulo**
 
-```bash
-docker compose cp omekas:/var/www/html/volume/modules/AdvancedSearch/view/search/results.phtml view/search/results.phtml
-```
-
-Si `docker compose cp` no está disponible:
+El contenedor en marcha (`omeka-s-moduletemplate-omekas-1`) pertenece a otro proyecto
+compose, así que `docker compose cp` desde este repositorio no resuelve el servicio. Copiar
+con `docker exec`:
 
 ```bash
+mkdir -p view/search
 docker exec omeka-s-moduletemplate-omekas-1 \
   cat /var/www/html/volume/modules/AdvancedSearch/view/search/results.phtml > view/search/results.phtml
+```
+
+Verificar que la copia no está vacía y trae el bucle de propiedades:
+
+```bash
+grep -c 'foreach ($properties as $property)' view/search/results.phtml   # → 1
 ```
 
 - [ ] **Step 2: Anotar la procedencia en la cabecera**
@@ -978,7 +986,12 @@ curl -s "http://localhost:8080/s/ceiplajares/rea?fulltext_search=" \
   | grep -c 'class="curriculum-anchor__group'
 ```
 
-Expected: 35 (el número de filas previsto para la página 1). Si sale 0, revisar que el override se está cargando: el tema debe estar activo en el sitio `ceiplajares`.
+Expected: **31**. La página 1 pagina a 15 resultados (`pagination_per_page: 15`) y sus filas
+suman 31 según la simulación del algoritmo: 3181:1, 4359:1, 4362:2, 4674:2, 4676:6, 5045:3,
+5047:2, 5051:2, 37129:1, 37132:1, 40419:1, 40422:2, 40425:2, 40427:4, 40431:1. (Las 35 filas
+que cita el spec son el catálogo completo, 19 recursos, no una sola página.)
+
+Si sale 0, revisar que el override se está cargando: el tema debe estar activo en el sitio `ceiplajares`.
 
 - [ ] **Step 8: Commit**
 
