@@ -18,6 +18,177 @@ use Laminas\View\Helper\AbstractHelper;
 class CurriculumAnchor extends AbstractHelper
 {
     /**
+     * @param \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+     * @return array|null Filas listas para pintar, o null si el modelo no encaja.
+     */
+    public function __invoke($resource): ?array
+    {
+        $view = $this->getView();
+
+        $subjectTerm = trim((string) $view->themeSetting('curriculum_anchor_subject_property'));
+        $levelTerm = trim((string) $view->themeSetting('curriculum_anchor_level_property'));
+        if ($subjectTerm === '' || $levelTerm === '') {
+            return null;
+        }
+
+        // Niveles que declara el propio recurso: son el universo permitido.
+        $declaredLevels = [];
+        foreach ($resource->value($levelTerm, ['all' => true]) ?: [] as $value) {
+            $linked = $this->linkedResource($value);
+            if ($linked) {
+                $declaredLevels[$linked->id()] = (string) $linked->displayTitle();
+            }
+        }
+
+        // Materias, en orden de aparición.
+        $subjects = [];
+        $subjectIds = [];
+        foreach ($resource->value($subjectTerm, ['all' => true]) ?: [] as $value) {
+            $linked = $this->linkedResource($value);
+            if ($linked) {
+                $subjects[] = ['id' => $linked->id(), 'label' => (string) $linked->displayTitle()];
+                $subjectIds[$linked->id()] = true;
+            } else {
+                // Literal suelto: sin ítem detrás, no tiene nivel propio.
+                $subjects[] = ['id' => null, 'label' => (string) $value];
+            }
+        }
+        if (!$subjects) {
+            return null;
+        }
+
+        // Consulta por lote 1: los ítems asignatura, para leer su nivel.
+        $subjectLevels = [];
+        foreach ($this->fetchItems(array_keys($subjectIds)) as $item) {
+            $ids = [];
+            foreach ($item->value($levelTerm, ['all' => true]) ?: [] as $value) {
+                $linked = $this->linkedResource($value);
+                if ($linked) {
+                    $ids[] = $linked->id();
+                }
+            }
+            $subjectLevels[$item->id()] = $ids;
+        }
+        foreach ($subjects as &$subject) {
+            $subject['levelIds'] = $subject['id'] === null
+                ? []
+                : ($subjectLevels[$subject['id']] ?? []);
+        }
+        unset($subject);
+
+        $levelStage = $this->levelStages(array_keys($declaredLevels));
+
+        $rows = self::groupRows(
+            $subjects,
+            $declaredLevels,
+            $levelStage,
+            $view->translate('Otros niveles') // @translate
+        );
+        if (!$rows) {
+            return null;
+        }
+
+        // Enlace por nivel: el mismo filtro que ya genera el módulo.
+        foreach ($rows as &$row) {
+            foreach ($row['levels'] as &$level) {
+                $level['url'] = $this->levelUrl($levelTerm, $level['id']);
+            }
+            unset($level);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /**
+     * Posición de la etapa de cada curso, para ordenar Infantil → Bachillerato.
+     * Consultas por lote 2 y 3.
+     *
+     * @param int[] $levelIds
+     * @return array [int $levelId => int $position]
+     */
+    private function levelStages(array $levelIds): array
+    {
+        $view = $this->getView();
+        $termsetProperty = trim((string) $view->themeSetting('advancedsearch_termset_property'))
+            ?: 'schema:inDefinedTermSet';
+
+        $levelToTermset = [];
+        $termsetIds = [];
+        foreach ($this->fetchItems($levelIds) as $item) {
+            foreach ($item->value($termsetProperty, ['all' => true]) ?: [] as $value) {
+                $linked = $this->linkedResource($value);
+                if ($linked) {
+                    $levelToTermset[$item->id()] = $linked->id();
+                    $termsetIds[$linked->id()] = true;
+                    break;
+                }
+            }
+        }
+
+        $positions = [];
+        foreach ($this->fetchItems(array_keys($termsetIds)) as $item) {
+            $position = $item->value('schema:position');
+            $positions[$item->id()] = $position === null ? PHP_INT_MAX : (int) (string) $position;
+        }
+
+        $stages = [];
+        foreach ($levelIds as $levelId) {
+            $termsetId = $levelToTermset[$levelId] ?? null;
+            $stages[$levelId] = $termsetId === null
+                ? PHP_INT_MAX
+                : ($positions[$termsetId] ?? PHP_INT_MAX);
+        }
+        return $stages;
+    }
+
+    /**
+     * Una sola consulta por lote sobre IDs, columna indexada.
+     *
+     * @param int[] $ids
+     * @return \Omeka\Api\Representation\ItemRepresentation[]
+     */
+    private function fetchItems(array $ids): array
+    {
+        if (!$ids) {
+            return [];
+        }
+        return $this->getView()->api()
+            ->search('items', ['id' => $ids, 'limit' => count($ids)])
+            ->getContent();
+    }
+
+    /**
+     * @param \Omeka\Api\Representation\ValueRepresentation $value
+     * @return \Omeka\Api\Representation\AbstractResourceEntityRepresentation|null
+     */
+    private function linkedResource($value)
+    {
+        $type = (string) $value->type();
+        // El tipo llega como "resource" o como "resource:item" según el origen.
+        if ($type !== 'resource' && strpos($type, 'resource') === false) {
+            return null;
+        }
+        return $value->valueResource();
+    }
+
+    private function levelUrl(string $levelTerm, int $levelId): string
+    {
+        return $this->getView()->url(
+            'site/resource',
+            ['controller' => 'item', 'action' => 'browse'],
+            [
+                'query' => [
+                    'property' => [
+                        ['property' => $levelTerm, 'type' => 'res', 'text' => (string) $levelId],
+                    ],
+                ],
+            ],
+            true
+        );
+    }
+
+    /**
      * Capa pura: sin dependencias de Omeka, para poder probarla en PHPUnit.
      *
      * @param array $subjects       [['label' => string, 'levelIds' => int[]], ...]
