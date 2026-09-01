@@ -18,6 +18,19 @@ use Laminas\View\Helper\AbstractHelper;
 class CurriculumAnchor extends AbstractHelper
 {
     /**
+     * Caché de ítems por id, de instancia (no static): Laminas crea un
+     * helper por render, así que esta caché vive lo que dura la página.
+     * Existe para cumplir el presupuesto de consultas de la spec §5.4 (tres
+     * consultas por lote por página de resultados, no por recurso listado):
+     * el vocabulario de asignaturas/niveles/termsets se repite mucho entre
+     * los recursos de una misma página, así que sin caché cada llamada a
+     * curriculumAnchor() repetiría las mismas consultas.
+     *
+     * @var \Omeka\Api\Representation\ItemRepresentation[] Indexado por id.
+     */
+    private $itemCache = [];
+
+    /**
      * @param \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
      * @return array|null Filas listas para pintar, o null si el modelo no encaja.
      */
@@ -143,7 +156,8 @@ class CurriculumAnchor extends AbstractHelper
     }
 
     /**
-     * Una sola consulta por lote sobre IDs, columna indexada.
+     * Una sola consulta por lote sobre los IDs que aún no están en caché,
+     * columna indexada. Los ya cacheados se devuelven sin volver a pedirlos.
      *
      * @param int[] $ids
      * @return \Omeka\Api\Representation\ItemRepresentation[]
@@ -153,9 +167,24 @@ class CurriculumAnchor extends AbstractHelper
         if (!$ids) {
             return [];
         }
-        return $this->getView()->api()
-            ->search('items', ['id' => $ids, 'limit' => count($ids)])
-            ->getContent();
+
+        $missingIds = array_values(array_diff($ids, array_keys($this->itemCache)));
+        if ($missingIds) {
+            $fetched = $this->getView()->api()
+                ->search('items', ['id' => $missingIds, 'limit' => count($missingIds)])
+                ->getContent();
+            foreach ($fetched as $item) {
+                $this->itemCache[$item->id()] = $item;
+            }
+        }
+
+        $items = [];
+        foreach ($ids as $id) {
+            if (isset($this->itemCache[$id])) {
+                $items[] = $this->itemCache[$id];
+            }
+        }
+        return $items;
     }
 
     /**
