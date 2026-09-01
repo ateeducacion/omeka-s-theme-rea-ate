@@ -490,11 +490,14 @@ elements.curriculum_anchor_level_property.attributes.value       = "lrmi:educati
 
 - [ ] **Step 2: Registrar el helper**
 
-En `config/theme.ini`, tras `helpers[] = "HtmlAllowlist"` (línea 18):
+Al final del bloque `helpers[]` de `config/theme.ini` (tras `helpers[] = "SlugifyValues"`):
 
 ```ini
 helpers[] = "CurriculumAnchor"
 ```
+
+> Ojo: `SafeUrl`, `CssToken` y `HtmlAllowlist` **no** están registrados en esta rama —
+> llegan con `security/audit-fixes`, que sigue sin fusionar. No los busques como ancla.
 
 - [ ] **Step 3: Implementar `__invoke()` y los privados**
 
@@ -834,7 +837,28 @@ En `asset/sass/components/search-results/_search-results-list.scss`, **eliminar*
         }
 ```
 
-Y dentro del bloque `@media (max-width: $md)` de ese mismo fichero, añadir:
+**Eliminar también el bloque muerto del media query.** Dentro de `@media (max-width: $md)`,
+en torno a las líneas 297-307, hay una segunda pareja de reglas para esos mismos términos:
+
+```scss
+            // Chips keep their pill visual in mobile — override the generic dd:inline
+            // from the meta-group block above and hide the dt (same as desktop).
+            .property[data-term="lrmi:educationalLevel"] dt,
+            .property[data-term="schema:about"] dt {
+                display: none;
+            }
+
+            .property[data-term="lrmi:educationalLevel"] dd,
+            .property[data-term="schema:about"] dd {
+                display: inline-block;
+            }
+```
+
+Esas dos reglas quedan sin sujeto: tras el override de `results.phtml` ya no existe ningún
+`.property[data-term="lrmi:educationalLevel"]` ni `.property[data-term="schema:about"]` en
+los resultados. Borrarlas, comentario incluido.
+
+Y en ese mismo bloque `@media (max-width: $md)`, añadir:
 
 ```scss
             .property--curriculum-anchor {
