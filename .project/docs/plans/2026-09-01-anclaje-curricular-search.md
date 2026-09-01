@@ -472,7 +472,9 @@ entradas que antes de empezar la tarea.
 
 **Interfaces:**
 - Consumes: `CurriculumAnchor::groupRows()` de la Tarea 1.
-- Produces: `$this->CurriculumAnchor($resource): ?array` — invocable desde cualquier template. Devuelve las filas de `groupRows()` enriquecidas con `url` por nivel, o `null` si el modelo de datos no encaja.
+- Produces: dos entradas públicas.
+  - `$this->CurriculumAnchor($resource): ?array` — devuelve las filas de `groupRows()` enriquecidas con `url` por nivel, o `null` si el modelo de datos no encaja.
+  - `primeResources(array $resources): void` — recorre todos los recursos de la página, junta los IDs y lanza las tres consultas por lote una sola vez. Es **opcional**: sin ella `__invoke()` da los mismos resultados, solo que con más consultas.
   - Forma exacta: `[['label' => string, 'orphan' => bool, 'levels' => [['id' => int, 'label' => string, 'url' => string], ...]], ...]`
 
 - [ ] **Step 1: Añadir los settings a `config/theme.ini`**
@@ -900,7 +902,7 @@ git commit -m "feat(sass): pildora compuesta materia y niveles en resultados"
 - Modify: `asset/js/advanced-search-list.js:194-224`
 
 **Interfaces:**
-- Consumes: el partial `common/curriculum-anchor` (Tarea 3) y el helper `CurriculumAnchor` (Tarea 2).
+- Consumes: el partial `common/curriculum-anchor` (Tarea 3) y el helper `CurriculumAnchor` (Tarea 2), con dos entradas: `primeResources(array $resources): void` (una vez por página, antes del bucle) y `__invoke($resource): ?array` (una vez por recurso).
 - Produces: nada consumido por tareas posteriores.
 
 - [ ] **Step 1: Copiar el template del módulo**
@@ -933,7 +935,26 @@ Añadir al principio del bloque de comentario `/** ... */` que ya trae el ficher
  *
 ```
 
-- [ ] **Step 3: Resolver el anclaje una vez por recurso**
+- [ ] **Step 3a: Precargar el vocabulario de la página en un solo lote**
+
+**Antes** del `<ul class="resource-list search-result-list...">`, justo después de la línea
+`$showLocale = (bool) $setting('show_locale_label');`, añadir:
+
+```php
+// Una sola pasada por los recursos de la página para lanzar las tres consultas
+// por lote (asignaturas, cursos, etapas). Sin esto, cada tarjeta dispararía las
+// suyas: 3 × 15 resultados = 45 viajes en vez de 3. Ver spec §5.4.
+if ($showProperties) {
+    $this->CurriculumAnchor()->primeResources($resources);
+}
+```
+
+> Si invocar el helper sin argumentos no devuelve la instancia en esta versión de Omeka,
+> obtenerla con `$this->getHelperPluginManager()->get('CurriculumAnchor')->primeResources($resources);`
+> y anotarlo en el informe. La precarga es una optimización: si falla, `__invoke()` sigue
+> dando resultados correctos, solo que con más consultas — nunca la conviertas en requisito.
+
+- [ ] **Step 3b: Resolver el anclaje una vez por recurso**
 
 Dentro del `foreach ($resources as $resource):`, justo después de la línea que calcula `$resourceThumbnail`, añadir:
 
