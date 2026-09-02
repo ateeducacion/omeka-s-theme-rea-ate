@@ -177,13 +177,13 @@ ul.resource-list.search-result-list.list > li.resource.item,
             // "corregirlo" a un valor mayor. Funciona porque el contenedor
             // `dl.properties` es `display: contents` (línea 51 de este fichero)
             // y los .property son items flex directos del `li`.
-            position: relative;
             order: 9;
             flex: 0 0 100%;
             margin: 0;
-            // Misma sangría que saberes y relación aunque esta fila no lleve
-            // rótulo, para que las tres zonas compartan margen izquierdo.
-            padding: 0.5rem 0 0 $meta-label-col;
+            // Sin sangría: esta fila no lleva rótulo, así que sus píldoras
+            // arrancan en el margen izquierdo de la tarjeta y aprovechan
+            // todo el ancho.
+            padding: 0.5rem 0 0;
             border-top: 1px solid $color__gray-93;
 
             display: flex;
@@ -191,14 +191,13 @@ ul.resource-list.search-result-list.list > li.resource.item,
             align-items: flex-start;
             gap: 0.4rem 0.5rem;
 
-            // El rótulo se emite vacío desde el partial; si algún caller pasa
-            // uno, se coloca en el hueco igual que en las otras zonas.
+            // El partial omite el <dt> cuando el rótulo va vacío, que es el
+            // caso normal. Si algún caller pasa uno, se pinta en línea antes
+            // de las píldoras.
             dt {
-                position: absolute;
-                left: 0;
-                width: $meta-label-col;
-                padding-right: 0.5rem;
-                margin: 0;
+                flex: 0 0 auto;
+                margin: 0 0.25rem 0 0;
+                padding-top: 3px;
                 font-size: 0.75rem;
                 font-weight: 600;
                 text-transform: uppercase;
@@ -412,13 +411,8 @@ ul.resource-list.search-result-list.list > li.resource.item,
             .property--curriculum-anchor {
                 flex-direction: column;
                 gap: 0.35rem;
-                padding-left: 0;
 
-                dt {
-                    position: static;
-                    width: auto;
-                    padding: 0;
-                }
+                dt { padding-top: 0; }
             }
 
             .curriculum-anchor__group {
