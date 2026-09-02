@@ -780,7 +780,7 @@ El resto del estilo pill (padding, background, border, border-radius, font-size,
 - **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
-**Resultados por paso (informe completo en `.superpowers/sdd/2026-09-01-anclaje-curricular-search/task-5-report.md`):**
+**Resultados por paso:**
 
 1. **Sin materias repetidas por tarjeta — PASA.** Ítem 4674 (*Figuras Planas*): 2 materias (antes 5, cuatro de ellas "Matemáticas"), verificado tanto con la ventana de 200 líneas del brief como sobre la tarjeta completa (330 líneas reales).
 2. **Ningún enlace de nivel con 0 resultados — PASA.** Las 14 URLs de nivel (`lrmi:educationalLevel`) devuelven entre 1 y 7 resultados; ninguna da 0. Confirma la regla de intersección (spec §4.3). El comando de verificación del brief necesitó dos correcciones: los `href` van doblemente escapados (entidades HTML numéricas, no solo `&amp;`) y los enlaces de nivel apuntan al `item/browse` nativo de Omeka S (`class="item resource resource-card"`), no a la página `/rea` de AdvancedSearch (`class="resource item"`) — el patrón literal del brief daba un falso "0 resultados" en la primera URL probada.
