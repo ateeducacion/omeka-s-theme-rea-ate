@@ -233,8 +233,13 @@ selecciona por clase (`.property--curriculum-anchor`) y no lleva `data-term`.
 
 ## 6. Markup y estilo
 
+Sin `data-term` en el `div` exterior: `groupMetaProperties()` en
+`asset/js/advanced-search-list.js` selecciona estrictamente por
+`[data-term=…]`, así que devolver ese atributo arrastraría el bloque al grupo
+de píldoras junto al título y rompería el layout de fila completa.
+
 ```html
-<div class="property property--curriculum-anchor" data-term="schema:about">
+<div class="property property--curriculum-anchor">
   <dt>Currículo</dt>
   <dd class="curriculum-anchor__group">
     <span class="curriculum-anchor__subject">Matemáticas</span>

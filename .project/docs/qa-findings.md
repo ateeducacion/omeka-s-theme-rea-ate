@@ -2,7 +2,7 @@
 
 _Documento operativo del proyecto. Fuente de trabajo para registrar incidencias detectadas en QA sobre la instancia real._
 
-Última actualización: 2026-09-02 — QA-034: verificación funcional del anclaje curricular sobre instancia real (ciclo 7). 4/5 pasos ejecutados; hallazgo de desbordamiento móvil abierto y paso 5 bloqueado por permisos de entorno. Próximo ID: QA-035.
+Última actualización: 2026-09-02 — QA-034: verificación funcional del anclaje curricular sobre instancia real (ciclo 7). 4/5 pasos ejecutados y en PASA; el hallazgo de desbordamiento móvil del paso 4 era un artefacto de medición de `--window-size` en Chrome headless, no una regresión real (corregido tras remedición). Paso 5 sigue bloqueado por permisos de entorno. Próximo ID: QA-035.
 
 ---
 
@@ -769,14 +769,15 @@ El resto del estilo pill (padding, background, border, border-radius, font-size,
 ### QA-034 — Verificación funcional del anclaje curricular contra la instancia
 
 - **Fecha:** 2026-09-02
-- **Severidad:** Media
+- **Severidad:** Baja
 - **Área:** Search results — anclaje curricular (materia + nivel agrupados)
-- **Hallazgo:** QA sobre instancia real (ciclo 7) de la funcionalidad de anclaje curricular construida en las Tareas 1-4. De los cinco chequeos del plan de verificación, cuatro se ejecutaron con evidencia completa y uno no pudo ejecutarse por una restricción del entorno de sesión (no del tema). Se detectó una regresión visual real en móvil.
-- **Reproducción mínima (del hallazgo de móvil, el único abierto):**
+- **Hallazgo:** QA sobre instancia real (ciclo 7) de la funcionalidad de anclaje curricular construida en las Tareas 1-4. De los cinco chequeos del plan de verificación, cuatro se ejecutaron con evidencia completa y los cuatro pasan; el quinto no pudo ejecutarse por una restricción del entorno de sesión (no del tema). El paso 4 se marcó inicialmente como fallo por desbordamiento móvil; una remedición con un método de captura correcto muestra que no hay tal regresión — ver detalle abajo.
+- **Reproducción mínima (del artefacto de medición del paso 4, ya descartado como hallazgo):**
   1. Capturar `http://localhost:8080/s/ceiplajares/rea?fulltext_search=` con Chrome headless a `--window-size=390,...`.
   2. Observar la tarjeta "Partes de la célula": el grupo `Conocimiento del Medio Natural, Social y cultural` + nivel `3º Primaria` no rompe de línea; el pill de nivel se corta a mitad de palabra en el borde derecho del viewport.
   3. Lo mismo ocurre en la tarjeta "Cuerpos geométricos" con el grupo `Matemáticas aplicadas a las ciencias sociales I` + nivel `1º Bachillerato`.
-- **Estado:** En análisis
+  4. **Esto no reproduce un bug del tema.** Ver paso 4 abajo: es un artefacto de `--window-size` en Chrome headless.
+- **Estado:** Cerrado
 - **Responsable:** Sin asignar
 
 **Resultados por paso (informe completo en `.superpowers/sdd/2026-09-01-anclaje-curricular-search/task-5-report.md`):**
@@ -784,10 +785,16 @@ El resto del estilo pill (padding, background, border, border-radius, font-size,
 1. **Sin materias repetidas por tarjeta — PASA.** Ítem 4674 (*Figuras Planas*): 2 materias (antes 5, cuatro de ellas "Matemáticas"), verificado tanto con la ventana de 200 líneas del brief como sobre la tarjeta completa (330 líneas reales).
 2. **Ningún enlace de nivel con 0 resultados — PASA.** Las 14 URLs de nivel (`lrmi:educationalLevel`) devuelven entre 1 y 7 resultados; ninguna da 0. Confirma la regla de intersección (spec §4.3). El comando de verificación del brief necesitó dos correcciones: los `href` van doblemente escapados (entidades HTML numéricas, no solo `&amp;`) y los enlaces de nivel apuntan al `item/browse` nativo de Omeka S (`class="item resource resource-card"`), no a la página `/rea` de AdvancedSearch (`class="resource item"`) — el patrón literal del brief daba un falso "0 resultados" en la primera URL probada.
 3. **Sin desbordamiento en desktop (1400px) — PASA.** "Matemáticas aplicadas a las ciencias sociales I" y "Conocimiento del Medio Natural, Social y cultural" se renderizan completos, dentro del borde de sus tarjetas.
-4. **Responsive en móvil (390px) — FALLA PARCIALMENTE.** Desbordamiento horizontal real (no artefacto de captura): cuando la materia es larga, el primer pill de nivel que la sigue se corta en el borde del viewport en lugar de bajar a su propia línea, en las dos tarjetas señaladas por el plan de QA. Los niveles siguientes de la misma tarjeta sí wrappean correctamente. Causa probable (sin confirmar con DevTools en vivo): interacción entre `display: inline-flex`, `flex-wrap: wrap` y `overflow: hidden` en `.curriculum-anchor__group` combinada con el `width: 100% !important` del breakpoint móvil, en `asset/sass/components/search-results/_search-results-list.scss`.
+4. **Responsive en móvil (390px) — PASA.** El "FALLA PARCIALMENTE" original era un artefacto de medición, no una regresión real, y se retracta aquí tras confirmarlo de forma independiente. Chrome headless clampa su *layout viewport* a un mínimo de 500px pero sigue escribiendo el PNG al ancho de canvas solicitado, así que `--window-size=390` maqueta la página a 500px de ancho y luego recorta la imagen a 390px — el "desbordamiento" observado era ese recorte, no CSS roto. Medido directamente:
+   ```
+   --window-size=390  ->  innerWidth=500
+   --window-size=360  ->  innerWidth=500
+   --window-size=500  ->  innerWidth=500
+   ```
+   Remedición correcta: cada `.curriculum-anchor__group` medido con `getBoundingClientRect()` en un `iframe` dimensionado al ancho real de viewport (320/360/390/414px, sin pasar por `--window-size`). Resultado: `scrollWidth == clientWidth` en los cuatro anchos, nada se recorta, y el pill de nivel de la materia larga envuelve correctamente a su propia línea flex. **Nota para verificaciones futuras:** medir un ancho móvil real requiere un `iframe` dimensionado al ancho objetivo o CDP `Emulation.setDeviceMetricsOverride` — nunca `--window-size` de Chrome headless, que no refleja el ancho de layout real por debajo de 500px.
 5. **Degradación del ajuste de tema — NO EJECUTADO.** Bloqueado por el clasificador de permisos de Claude Code al intentar autenticarse por HTTP contra el formulario admin (no hay sesión de administrador activa ni herramienta de automatización de navegador disponible en esta sesión). No se realizó ninguna escritura. La fila `theme_settings_rea-ate` se verificó intacta antes de intentar nada: 2522 bytes, SHA-256 `dc5b1dab6c8b4cbf78...` (idéntico byte a byte a la referencia `theme-settings-backup.json`), 57 claves, sin `curriculum_anchor_*`.
 
-**Pendiente:** repetir el paso 5 con permisos ampliados o con el cambio hecho manualmente por una persona (ver detalle de las dos opciones en el informe), y decidir si el hallazgo de móvil (paso 4) se corrige en este ciclo o se difiere.
+**Pendiente:** repetir el paso 5 con permisos ampliados o con el cambio hecho manualmente por una persona (ver detalle de las dos opciones en el informe). No hay ningún hallazgo de CSS pendiente de este ciclo: el paso 4 pasa y no requiere corrección.
 
 ---
 
@@ -796,9 +803,9 @@ El resto del estilo pill (padding, background, border, border-radius, font-size,
 | Estado | Conteo |
 |--------|--------|
 | Abierto | 0 |
-| En análisis | 1 |
+| En análisis | 0 |
 | En curso | 0 |
 | Resuelto | 0 |
-| Cerrado | 33 |
+| Cerrado | 34 |
 | Diferido | 0 |
 | Rechazado | 0 |
