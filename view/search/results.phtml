@@ -124,7 +124,9 @@ if ($curriculumAnchor) {
                 <?php if ($curriculumRows): ?>
                 <?= $this->partial('common/curriculum-anchor', [
                     'rows' => $curriculumRows,
-                    'label' => $translate('Currículo'), // @translate
+                    // Sin rótulo: la fila se identifica por sus propias
+                    // píldoras. Conserva la sangría de las otras zonas.
+                    'label' => '',
                 ]) ?>
                 <?php endif; ?>
                 <?php foreach ($properties as $property):

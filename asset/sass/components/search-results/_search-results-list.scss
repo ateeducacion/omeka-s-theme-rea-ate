@@ -4,6 +4,12 @@
 // linked-resource metadata (teaches / relation).
 // Relies on data-term attributes injected by asset/js/advanced-search-list.js.
 
+// Ancho de la columna de rótulos de zona (SABERES BÁSICOS, RELACIÓN…). Las
+// filas de metadatos se sangran este ancho y el rótulo se coloca en el hueco
+// resultante, de modo que los chips que saltan de línea se alinean bajo el
+// primero en vez de volver al margen izquierdo de la tarjeta.
+$meta-label-col: 8.5rem;
+
 .search-results-list ul.search-result-list.list,
 ul.resource-list.search-result-list.list {
     list-style: none;
@@ -171,10 +177,13 @@ ul.resource-list.search-result-list.list > li.resource.item,
             // "corregirlo" a un valor mayor. Funciona porque el contenedor
             // `dl.properties` es `display: contents` (línea 51 de este fichero)
             // y los .property son items flex directos del `li`.
+            position: relative;
             order: 9;
             flex: 0 0 100%;
             margin: 0;
-            padding: 0.5rem 0 0;
+            // Misma sangría que saberes y relación aunque esta fila no lleve
+            // rótulo, para que las tres zonas compartan margen izquierdo.
+            padding: 0.5rem 0 0 $meta-label-col;
             border-top: 1px solid $color__gray-93;
 
             display: flex;
@@ -182,10 +191,14 @@ ul.resource-list.search-result-list.list > li.resource.item,
             align-items: flex-start;
             gap: 0.4rem 0.5rem;
 
+            // El rótulo se emite vacío desde el partial; si algún caller pasa
+            // uno, se coloca en el hueco igual que en las otras zonas.
             dt {
-                flex: 0 0 auto;
-                margin: 0 0.25rem 0 0;
-                padding-top: 3px;
+                position: absolute;
+                left: 0;
+                width: $meta-label-col;
+                padding-right: 0.5rem;
+                margin: 0;
                 font-size: 0.75rem;
                 font-weight: 600;
                 text-transform: uppercase;
@@ -260,9 +273,10 @@ ul.resource-list.search-result-list.list > li.resource.item,
         // ---- Linked-resource metadata (full-width rows) ----
         .property[data-term="lrmi:teaches"],
         .property[data-term="dcterms:relation"] {
+            position: relative;
             flex: 0 0 100%;
             margin: 0;
-            padding: 0.5rem 0 0;
+            padding: 0.5rem 0 0 $meta-label-col;
             border-top: 1px solid $color__gray-93;
 
             display: flex;
@@ -270,15 +284,22 @@ ul.resource-list.search-result-list.list > li.resource.item,
             align-items: center;
             gap: 0.4rem 0.5rem;
 
+            // El rótulo se saca del flujo flex y se coloca en el hueco que deja
+            // la sangría. Así los chips forman una columna propia y las filas
+            // que envuelven arrancan bajo el primer chip, no en el margen.
             dt {
-                flex: 0 0 auto;
-                margin: 0 0.25rem 0 0;
+                position: absolute;
+                left: 0;
+                top: 0.5rem;
+                width: $meta-label-col;
+                padding-right: 0.5rem;
+                margin: 0;
                 font-size: 0.75rem;
                 font-weight: 600;
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
+                line-height: 1.5;
                 color: $color__gray-46;
-                align-self: center;
             }
 
             // Each value renders as a content-sized chip with rounded border.
@@ -391,20 +412,30 @@ ul.resource-list.search-result-list.list > li.resource.item,
             .property--curriculum-anchor {
                 flex-direction: column;
                 gap: 0.35rem;
+                padding-left: 0;
 
-                dt { padding-top: 0; }
+                dt {
+                    position: static;
+                    width: auto;
+                    padding: 0;
+                }
             }
 
             .curriculum-anchor__group {
                 width: 100%;
             }
 
+            // En móvil no hay ancho para una columna de rótulos: se quita la
+            // sangría y el rótulo vuelve al flujo, encima de sus chips.
             .property[data-term="lrmi:teaches"],
             .property[data-term="dcterms:relation"] {
-                padding-top: 0.4rem;
+                padding: 0.4rem 0 0;
 
                 dt {
+                    position: static;
                     flex: 0 0 100%;
+                    width: auto;
+                    padding-right: 0;
                     margin-bottom: 0.1rem;
                 }
             }

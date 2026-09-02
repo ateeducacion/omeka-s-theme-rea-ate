@@ -81,7 +81,8 @@ las facetas por `DefinedTermSet`.
 | D2 | **La materia es rótulo, cada nivel es enlace.** El nivel filtra por `lrmi:educationalLevel`, que es el `metadata-search-link` que el módulo ya genera. | Materia también enlace: exigiría construir URLs con `joiner=or` sobre N ids de asignatura y validarlas contra AdvancedSearch. Solo la materia enlace: perdería el filtrado por nivel que hoy funciona. |
 | D3 | **Píldora compuesta de dos zonas**, la derecha partida en un segmento clicable por nivel. | Fila con rejilla materia/niveles: ocupa más alto. Columna a la derecha del título: mantiene el sitio destacado pero obliga a seguir abreviando los nombres largos. |
 | D4 | **Intersección con los niveles declarados por el recurso** (ver §4.3). | Mostrar todos los niveles de la asignatura: produce enlaces muertos. |
-| D5 | Rótulo de la fila: **«Currículo»**. | «Anclaje curricular»: ata mejor con el bloque de la ficha, pero son 18 caracteres en una columna de 118 px y parte la línea. Es cadena traducible, revisable en el `.po`. |
+| D5 | **La fila no lleva rótulo** (2026-09-02, a petición del cliente; antes «Currículo»). El partial omite el `<dt>` cuando el rótulo está vacío, pero la fila conserva la sangría de las demás zonas para que las tres compartan margen izquierdo. | «Currículo» y «Anclaje curricular»: el segundo ata mejor con el bloque de la ficha, pero son 18 caracteres en una columna de 8,5 rem y parte la línea. Se descarta cualquier rótulo: las píldoras se identifican solas. |
+| D6 | Los rótulos de zona (`SABERES BÁSICOS`, `RELACIÓN`) ocupan una **columna propia de 8,5 rem**, fuera del flujo, y los chips se sangran ese ancho. | Rótulo en su propia línea con los chips debajo: gana ancho útil pero añade una línea por bloque. Dejarlo como estaba: al envolver, la segunda fila de chips volvía al margen izquierdo y rompía la columna. |
 
 ## 4. Algoritmo
 
@@ -240,7 +241,7 @@ de píldoras junto al título y rompería el layout de fila completa.
 
 ```html
 <div class="property property--curriculum-anchor">
-  <dt>Currículo</dt>
+  <!-- sin <dt>: el partial lo omite cuando el rótulo está vacío (D5) -->
   <dd class="curriculum-anchor__group">
     <span class="curriculum-anchor__subject">Matemáticas</span>
     <a class="curriculum-anchor__level" href="…">1º Primaria</a>
