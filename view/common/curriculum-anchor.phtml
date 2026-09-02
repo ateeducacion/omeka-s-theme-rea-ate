@@ -18,7 +18,9 @@ if (!$rows) {
     <dd class="curriculum-anchor__group<?php echo $row['orphan'] ? ' curriculum-anchor__group--orphan' : ''; ?>">
         <span class="curriculum-anchor__subject"><?php echo $escape($row['label']); ?></span>
         <?php foreach ($row['levels'] as $level): ?>
-        <a class="curriculum-anchor__level" href="<?php echo $escapeAttr($level['url']); ?>"><?php
+        <a class="curriculum-anchor__level" href="<?php echo $escapeAttr($level['url']); ?>" aria-label="<?php
+            echo $escapeAttr($row['label'] . ' — ' . $level['label']);
+        ?>"><?php
             echo $escape($level['label']);
         ?></a>
         <?php endforeach; ?>

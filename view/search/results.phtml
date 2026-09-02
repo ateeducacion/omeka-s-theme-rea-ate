@@ -1,8 +1,9 @@
 <?php
 /**
- * Override del tema REA ATE. Copiado de AdvancedSearch para interceptar el
- * renderizado de materia y nivel y sustituirlo por la píldora compuesta del
- * anclaje curricular. Al actualizar el módulo hay que rebasar este fichero.
+ * Override del tema REA ATE. Copiado de AdvancedSearch 3.4.60 para interceptar
+ * el renderizado de materia y nivel y sustituirlo por la píldora compuesta del
+ * anclaje curricular. Al actualizar el módulo hay que rebasar este fichero
+ * contra la versión instalada, partiendo del diff con 3.4.60.
  * Ver .project/docs/specs/2026-09-01-anclaje-curricular-busqueda-facetada-design.md
  *
  * @var \Laminas\View\Renderer\PhpRenderer $this
@@ -74,6 +75,13 @@ $showLocale = (bool) $setting('show_locale_label');
 // para resolver los términos (anchorTerms()), en vez de resolver el plugin
 // una vez por recurso.
 $curriculumAnchor = $showProperties ? $this->getHelperPluginManager()->get('CurriculumAnchor') : null;
+// La config de búsqueda decide si el anclaje se pinta: si el admin quita la
+// propiedad de materia de la lista de propiedades mostradas, el componente
+// cae al renderizado normal del módulo (spec §9), no solo cuando la lista
+// entera está vacía.
+if ($curriculumAnchor && !in_array($curriculumAnchor->anchorTerms()[0], $properties, true)) {
+    $curriculumAnchor = null;
+}
 
 // Una sola pasada por los recursos de la página para lanzar las tres consultas
 // por lote (asignaturas, cursos, etapas). Sin esto, cada tarjeta dispararía las
