@@ -194,6 +194,13 @@
     function processItem(item) {
         const properties = item.querySelectorAll('dl.properties > .property');
         properties.forEach(function (prop) {
+            // El anclaje curricular ya viene resuelto y maquetado desde el
+            // servidor. Sus enlaces de nivel llevan lrmi:educationalLevel en el
+            // href, así que sin esta guarda se etiquetaría como esa propiedad y
+            // groupMetaProperties() lo arrastraría al grupo de la derecha.
+            if (prop.classList.contains('property--curriculum-anchor')) {
+                return;
+            }
             if (!prop.dataset.term) {
                 const firstLink = prop.querySelector('a.metadata-search-link');
                 let term = firstLink ? extractTerm(firstLink.getAttribute('href')) : null;
