@@ -68,11 +68,18 @@ $properties = !empty($properties) ? $properties : $searchConfig->subSetting('res
 $showProperties = !empty($properties);
 $showLocale = (bool) $setting('show_locale_label');
 
+// Se obtiene la instancia del helper directamente del gestor de plugins, no
+// vía $this->CurriculumAnchor(), porque __invoke() exige un $resource y no
+// admite la llamada sin argumentos. Se reutiliza más abajo por recurso y
+// para resolver los términos (anchorTerms()), en vez de resolver el plugin
+// una vez por recurso.
+$curriculumAnchor = $showProperties ? $this->getHelperPluginManager()->get('CurriculumAnchor') : null;
+
 // Una sola pasada por los recursos de la página para lanzar las tres consultas
 // por lote (asignaturas, cursos, etapas). Sin esto, cada tarjeta dispararía las
 // suyas: 3 × 15 resultados = 45 viajes en vez de 3. Ver spec §5.4.
-if ($showProperties) {
-    $this->getHelperPluginManager()->get('CurriculumAnchor')->primeResources($resources);
+if ($curriculumAnchor) {
+    $curriculumAnchor->primeResources($resources);
 }
 ?>
 
@@ -84,13 +91,8 @@ if ($showProperties) {
         $heading = $headingTerm ? $resource->value($headingTerm, ['default' => $untitled, 'lang' => $langValue]) : $resource->displayTitle($untitled, $langValue);
         $body = $bodyTerm ? $resource->value($bodyTerm, ['lang' => $langValue, 'default' => '']) : $resource->displayDescription(null, $langValue);
         $resourceThumbnail = $noThumbnail ? null : $thumbnail($resource, $thumbnailType);
-        $curriculumRows = $showProperties ? $this->CurriculumAnchor($resource) : null;
-        $curriculumTerms = $curriculumRows
-            ? [
-                trim((string) $this->themeSetting('curriculum_anchor_subject_property')),
-                trim((string) $this->themeSetting('curriculum_anchor_level_property')),
-            ]
-            : [];
+        $curriculumRows = $curriculumAnchor ? $curriculumAnchor($resource) : null;
+        $curriculumTerms = $curriculumRows ? $curriculumAnchor->anchorTerms() : [];
         ?>
     <li class="resource <?= $resourceType ?><?= $resourceThumbnail || $allThumbnail ? '' : ' no-thumbnail' ?>" data-id="<?= $resource->id() ?>">
         <div class="resource-heading">

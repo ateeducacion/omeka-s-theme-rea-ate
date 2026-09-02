@@ -38,8 +38,7 @@ class CurriculumAnchor extends AbstractHelper
     {
         $view = $this->getView();
 
-        $subjectTerm = trim((string) $view->themeSetting('curriculum_anchor_subject_property'));
-        $levelTerm = trim((string) $view->themeSetting('curriculum_anchor_level_property'));
+        [$subjectTerm, $levelTerm] = $this->anchorTerms();
         if ($subjectTerm === '' || $levelTerm === '') {
             return null;
         }
@@ -128,9 +127,7 @@ class CurriculumAnchor extends AbstractHelper
      */
     public function primeResources(array $resources): void
     {
-        $view = $this->getView();
-        $subjectTerm = trim((string) $view->themeSetting('curriculum_anchor_subject_property'));
-        $levelTerm = trim((string) $view->themeSetting('curriculum_anchor_level_property'));
+        [$subjectTerm, $levelTerm] = $this->anchorTerms();
         if ($subjectTerm === '' || $levelTerm === '') {
             return;
         }
@@ -157,6 +154,40 @@ class CurriculumAnchor extends AbstractHelper
         // Consultas por lote 2 y 3: todos los niveles declarados de la
         // página y los termsets a los que pertenecen.
         $this->levelStages(array_keys($levelIds));
+    }
+
+    /**
+     * Términos de materia y nivel resueltos, con valor por defecto de código
+     * cuando el ajuste de tema nunca se ha guardado. `theme.ini` solo aporta
+     * el valor que ve el formulario de ajustes al abrirse (`attributes.value`),
+     * no un valor efectivo: mientras nadie guarde el formulario del tema,
+     * `themeSetting()` devuelve `null` para estas dos claves, incluso en una
+     * instalación nueva. Sin este default de código el anclaje se
+     * autodesactivaba en silencio en cualquier sitio sin ese guardado manual.
+     *
+     * Se distingue el ajuste nunca guardado (`null`, usa el default de
+     * código) del ajuste guardado explícitamente vacío (`''`, respeta el
+     * apagado deliberado documentado en __invoke()): solo el primer caso cae
+     * al default.
+     *
+     * Única fuente de verdad para estos dos términos: __invoke(),
+     * primeResources() y view/search/results.phtml pasan por aquí en vez de
+     * leer `curriculum_anchor_*` directamente.
+     *
+     * @return array{0: string, 1: string} [$subjectTerm, $levelTerm]
+     */
+    public function anchorTerms(): array
+    {
+        return [
+            $this->resolveAnchorTerm('curriculum_anchor_subject_property', 'schema:about'),
+            $this->resolveAnchorTerm('curriculum_anchor_level_property', 'lrmi:educationalLevel'),
+        ];
+    }
+
+    private function resolveAnchorTerm(string $settingId, string $default): string
+    {
+        $raw = $this->getView()->themeSetting($settingId);
+        return $raw === null ? $default : trim((string) $raw);
     }
 
     /**
