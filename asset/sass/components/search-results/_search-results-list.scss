@@ -343,6 +343,57 @@ ul.resource-list.search-result-list.list > li.resource.item,
         .property[data-term="lrmi:teaches"] { order: 11; }
         .property[data-term="dcterms:relation"] { order: 12; }
 
+        // ---- Plegado de listas largas de chips ----
+        // Mejora progresiva: el contenedor y el botón los crea el JS solo si los
+        // chips desbordan la primera línea. Sin JS no existe ninguno de los dos
+        // y la fila se pinta entera, como antes.
+        .property__values {
+            flex: 0 0 100%;
+            min-width: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.4rem 0.5rem;
+        }
+
+        // --property-row-h la mide el JS sobre un chip real: depende de la
+        // fuente cargada y del tamaño de texto del usuario, así que no se
+        // puede fijar aquí.
+        .property--collapsed .property__values {
+            max-height: var(--property-row-h, 2rem);
+            overflow: hidden;
+        }
+
+        .property__toggle {
+            flex: 0 0 auto;
+            margin: 0.35rem 0 0;
+            padding: 2px 0;
+            border: 0;
+            background: none;
+            font: inherit;
+            font-size: 0.8rem;
+            color: $color__link;
+            cursor: pointer;
+            // El selector global `button` aplica @include primary-button, que
+            // incluye text-transform: uppercase. Aquí queremos una acción en
+            // línea con aspecto de enlace, no un botón de formulario.
+            text-transform: none;
+            border-radius: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.15rem;
+
+            &:hover,
+            &:focus-visible {
+                text-decoration: underline;
+            }
+
+            .material-symbols-outlined {
+                font-size: 18px;
+                line-height: 1;
+            }
+        }
+
         // Keep metadata-search-link + its sibling resource-link-info glued
         // together on the same line.
         .value-content--nobr {

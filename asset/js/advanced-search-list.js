@@ -191,6 +191,109 @@
         props.forEach(function (p) { group.appendChild(p); });
     }
 
+    // ---- Plegado de listas largas de chips ----
+    // Mejora progresiva: sin JS no se pliega nada y se ve todo. Solo se activa
+    // cuando los chips desbordan la primera línea, así que una fila de tres
+    // valores no gana un botón inútil.
+
+    const COLLAPSIBLE_TERMS = ['lrmi:teaches', 'dcterms:relation'];
+    let collapseSeq = 0;
+
+    function undoCollapse(prop) {
+        const values = prop.querySelector(':scope > .property__values');
+        if (values) {
+            while (values.firstChild) prop.insertBefore(values.firstChild, values);
+            values.remove();
+        }
+        const toggle = prop.querySelector(':scope > .property__toggle');
+        if (toggle) toggle.remove();
+        prop.classList.remove('property--collapsible', 'property--collapsed');
+        prop.style.removeProperty('--property-row-h');
+        delete prop.dataset.collapseReady;
+    }
+
+    function setupCollapse(prop) {
+        if (prop.dataset.collapseReady) return;
+
+        const dds = Array.prototype.slice.call(prop.querySelectorAll(':scope > dd'));
+        if (dds.length < 2) return;
+
+        // Un chip que empieza más abajo que el primero es que ha saltado de línea.
+        const firstTop = dds[0].offsetTop;
+        const rowHeight = dds[0].offsetHeight;
+        if (!dds.some(function (dd) { return dd.offsetTop > firstTop; })) return;
+
+        prop.dataset.collapseReady = '1';
+
+        const values = document.createElement('div');
+        values.className = 'property__values';
+        values.id = 'property-values-' + (++collapseSeq);
+        dds.forEach(function (dd) { values.appendChild(dd); });
+        prop.appendChild(values);
+
+        // La altura de una fila se mide, no se asume: depende de la fuente
+        // cargada y del tamaño de texto del usuario.
+        prop.style.setProperty('--property-row-h', rowHeight + 'px');
+
+        const dt = prop.querySelector(':scope > dt');
+        const label = dt ? dt.textContent.trim() : '';
+        const showAll = 'Ver todos (' + dds.length + ')';
+        const showLess = 'Ver menos';
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'property__toggle';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-controls', values.id);
+
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = 'expand_more';
+
+        const text = document.createTextNode(showAll);
+        toggle.appendChild(text);
+        toggle.appendChild(icon);
+
+        // El nombre accesible empieza por el texto visible (WCAG 2.5.3) y le
+        // antepone la zona, que en el DOM queda a la izquierda y fuera del botón.
+        const nameFor = function (visible) {
+            return label ? label + ': ' + visible : visible;
+        };
+        toggle.setAttribute('aria-label', nameFor(showAll));
+
+        toggle.addEventListener('click', function () {
+            const collapsed = prop.classList.toggle('property--collapsed');
+            toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            text.nodeValue = collapsed ? showAll : showLess;
+            toggle.setAttribute('aria-label', nameFor(collapsed ? showAll : showLess));
+            icon.textContent = collapsed ? 'expand_more' : 'expand_less';
+        });
+
+        prop.appendChild(toggle);
+        prop.classList.add('property--collapsible', 'property--collapsed');
+    }
+
+    function scheduleCollapse(root) {
+        // Medir antes de que la tipografía esté lista da alturas equivocadas.
+        requestAnimationFrame(function () {
+            (root || document).querySelectorAll(COLLAPSIBLE_TERMS.map(function (t) {
+                return '.property[data-term="' + t + '"]';
+            }).join(',')).forEach(setupCollapse);
+        });
+    }
+
+    let resizeTimer = null;
+    window.addEventListener('resize', function () {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(function () {
+            // Al cambiar el ancho cambia cuántos chips caben, así que se
+            // deshace y se vuelve a medir en vez de conservar un estado viejo.
+            document.querySelectorAll('.property--collapsible').forEach(undoCollapse);
+            scheduleCollapse(document);
+        }, 200);
+    });
+
     function processItem(item) {
         const properties = item.querySelectorAll('dl.properties > .property');
         properties.forEach(function (prop) {
@@ -228,6 +331,7 @@
         });
 
         groupMetaProperties(item);
+        scheduleCollapse(item);
     }
 
     function processList(list) {
@@ -240,6 +344,16 @@
 
     function init() {
         processAll(document);
+
+        // Inter y Material Symbols llegan de fuera: al aplicarse cambian el
+        // ancho de los chips y con él cuántos caben en la primera línea. Se
+        // vuelve a medir cuando la tipografía está lista.
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function () {
+                document.querySelectorAll('.property--collapsible').forEach(undoCollapse);
+                scheduleCollapse(document);
+            });
+        }
 
         const observer = new MutationObserver(function (mutations) {
             mutations.forEach(function (mutation) {

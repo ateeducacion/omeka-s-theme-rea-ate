@@ -310,6 +310,13 @@ deliberadamente** para esa ruta: no son CSS muerto.
 - **Guarda obligatoria:** ignora `.property--curriculum-anchor` *antes* de la inferencia de
   `data-term`. Sin ella, como los enlaces de nivel llevan `lrmi:educationalLevel` en el
   `href`, el bloque acabaría arrastrado a la tira de píldoras del título.
+- **Plegado de listas largas de chips** (`lrmi:teaches`, `dcterms:relation`): cuando los
+  valores desbordan la primera línea, envuelve los `<dd>` en `.property__values`, limita su
+  alto a una fila —medida sobre un chip real y publicada como `--property-row-h`, porque
+  depende de la fuente cargada y del tamaño de texto del usuario— y añade un botón
+  «Ver todos (N)» / «Ver menos» con `aria-expanded` y `aria-controls`. Es **mejora
+  progresiva**: sin JavaScript no se pliega nada. Se recalcula tras `document.fonts.ready`
+  y al redimensionar, deshaciendo y volviendo a medir en vez de conservar un estado viejo.
 - Barra de chips de filtros activos, con validación de URL de mismo origen.
 - Preserva la posición de scroll al marcar una faceta (`sessionStorage`).
 
@@ -389,6 +396,7 @@ criterios prioritarios). Existe un scope de commit `a11y` propio.
 | Portada en base de datos | El hero de la home es un bloque `html` manual: no está versionado. |
 | `results.properties` es de instancia | Si un administrador quita `schema:about` de las propiedades mostradas, el anclaje curricular deja de pintarse. |
 | msgids en español | `Otros niveles` y otras cadenas nuevas son msgids en español dentro de un catálogo cuyos msgids son ingleses. Funciona en `es`, pero cualquier otro locale vería español sin traducir. |
+| Cadenas del JS sin traducir | «Ver todos (N)», «Ver menos» y «Limpiar todo» están **codificadas en español dentro de `advanced-search-list.js`**, sin pasar por `translate()`. Para internacionalizarlas habría que inyectarlas desde PHP como `data-*`. |
 | Sin caché negativa | `CurriculumAnchor::fetchItems()` vuelve a pedir un ID que nunca resuelve en cada llamada. |
 | Fases 2-4 de seguridad pendientes | CSP, *self-hosting* de fuentes, cabeceras de seguridad, *expression injection* en `release.yml`, action de terceros anclada a `@main`, sandbox de iframes SCORM, endurecimiento de la instancia. |
 
