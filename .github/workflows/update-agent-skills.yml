@@ -1,0 +1,37 @@
+name: Update agent skills
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: update-agent-skills
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          persist-credentials: false
+      - id: update
+        uses: devantler-tech/actions/update-agent-skills@v13.3.3
+        with:
+          dir: .agents/skills
+      - uses: peter-evans/create-pull-request@v8
+        if: steps.update.outputs.changed == 'true'
+        with:
+          base: master
+          branch: feature/update-agent-skills
+          delete-branch: true
+          add-paths: .agents/skills
+          commit-message: 'chore(deps): update agent skills'
+          title: 'chore(deps): update agent skills'
+          body: |
+            Updates vendored skills using their GitHub provenance.
+            Review the diff as a change to agent behavior before merging.
