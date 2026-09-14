@@ -20,7 +20,7 @@ jobs:
           ref: master
           persist-credentials: false
       - id: update
-        uses: devantler-tech/actions/update-agent-skills@v13.3.3
+        uses: devantler-tech/actions/update-agent-skills@v13.5.1
         with:
           dir: .agents/skills
       - uses: peter-evans/create-pull-request@v8
