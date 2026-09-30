@@ -418,3 +418,21 @@ body.item.resource.show {
         flex: none;
     }
 }
+
+// Bloque lateral de la licencia: mismo lenguaje visual que .project-funding.
+.item-license {
+    background: var(--ate-surface-canvas);
+    border: 1px solid var(--ate-hairline);
+    border-left: 3px solid var(--ate-color-brand-blue-mid);
+    border-radius: var(--ate-radius-lg);
+    padding: 16px 18px;
+
+    &__title {
+        margin: 0 0 12px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        color: var(--ate-text-muted);
+    }
+}
