@@ -330,3 +330,25 @@ El ajuste anterior resolvió la salida del contador del header principal, pero d
 
 ### Dependencias
 - QA-012.
+
+---
+
+## [2026-09-30] ACEPTADA — Anclaje curricular de la ficha agrupado por materia
+
+### Decisión
+El bloque «Simple block for theme» (`view/common/resource-page-block-layout/block.phtml`) pinta una tarjeta por materia en lugar de cuatro listas planas. Cada tarjeta lleva el nombre de la materia, sus cursos como píldoras y, plegados en un `<details>`, los criterios y saberes que cuelgan de ella («6 criterios · 10 saberes»). La descripción de cada código se muestra en un tooltip al pasar el ratón o con el foco.
+
+### Contexto
+Un recurso puede declarar varios niveles, varias materias (a menudo homónimas: una Asignatura por curso) y decenas de criterios y saberes. El ítem 40427 pintaba 47 píldoras, una por línea. El grafo ya permite agrupar: la Asignatura lleva `lrmi:educationalLevel`, y cada criterio o saber apunta a su Asignatura con `schema:inDefinedTermSet`.
+
+### Cambios realizados
+- `helper/CurriculumAnchor.php`: nuevo `alignment()`, que reutiliza `__invoke()` (materia → cursos) y cuelga cada término alineado de su materia. Primero casa por el termset y, si no, por el nombre de la materia. Lo que no casa va a «Otros». Hace una consulta por lote por término. La capa pura `attachAligned()` tiene tests en `CurriculumAnchorAlignmentTest.php`.
+- `view/common/curriculum-anchor-card.phtml`: parcial nuevo.
+- `block.phtml`: activa la vista agrupada si el bloque incluye materia y nivel y el grafo encaja. Solo se agrupan los términos con ítems enlazados; los literales (uso educativo, destinatarios, tiempo) siguen en lista plana bajo las tarjetas. Si el grafo no encaja, se usa la lista plana de siempre.
+- `_anclaje-curricular.scss`: estilos de `.anclaje-curricular--grouped`.
+
+### Pendiente
+- El tooltip no se cierra con Esc (WCAG 1.4.13). Requiere un JS mínimo.
+
+### Dependencias
+- Backlog ciclo 7 #5.

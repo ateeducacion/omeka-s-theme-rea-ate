@@ -26,6 +26,9 @@ $defaultLabels = [
     'lrmi:educationalLevel'   => 'Nivel educativo',         // @translate
     'lrmi:assesses'           => 'Criterios de evaluación', // @translate
     'lrmi:teaches'            => 'Saberes básicos',         // @translate
+    'lrmi:educationalUse'     => 'Uso educativo',           // @translate
+    'lrmi:educationalRole'    => 'Destinatarios',           // @translate
+    'lrmi:timeRequired'       => 'Tiempo estimado',         // @translate
 ];
 
 // Respetar configuración de locale del sitio (igual que resource-values.phtml).
@@ -63,12 +66,46 @@ foreach ($properties as $term) {
     ];
 }
 
-if (!$blocks) {
+// Vista agrupada: una tarjeta por materia con sus cursos y, plegados, los términos
+// alineados con ítems enlazados (criterios, saberes…). Solo si el bloque incluye
+// materia y nivel y el grafo curricular encaja; si no, lista plana de siempre.
+// Los términos solo literales (uso educativo, rol…) siguen en lista plana debajo.
+$curriculumAnchor = $this->plugin('CurriculumAnchor');
+[$subjectTerm, $levelTerm] = $curriculumAnchor->anchorTerms();
+$groupedRows = null;
+if ($subjectTerm !== '' && isset($blocks[$subjectTerm], $blocks[$levelTerm])) {
+    $alignedLabels = [];
+    foreach ($blocks as $term => $data) {
+        if ($term === $subjectTerm || $term === $levelTerm) {
+            continue;
+        }
+        foreach ($data['values'] as $value) {
+            if (strpos((string) $value->type(), 'resource') !== false) {
+                $alignedLabels[$term] = $data['label'];
+                break;
+            }
+        }
+    }
+    $groupedRows = $curriculumAnchor->alignment($resource, array_keys($alignedLabels));
+    if ($groupedRows) {
+        $blocks = array_diff_key($blocks, $alignedLabels, [$subjectTerm => true, $levelTerm => true]);
+    }
+}
+
+if (!$blocks && !$groupedRows) {
     return;
 }
 
 $termClass = fn(string $term): string => str_replace(':', '-', $term);
 ?>
+<?php if ($groupedRows): ?>
+<?php echo $this->partial('common/curriculum-anchor-card', [
+    'rows' => $groupedRows,
+    'divClass' => $divClass,
+    'alignedLabels' => $alignedLabels,
+    'flatBlocks' => $blocks,
+]); ?>
+<?php return; endif; ?>
 <div class="<?php echo $escape($divClass); ?>">
     <?php foreach ($blocks as $term => $data): ?>
     <div class="property <?php echo $escape($termClass($term)); ?>">

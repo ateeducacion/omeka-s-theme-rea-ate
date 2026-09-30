@@ -153,3 +153,167 @@
         }
     }
 }
+
+// ── Vista agrupada de la ficha: una tarjeta por materia ──────
+// Materia → cursos → (plegado) criterios y saberes. Ver
+// view/common/curriculum-anchor-card.phtml.
+.anclaje-curricular--grouped {
+
+    .curriculum-cards {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    // Anula `ul li { margin-bottom }` de base/elements/_lists.scss.
+    .curriculum-cards li { margin-bottom: 0; }
+
+    .curriculum-card {
+        padding: 14px 0;
+
+        &:first-child { padding-top: 0; }
+        & + .curriculum-card { border-top: 1px solid var(--ate-hairline); }
+
+        &--orphan .curriculum-card__subject { color: var(--ate-text-muted); }
+    }
+
+    .curriculum-card__subject {
+        margin: 0 0 8px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: var(--ate-color-brand-blue-dark);
+    }
+
+    .curriculum-card__levels {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .curriculum-card__level {
+        display: inline-block;
+        background: var(--ate-color-brand-blue-dark);
+        color: var(--ate-text-on-dark);
+        border-radius: var(--ate-radius-pill);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 3px 11px;
+        text-decoration: none;
+
+        &:hover,
+        &:focus-visible { text-decoration: underline; }
+    }
+
+    // Resumen plegable «6 criterios · 10 saberes».
+    .curriculum-card__aligned {
+        margin-top: 10px;
+
+        > summary {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            list-style: none;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ate-color-brand-blue-mid);
+
+            &::-webkit-details-marker { display: none; }
+
+            &::before {
+                content: '';
+                width: 0;
+                height: 0;
+                border-top: 4px solid transparent;
+                border-bottom: 4px solid transparent;
+                border-left: 6px solid currentColor;
+                transition: transform 0.15s;
+            }
+
+            &:hover { text-decoration: underline; }
+        }
+
+        &[open] > summary::before { transform: rotate(90deg); }
+    }
+
+    .curriculum-card__term { margin-top: 10px; }
+
+    .curriculum-card__term-label {
+        margin: 0 0 6px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        color: var(--ate-text-muted);
+    }
+
+    // Los códigos van en línea (no flex): así el tooltip, absoluto y de
+    // bloque, se coloca en la línea siguiente al chip y ocupa todo el ancho
+    // de la lista sin salirse del lateral.
+    .curriculum-card__codes {
+        position: relative;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .curriculum-card__code-item { display: inline; }
+
+    .curriculum-card__code {
+        display: inline-block;
+        margin: 0 4px 5px 0;
+        padding: 4px 8px;
+        background: var(--ate-surface-card);
+        border: 1px solid var(--ate-hairline);
+        border-radius: var(--ate-radius-sm);
+        font-size: 11.5px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: var(--ate-color-brand-blue-mid);
+        text-decoration: none;
+        transition: background 0.15s, border-color 0.15s;
+
+        &:hover,
+        &:focus-visible {
+            background: var(--ate-surface-yellow);
+            border-color: var(--ate-color-brand-yellow);
+        }
+    }
+
+    .curriculum-card__tip {
+        position: absolute;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        display: block;
+        padding: 8px 10px;
+        background: var(--ate-color-brand-blue-dark);
+        color: var(--ate-text-on-dark);
+        border-radius: var(--ate-radius-md);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.12s;
+        pointer-events: none;
+    }
+
+    .curriculum-card__code-item:hover .curriculum-card__tip,
+    .curriculum-card__code-item:focus-within .curriculum-card__tip {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    // Términos literales (uso educativo, rol…) bajo las tarjetas.
+    .curriculum-cards + .property {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--ate-hairline);
+    }
+}

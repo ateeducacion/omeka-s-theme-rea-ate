@@ -632,6 +632,20 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 
 ---
 
+## [2026-09-30] ACEPTADA — Anclaje curricular de la ficha agrupado por materia
+
+**Contexto:** El bloque de anclaje de la ficha pinta niveles, materias, criterios y saberes como cuatro listas planas. Las materias homónimas se repiten y los criterios y saberes, a menudo más de 30, ocupan todo el lateral. De tres propuestas (tarjeta por materia, por etapa → curso, resumen en el lateral + tabla en la columna principal) se elige la tarjeta por materia.
+
+**Decisión:** Añadir el ítem #5 al backlog del ciclo 7.
+
+| # | Ítem | Descripción | Tipo | Prioridad |
+|---|------|-------------|------|-----------|
+| 5 | Anclaje curricular de la ficha agrupado | Una tarjeta por materia con sus cursos y, plegados, sus criterios y saberes, asignados por el grafo curricular | Diseño | Media |
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
@@ -1046,5 +1060,6 @@ Los cambios que pueden afectar al mobile son:
 | Licencia como URI (#33) | ⏳ Pendiente |
 | `metadata_model.md` alineado con el módulo (#34) | ⏳ Pendiente |
 | Anclaje curricular agrupado (#4) | 🔵 Implementado, pendiente de merge; QA-034 4/5 en PASA |
+| Anclaje curricular de la ficha agrupado (#5) | 🔵 Implementado en PR; pendiente de revisión visual |
 
 **Agente:** orchestrator
