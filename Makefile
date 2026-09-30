@@ -128,6 +128,11 @@ package:
 		--exclude='Makefile' \
 		--exclude='AGENTS.md' \
 		--exclude='DESIGN.md' \
+		--exclude='/test' \
+		--exclude='/vendor' \
+		--exclude='composer.lock' \
+		--exclude='docker-compose.yml' \
+		--exclude='blueprint.json' \
 		./ tmpzip/rea-ate/; \
 	echo "Creating ZIP archive: rea-ate-$(VERSION).zip..."; \
 	cd tmpzip && zip -qr ../rea-ate-$(VERSION).zip rea-ate && cd ..; \
