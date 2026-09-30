@@ -51,12 +51,20 @@ if ($_desc) $_jl['description'] = strip_tags($_desc);
 
 foreach ([
     'inLanguage'    => 'dcterms:language',
-    'license'       => 'dcterms:rights',
     'datePublished' => 'dcterms:date',
 ] as $_prop => $_term) {
     $_v = $item->value($_term);
     if ($_v) $_jl[$_prop] = (string) $_v;
 }
+// R-02: la licencia es la URI de dcterms:license (decisión 0019 de OERManager), no su
+// etiqueta; un literal sin URI no lo resuelve un consumidor automático y se omite.
+$_lic = $item->value('dcterms:license');
+$_licUri = $_lic ? $this->safeUrl($_lic->uri(), ['http', 'https'], false) : null;
+if ($_licUri !== null) {
+    $_licBadge = $this->licenseBadge($_licUri);
+    $_jl['license'] = $_licBadge ? $_licBadge['uri'] : $_licUri;
+}
+unset($_lic, $_licUri, $_licBadge);
 $_trv = $item->value('lrmi:timeRequired');
 if ($_trv) { $_trMins = (int)(string)$_trv; if ($_trMins > 0) $_jl['timeRequired'] = 'PT' . $_trMins . 'M'; unset($_trMins); }
 unset($_trv);

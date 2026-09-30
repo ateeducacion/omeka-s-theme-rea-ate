@@ -406,3 +406,15 @@ body.item.resource.show {
 
 
 }
+
+// Licencia (dcterms:license): distintivo oficial de Creative Commons + etiqueta.
+.license-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &__img {
+        display: block;
+        flex: none;
+    }
+}
