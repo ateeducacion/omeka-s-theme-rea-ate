@@ -406,8 +406,7 @@ class CurriculumAnchor extends AbstractHelper
             foreach ($subject['levelIds'] ?? [] as $levelId) {
                 // Intersección: solo sobreviven los niveles que el recurso declara.
                 // Sin esto se pintarían enlaces que devuelven cero resultados.
-                if (
-                    isset($declaredLevels[$levelId])
+                if (isset($declaredLevels[$levelId])
                     && !in_array($levelId, $groups[$key]['levelIds'], true)
                 ) {
                     $groups[$key]['levelIds'][] = $levelId;
