@@ -15,7 +15,7 @@ use Laminas\View\Helper\AbstractHelper;
  * en asset/img/cc/ para no pedir imágenes a un tercero en cada ficha.
  *
  * Uso en plantillas:
- *   $badge = $this->licenseBadge($value->uri());
+ *   $badge = $this->plugin('LicenseBadge')($value->uri());
  *   if ($badge): ?><img src="<?= $this->assetUrl('img/cc/' . $badge['image']) ?>"><?php endif;
  */
 class LicenseBadge extends AbstractHelper

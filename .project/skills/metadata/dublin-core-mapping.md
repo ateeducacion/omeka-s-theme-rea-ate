@@ -96,7 +96,7 @@ foreach ($item->value('dcterms:relation', ['all' => true]) ?: [] as $rel) {
 ```php
 // Reconocer la licencia y obtener su distintivo (null si no es una de las cinco CC)
 $license = $item->value('dcterms:license');
-$badge   = $license ? $this->licenseBadge($license->uri()) : null;
+$badge   = $license ? $this->plugin('LicenseBadge')($license->uri()) : null;
 ```
 
 ## Errores comunes

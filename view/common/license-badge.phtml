@@ -3,7 +3,7 @@
 $escape  = $this->plugin('escapeHtml');
 $escAttr = $this->plugin('escapeHtmlAttr');
 
-$badge = $this->licenseBadge($value->uri());
+$badge = $this->plugin('LicenseBadge')($value->uri());
 
 // Valor que no es una de las cinco licencias admitidas (p. ej. un recurso antiguo con
 // literal): se muestra como lo haría Omeka, sin distintivo.

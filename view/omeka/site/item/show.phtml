@@ -59,9 +59,9 @@ foreach ([
 // R-02: la licencia es la URI de dcterms:license (decisión 0019 de OERManager), no su
 // etiqueta; un literal sin URI no lo resuelve un consumidor automático y se omite.
 $_lic = $item->value('dcterms:license');
-$_licUri = $_lic ? $this->safeUrl($_lic->uri(), ['http', 'https'], false) : null;
+$_licUri = $_lic ? $this->plugin('SafeUrl')($_lic->uri(), ['http', 'https'], false) : null;
 if ($_licUri !== null) {
-    $_licBadge = $this->licenseBadge($_licUri);
+    $_licBadge = $this->plugin('LicenseBadge')($_licUri);
     $_jl['license'] = $_licBadge ? $_licBadge['uri'] : $_licUri;
 }
 unset($_lic, $_licUri, $_licBadge);
