@@ -34,8 +34,7 @@ class CurriculumAnchorAlignmentTest extends TestCase
         string $label,
         array $subjectIds = [],
         array $subjectLabels = []
-    ): array
-    {
+    ): array {
         return compact('term', 'id', 'label', 'subjectIds', 'subjectLabels') + ['description' => '', 'url' => null];
     }
 
