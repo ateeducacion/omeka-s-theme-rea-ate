@@ -3,3 +3,5 @@
 .sass-cache
 .DS_Store
 .superpowers/
+*.zip
+test/.phpunit.result.cache

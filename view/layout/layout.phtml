@@ -1,15 +1,21 @@
 <?php
 $siteTitle = $site->title();
 $userBar = $this->userBar();
-$header_layout = ($this->themeSetting('header_layout')) ?? 'inline';
+$cssToken = $this->plugin('CssToken');
+
+// Theme settings interpolated into the <style> block below are not protected by HTML
+// escaping: a value such as "red;}</style><script>…" would close the block. Each one is
+// validated against the grammar it is meant to follow, falling back to the default.
+// Allowlists mirror the value_options declared in config/theme.ini.
+$header_layout = $cssToken->keyword($this->themeSetting('header_layout'), ['inline', 'center'], 'inline');
 $body_class = 'main-header--' . $header_layout;
-$bannerHeightMobile = $this->themeSetting('banner_height_mobile');
+$bannerHeightMobile = $cssToken->length($this->themeSetting('banner_height_mobile'), '');
 $bannerHeading = $this->themeSetting('banner_heading');
 $bannerDescription = $this->themeSetting('banner_description');
 $bannerHeightProperty = $bannerHeading || $bannerDescription ? 'min-height' : 'height';
-$primaryColor = $this->themeSetting('primary_color') ?? '#0C2C84';
-$secondaryColor = $this->themeSetting('secondary_color') ?? '#0C2C84';
-$accentColor = $this->themeSetting('accent_color') ?? '#0768AC';
+$primaryColor = $cssToken->color($this->themeSetting('primary_color'), '#0C2C84');
+$secondaryColor = $cssToken->color($this->themeSetting('secondary_color'), '#0C2C84');
+$accentColor = $cssToken->color($this->themeSetting('accent_color'), '#0768AC');
 
 $normalizePath = static function (?string $path): string {
 	$path = trim((string) $path);
@@ -48,6 +54,10 @@ $this->jsTranslate();
 $this->trigger('view.layout');
 
 $this->htmlElement('body')->appendAttribute('class', 'user-bar');
+
+// Expose the API base path so resource-link-info.js does not have to hardcode
+// "/api/items", which breaks whenever Omeka is installed in a subdirectory.
+$this->htmlElement('body')->setAttribute('data-api-items-base', $this->basePath('/api/items'));
 ?>
 
 <?php echo $this->doctype(); ?>

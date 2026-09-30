@@ -398,8 +398,14 @@ $displayValue = function ($value) use ($valueLang) {
 
 <?php if ($user && $showToolboxForUser): ?>
 <?php
+    // This is a valid admin CSRF token sitting in the DOM of a public page. It is only
+    // rendered for users who can already delete items, but it does mean any XSS on the
+    // public site escalates straight to item deletion: keeping this theme free of XSS
+    // sinks is load-bearing, not cosmetic.
+    // getHash() rather than getHash(true): regenerating on every public page render
+    // invalidates the token of any admin form the user has open in another tab.
     $csrfElement = new \Laminas\Form\Element\Csrf('confirmform_csrf');
-    $csrfToken = $csrfElement->getCsrfValidator()->getHash(true);
+    $csrfToken = $csrfElement->getCsrfValidator()->getHash();
 ?>
 <div id="delete-confirm-modal" class="delete-confirm-modal" hidden
      data-csrf-token="<?php echo $escapeAttr($csrfToken); ?>"

@@ -8,6 +8,7 @@
  *   logos_bar_link_N  (Laminas\Form\Element\Url)  — URL de destino (opcional)
  */
 $escAttr = $this->plugin('escapeHtmlAttr');
+$safeUrl = $this->plugin('SafeUrl');
 
 $logos = [];
 
@@ -18,7 +19,10 @@ for ($i = 1; $i <= 8; $i++) {
     }
     $logos[] = [
         'logoUrl' => $logoUrl,
-        'linkUrl' => $this->themeSetting("logos_bar_link_$i") ?: null,
+        // Laminas\Form\Element\Url validates this on save, but a value written through
+        // the API or straight to the database never passes through that validator.
+        // A rejected URL renders the logo without a link rather than as a dead <a>.
+        'linkUrl' => $safeUrl($this->themeSetting("logos_bar_link_$i")),
         'alt'     => '',
     ];
 }

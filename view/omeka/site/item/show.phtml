@@ -1,6 +1,7 @@
 <?php
-$translate = $this->plugin('translate');
-$escape    = $this->plugin('escapeHtml');
+$translate  = $this->plugin('translate');
+$escape     = $this->plugin('escapeHtml');
+$escapeAttr = $this->plugin('escapeHtmlAttr');
 
 $this->headLink()->appendStylesheet($this->assetUrl('css/resource-page-blocks.css', 'Omeka'));
 $this->htmlElement('body')->appendAttribute('class', 'item resource show');
@@ -223,12 +224,18 @@ if ($mainHasBlocks || $leftSidebarHasBlocks || $hasRightSidebar):
 
 <?php if ($user && $showToolboxForUser): ?>
 <?php
+    // This is a valid admin CSRF token sitting in the DOM of a public page. It is only
+    // rendered for users who can already delete the item, but it does mean any XSS on the
+    // public site escalates straight to item deletion: keeping this theme free of XSS
+    // sinks is load-bearing, not cosmetic.
+    // getHash() rather than getHash(true): regenerating on every public page render
+    // invalidates the token of any admin form the user has open in another tab.
     $csrfElement = new \Laminas\Form\Element\Csrf('confirmform_csrf');
-    $csrfToken = $csrfElement->getCsrfValidator()->getHash(true);
+    $csrfToken = $csrfElement->getCsrfValidator()->getHash();
 ?>
 <div id="delete-confirm-modal" class="delete-confirm-modal" hidden
-     data-csrf-token="<?php echo $escape($csrfToken); ?>"
-     data-admin-base-path="<?php echo $escape($this->url('admin')); ?>">
+     data-csrf-token="<?php echo $escapeAttr($csrfToken); ?>"
+     data-admin-base-path="<?php echo $escapeAttr($this->url('admin')); ?>">
     <div class="delete-confirm-modal__overlay"></div>
     <div class="delete-confirm-modal__content">
         <h3><?php echo $escape($translate('Confirm Delete')); ?></h3>

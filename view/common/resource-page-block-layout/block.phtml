@@ -7,7 +7,9 @@
 $escape    = $this->plugin('escapeHtml');
 $translate = $this->plugin('translate');
 
-$divClass = trim((string) $this->themeSetting('anclaje_div_class')) ?: 'anclaje-curricular';
+// Free-text setting landing in a class attribute: restrict it to valid CSS class
+// syntax so it cannot smuggle extra attributes or classes into the markup.
+$divClass = $this->plugin('CssToken')->cssClass($this->themeSetting('anclaje_div_class'), 'anclaje-curricular');
 $rawProps  = (string) $this->themeSetting('anclaje_properties');
 
 $properties = array_values(array_filter(

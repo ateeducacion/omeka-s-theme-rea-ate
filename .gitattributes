@@ -3,3 +3,8 @@
 /.tx/ export-ignore
 /language/*.pot export-ignore
 /language/*.po export-ignore
+
+/.project/ export-ignore
+/.agents/ export-ignore
+/.claude/ export-ignore
+/AGENTS.md export-ignore

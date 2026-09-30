@@ -1,137 +1,74 @@
-# Sistema multiagente del proyecto
+# Agent guidance
 
-Este proyecto opera con cinco roles que colaboran de forma asíncrona.
-Cada rol tiene responsabilidades delimitadas y se comunica a través de
-los archivos de decisiones en `.project/decisions/`.
+REA ATE is an Omeka S theme for an educational-resource repository. Preserve
+Omeka S compatibility declared in `config/theme.ini` (currently `^4.2.0`).
 
-La documentación de coordinación del proyecto vive en `.project/`.
-Este directorio **no forma parte de las releases del tema**.
+## Working conventions
 
----
+- Write new guidance, skills, documentation and pull requests in English. Existing
+  Spanish historical decisions and product translations retain their language.
+- Branch names use English with `feature/` or `hotfix/`; never `codex/`.
+- This repository's default branch is `master`. Base changes on its latest remote
+  state; do not combine unrelated feature branches.
+- Load only the skill and source relevant to the change. Existing implementation
+  establishes current behavior; verify legacy `.project/` examples against it.
+- `.project/agents/` and `.project/decisions/` preserve the established role and
+  decision history. Use parallel roles for substantial independent work; routine
+  edits do not require five roles or a new decision. Record durable decisions in
+  the appropriate existing log without rewriting historical entries.
 
-## Estructura de `.project/`
+## Source and validation map
 
-```
-.project/
-├── agents/          # Prompts de sistema por rol
-├── context/         # Requisitos y modelo de metadatos del proyecto
-├── decisions/       # Diario de decisiones por agente
-├── docs/            # Documentación técnica del proyecto
-└── skills/          # Procedimientos técnicos reutilizables por dominio
-    ├── omeka-s-core/
-    ├── metadata/
-    ├── frontend/
-    ├── features/
-    └── process/
-```
+| Change | Source and relevant validation |
+|---|---|
+| View/helper behavior | `view/`, `helper/`; PHP syntax checks and affected `test/ReaAteTest/` tests |
+| Styles | `asset/sass/`, `gulpfile.js`; `npm ci` then `npm run build`, inspect generated CSS |
+| Browser behavior | `asset/js/` (plain JavaScript); verify affected page, keyboard and mobile behavior in Omeka S |
+| Translation | `language/`; `make i18n` uses gettext and changes PO/MO files |
+| Distribution | `Makefile` package target, `.gitattributes`, release workflow; inspect the produced ZIP |
 
-### Distinción conceptual
+`make test` and `make lint` depend on `deps-update`, which may update Composer
+packages. For verification with installed dependencies use
+`vendor/bin/phpunit -c test/phpunit.xml` and the PHPCS invocation in `Makefile`
+directly. Report unavailable dependencies or runtime checks without claiming a pass.
+Do not run `make clean` or `make fresh` on a valued database: they delete volumes.
 
-| Concepto | Dónde vive | Qué es |
-|----------|-----------|--------|
-| **Agente** | `.project/agents/` | Prompt de sistema: rol, responsabilidades, protocolo, skills que invoca |
-| **Skill** | `.project/skills/` | Procedimiento técnico sin estado, reutilizable por cualquier agente |
-| **Decisión** | `.project/decisions/` | Historial de decisiones tomadas, con contexto y alternativas descartadas |
+## Theme constraints
 
----
+- Keep template paths and variable contracts compatible with Omeka S and installed
+  modules. Optional-module fallbacks must continue to work.
+- Reuse `SafeUrl`, `CssToken`, and `HtmlAllowlist` where the current templates use
+  them; output escaping and context-specific validation serve different purposes.
+- Edit Sass sources and rebuild; do not implement fixes only in generated CSS.
+  Preserve the `--ate-*` theme settings and the progressive-enhancement baseline.
+- Resource values may be literals, URIs or linked resources. Keep stable vocabulary
+  terms and facet query semantics rather than deriving behavior from display labels.
+- Packaging must exclude `.project/`, `.agents/`, `.claude/` and `AGENTS.md`.
+  `make package VERSION=X.Y.Z` creates a `rea-ate/` top-level directory. It temporarily
+  changes `theme.ini`; verify restoration after a failure. Publishing needs a release request.
 
-## Roles y archivos de agente
+## Skills
 
-| Rol | Prompt de sistema | Diario de decisiones |
-|-----|-------------------|----------------------|
-| Orquestador | `.project/agents/orchestrator.md` | `.project/decisions/orchestrator.md` |
-| Arquitecto | `.project/agents/architect.md` | `.project/decisions/architect.md` |
-| Diseñador | `.project/agents/designer.md` | `.project/decisions/designer.md` |
-| Desarrollador | `.project/agents/developer.md` | `.project/decisions/developer.md` |
-| QA | `.project/agents/qa.md` | `.project/docs/qa-findings.md` |
+| Task | Skill |
+|---|---|
+| Templates, helpers, styles, accessibility and translation | [rea-theme](.agents/skills/rea-theme/SKILL.md) |
+| Metadata rendering, search facets and educational-resource badges | [rea-metadata-search](.agents/skills/rea-metadata-search/SKILL.md) |
+| Build and ZIP release verification | [theme-release](.agents/skills/theme-release/SKILL.md) |
+| Authoring/reviewing workflows | [github-actions-hardening](.agents/skills/github-actions-hardening/SKILL.md) |
 
----
+Canonical skills live in `.agents/skills/`; `.claude/skills/` links to them.
+The older `.project/skills/` files remain historical technical references, not
+additional mandatory startup prompts. Consult only relevant material and verify
+paths and examples against source.
 
-## Skills disponibles
+Install external skills using `gh skills install OWNER/REPO PATH --dir .agents/skills`.
+Keep vendored bodies and `metadata.github-*` provenance verbatim. Local skills have
+no upstream metadata. Preview updates with
+`gh skills update --dir .agents/skills --dry-run`.
 
-| Dominio | Skill | Descripción |
-|---------|-------|-------------|
-| omeka-s-core | `omeka-api.md` | API REST y PHP de Omeka-S |
-| omeka-s-core | `omeka-theme-anatomy.md` | Estructura del tema, helpers y resolución de plantillas |
-| omeka-s-core | `omeka-hooks-events.md` | Sistema de eventos e inyección de assets |
-| metadata | `lrmi-schema.md` | Propiedades LRMI y su mapeo en REA ATE |
-| metadata | `dublin-core-mapping.md` | Elementos DC/DC Terms y campos obligatorios |
-| metadata | `schema-org-rea.md` | Tipos Schema.org y JSON-LD para SEO |
-| frontend | `sass-architecture.md` | Estructura 7-1, tokens, BEM y compilación |
-| frontend | `js-progressive-enhancement.md` | Patrones JS, registro de scripts en Omeka-S |
-| frontend | `a11y-wcag.md` | Criterios WCAG 2.1 AA, contraste, ARIA |
-| features | `advanced-search.md` | Módulo AdvancedSearch: búsqueda, facetas, resultados |
-| features | `media-rendering.md` | Tipos de media, thumbnails, SCORM |
-| features | `i18n-localization.md` | Gettext, archivos .po/.mo, strings traducibles |
-| process | `qa-checklist.md` | Checklist de revisión funcional, a11y y release |
-| process | `decision-log-protocol.md` | Formato y reglas del diario de decisiones |
-| process | `git-commit-convention.md` | Tipos, scopes y ejemplos de commits |
-
----
-
-## Flujo de trabajo
-
-```
-Orquestador lee estado → identifica próximas decisiones necesarias
-       ↓
-Arquitecto y Diseñador proponen decisiones en paralelo
-       ↓
-Orquestador valida y marca decisiones como ACEPTADAS
-       ↓
-Desarrollador implementa basándose en decisiones ACEPTADAS
-       ↓
-QA verifica en instancia real y registra hallazgos
-       ↓
-Orquestador actualiza estado del proyecto
-```
-
----
-
-## Cómo iniciar una sesión con un agente
-
-Patrón de prompt para activar un agente con el contexto mínimo:
-
-```
-[Pega el contenido de .project/agents/<rol>.md]
-
----
-
-Contexto del proyecto:
-[Pega .project/context/requirements.md]
-
-Decisiones previas tuyas:
-[Pega .project/decisions/<rol>.md — últimas entradas relevantes]
-
-Skills relevantes para esta tarea:
-[Pega el contenido de las skills necesarias]
-
----
-
-Tarea: [descripción concreta]
-```
-
-El Orquestador carga todos los archivos de `agents/` para coordinar entre roles.
-
----
-
-## Releases del tema
-
-Las releases se generan sobre la raíz del repositorio excluyendo
-`.project/` y los archivos de coordinación. Solo se empaqueta el
-contenido del tema Omeka-S.
-
-El pipeline de release está operativo en GitHub Actions (tag `v*.*.*`).
-Ver `.project/decisions/architect.md` para el procedimiento exacto.
-
----
-
-## Convenciones generales
-
-| Aspecto | Convención |
-|---------|-----------|
-| Idioma del código | Inglés (variables, clases CSS, funciones) |
-| Idioma documentación | Español (es-ES) |
-| Versión mínima Omeka-S | 4.2 |
-| JavaScript | Vanilla JS, sin bundler |
-| CSS | Sistema de tokens `--ate-*` en `layout.phtml` |
-| Commits | `type(scope): descripción` — ver `skills/process/git-commit-convention.md` |
+The weekly/manual update workflow opens reviewable PRs, never merges them. GitHub
+Actions must be allowed to create PRs; PRs created with `GITHUB_TOKEN` do not trigger
+normal PR workflows automatically. Review skill diffs as behavior changes.
+Maintainer preference overrides vendored pinning advice: use `actions/checkout@v7`,
+`devantler-tech/actions/update-agent-skills@v13.3.3` (floating `v13` when available),
+and `peter-evans/create-pull-request@v8`, with version tags rather than SHAs.

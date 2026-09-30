@@ -2,9 +2,9 @@ const showMoreFacets = (button) => {
     const facets = document.getElementById('facets');
     facets.classList.toggle('show-all');
 
-    if (button.innerHTML === 'Show more') {
-        button.innerHTML = 'Show less';
+    if (button.textContent === 'Show more') {
+        button.textContent = 'Show less';
     } else {
-        button.innerHTML = 'Show more';
+        button.textContent = 'Show more';
     }
 };

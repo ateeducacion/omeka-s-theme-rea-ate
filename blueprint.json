@@ -1,0 +1,55 @@
+{
+  "$schema": "https://ateeducacion.github.io/omeka-s-playground/assets/blueprints/blueprint-schema.json",
+  "debug": {
+    "enabled": true
+  },
+  "landingPage": "/admin",
+  "siteOptions": {
+    "title": "REA ATE Playground",
+    "locale": "es",
+    "timezone": "Atlantic/Canary"
+  },
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@example.com",
+      "password": "password",
+      "role": "global_admin"
+    }
+  ],
+  "modules": [
+    {
+      "name": "Common",
+      "state": "activate",
+      "source": {
+        "type": "omeka.org",
+        "slug": "Common"
+      }
+    },
+    {
+      "name": "AdvancedSearch",
+      "state": "activate",
+      "source": {
+        "type": "omeka.org",
+        "slug": "AdvancedSearch"
+      }
+    }
+  ],
+  "themes": [
+    {
+      "name": "rea-ate",
+      "source": {
+        "type": "url",
+        "url": "https://github.com/ateeducacion/omeka-s-theme-rea-ate/archive/refs/heads/master.zip"
+      }
+    }
+  ],
+  "site": {
+    "title": "REA ATE Demo",
+    "slug": "demo",
+    "theme": "rea-ate",
+    "summary": "Minimal install to preview the REA ATE theme (with AdvancedSearch) in Omeka S Playground.",
+    "isPublic": true,
+    "setAsDefault": true
+  }
+}
