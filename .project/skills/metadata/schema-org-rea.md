@@ -30,7 +30,7 @@ Referencia de tipos y propiedades Schema.org aplicables a Recursos Educativos Ab
 | `educationalLevel` | `lrmi:educationalLevel` | P. ej. "Educación Primaria" |
 | `learningResourceType` | `lrmi:learningResourceType` | P. ej. "actividad interactiva" |
 | `inLanguage` | `dcterms:language` | Código BCP 47: "es", "en" |
-| `license` | `dcterms:rights` | URL de la licencia CC |
+| `license` | `dcterms:license` | URI de la licencia CC (`$value->uri()`, no la etiqueta) |
 | `creator` | `dcterms:creator` | Puede ser `Person` u `Organization` |
 | `datePublished` | `dcterms:date` | Formato ISO 8601 |
 | `publisher` | `dcterms:publisher` | `Organization` |
@@ -54,7 +54,7 @@ $jsonLd = [
     'inLanguage'          => (string) ($item->value('dcterms:language') ?? 'es'),
     'learningResourceType'=> (string) ($item->value('lrmi:learningResourceType') ?? ''),
     'educationalLevel'    => (string) ($item->value('lrmi:educationalLevel') ?? ''),
-    'license'             => (string) ($item->value('dcterms:rights') ?? ''),
+    'license'             => $item->value('dcterms:license') ? $item->value('dcterms:license')->uri() : '',
     'datePublished'       => (string) ($item->value('dcterms:date') ?? ''),
 ];
 

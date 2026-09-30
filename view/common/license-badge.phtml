@@ -1,0 +1,20 @@
+<?php
+/** @var \Omeka\Api\Representation\ValueRepresentation $value dcterms:license */
+$escape  = $this->plugin('escapeHtml');
+$escAttr = $this->plugin('escapeHtmlAttr');
+
+$badge = $this->plugin('LicenseBadge')($value->uri());
+
+// Valor que no es una de las cinco licencias admitidas (p. ej. un recurso antiguo con
+// literal): se muestra como lo haría Omeka, sin distintivo.
+if ($badge === null) {
+    echo $value->asHtml();
+    return;
+}
+?>
+<a class="license-badge" href="<?php echo $escAttr($badge['uri']); ?>" rel="license noopener" target="_blank">
+    <img class="license-badge__img"
+         src="<?php echo $escAttr($this->assetUrl('img/cc/' . $badge['image'])); ?>"
+         alt="" width="88" height="31" loading="lazy">
+    <span class="license-badge__label"><?php echo $escape($badge['label']); ?></span>
+</a>
