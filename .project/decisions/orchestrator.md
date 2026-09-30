@@ -616,6 +616,22 @@ Para cada hallazgo: si la revalidación es **PASS** → estado pasa a **Cerrado*
 
 ---
 
+## [2026-09-30] ACEPTADA — Registro del anclaje curricular agrupado en el backlog del ciclo 7
+
+**Contexto:** La rama `feature/anclaje-curricular-search` implementa el anclaje curricular agrupado de los resultados de la búsqueda facetada (spec y plan de 2026-09-01 en `.project/docs/`). El trabajo no figuraba en el backlog. Incluye el helper `CurriculumAnchor` (resolución por lotes, máximo 3 consultas por página), la píldora compuesta materia + niveles, el plegado de listas largas de chips (`advanced-search-list.js`) y el ajuste de `theme.ini`. QA-034 lo verificó sobre instancia real: 4 de 5 pasos en PASA; el paso 5 sigue bloqueado por permisos de entorno.
+
+**Decisión:** Registrar el ítem como #4 del ciclo 7, implementado y pendiente de merge.
+
+| # | Ítem | Descripción | Tipo | Prioridad |
+|---|------|-------------|------|-----------|
+| 4 | Anclaje curricular agrupado en resultados | Materias y niveles agrupados en los resultados de `/search`, con degradación sin el módulo y consultas acotadas por página | Funcionalidad | Media |
+
+**Relación con otros ítems:** depende del modelo de #3 (`metadata_model.md`): materia, nivel y eje son ítems enlazados, no literales. El paso 5 de QA-034 sigue abierto hasta disponer de permisos.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
@@ -993,6 +1009,26 @@ Los cambios que pueden afectar al mobile son:
 
 ---
 
+## [2026-09-15] ACEPTADA — Incorporación de los issues de GitHub al backlog del ciclo 7
+
+**Contexto:** El repositorio tiene dos issues abiertos, creados el 2026-09-14, que no figuraban en el backlog. Los dos nacen de la memoria técnica del REA y del módulo `omeka-s-OERManager`, cuya decisión de arquitectura 0019 fija el modelo de licencia y de anclaje curricular. El tema se ha quedado desalineado con esa decisión en el código (#33) y en la documentación (#34).
+
+**Decisión:** Añadir ambos issues al backlog del ciclo 7.
+
+| # | Ítem | Descripción | Tipo | Prioridad |
+|---|------|-------------|------|-----------|
+| 2 | Licencia como URI ([#33](https://github.com/ateeducacion/omeka-s-theme-rea-ate/issues/33)) | `item/show.phtml` lee la licencia de `dcterms:rights`; debe leer `dcterms:license`, emitir la URI en el `license` del JSON-LD y mostrarla con el distintivo oficial CC (cinco licencias admitidas). `dcterms:rights` deja de usarse como licencia. Requisito R-02 | Requisito | Alta |
+| 3 | `metadata_model.md` desalineado ([#34](https://github.com/ateeducacion/omeka-s-theme-rea-ate/issues/34)) | `lrmi:educationalLevel`, `schema:about` y `dcterms:relation` figuran como literales y son ítems enlazados (Curso, Asignatura, Eje temático). Quitar el «a confirmar» y corregir la licencia a `dcterms:license` con URI | Documentación | Media |
+
+**Relación entre ítems:** #2 y #3 comparten el cambio de licencia (`dcterms:rights` → `dcterms:license`). Conviene cerrar #3 primero o en el mismo lote, porque `metadata_model.md` es la fuente que cita el plan del anclaje curricular.
+
+**Alternativas descartadas:**
+- Posponer los issues al ciclo 8: descartado. #2 afecta a un requisito (R-02) ya visible en la ficha pública, y #3 induce a construir un modelo incorrecto.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
@@ -1007,5 +1043,8 @@ Los cambios que pueden afectar al mobile son:
 | JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias) |
 | Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
 | QA ciclo 7 — búsqueda avanzada | ⏳ Pendiente |
+| Licencia como URI (#33) | ⏳ Pendiente |
+| `metadata_model.md` alineado con el módulo (#34) | ⏳ Pendiente |
+| Anclaje curricular agrupado (#4) | 🔵 Implementado, pendiente de merge; QA-034 4/5 en PASA |
 
 **Agente:** orchestrator
