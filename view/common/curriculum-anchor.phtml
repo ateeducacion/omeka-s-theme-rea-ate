@@ -1,0 +1,31 @@
+<?php
+/**
+ * Píldoras compuestas «materia › niveles» para los resultados de búsqueda.
+ *
+ * @var array  $rows  Filas de OmekaTheme\Helper\CurriculumAnchor
+ * @var string $label Rótulo de la fila; vacío para no emitir ninguno
+ */
+$escape = $this->plugin('escapeHtml');
+$escapeAttr = $this->plugin('escapeHtmlAttr');
+
+if (!$rows) {
+    return;
+}
+?>
+<div class="property property--curriculum-anchor">
+    <?php if ($label !== ''): ?>
+    <dt><?php echo $escape($label); ?></dt>
+    <?php endif; ?>
+    <?php foreach ($rows as $row): ?>
+    <dd class="curriculum-anchor__group<?php echo $row['orphan'] ? ' curriculum-anchor__group--orphan' : ''; ?>">
+        <span class="curriculum-anchor__subject"><?php echo $escape($row['label']); ?></span>
+        <?php foreach ($row['levels'] as $level): ?>
+        <a class="curriculum-anchor__level" href="<?php echo $escapeAttr($level['url']); ?>" aria-label="<?php
+            echo $escapeAttr($row['label'] . ' — ' . $level['label']);
+        ?>"><?php
+            echo $escape($level['label']);
+        ?></a>
+        <?php endforeach; ?>
+    </dd>
+    <?php endforeach; ?>
+</div>

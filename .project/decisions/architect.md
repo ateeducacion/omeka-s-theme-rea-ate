@@ -533,3 +533,15 @@ El partial no se implementa hasta tener la decisión del Diseñador sobre layout
 - Desbloquea: decisión del Diseñador (spec visual del bloque `.project-funding`).
 - Bloqueado por: decisión del Diseñador — Desarrollador no implementa hasta tenerla.
 - Sin dependencias de módulos externos; usa únicamente la API de representación estándar de Omeka-S 4.2.
+
+## [2026-09-01] Anclaje curricular agrupado en la búsqueda facetada
+
+**Contexto:** En los resultados de `/s/<sitio>/rea`, `lrmi:educationalLevel` y `schema:about` se pintan como dos tiras de píldoras paralelas montadas por JS (`groupMetaProperties()`). Un recurso tiene varios de cada uno y las materias se repiten por nombre: 10 de los 19 REA del volcado tienen títulos duplicados en `about`, y el ítem 4676 llega a 12 píldoras que desbordan la tarjeta. La correspondencia materia→nivel no es deducible por posición (4676 tiene 4 niveles y 8 materias).
+
+**Decisión:** Agrupar por materia, con los niveles anidados dentro de una píldora compuesta, resuelto en servidor. El enlace materia→nivel se lee del propio ítem *Asignatura* (`lrmi:educationalLevel`), verificado como función total sobre los 57 enlaces del volcado. La agrupación se hace por título normalizado (título y `dcterms:identifier` son biyectivos: cero colisiones). De los niveles de cada asignatura solo se pintan los que el recurso declara, para que ningún enlace lleve a un resultado vacío; los niveles declarados que ninguna materia reclama van a una fila «Otros niveles». La materia es rótulo, cada nivel es enlace. Nuevo helper `helper/CurriculumAnchor.php` (capa pura testeable + capa de acceso con 3 consultas por lote), override `view/search/results.phtml` y partial `view/common/curriculum-anchor.phtml`. Diseño completo en `.project/docs/specs/2026-09-01-anclaje-curricular-busqueda-facetada-design.md`.
+
+**Alternativas descartadas:** Agrupar por etapa › materia › niveles — fiel al currículo pero genera hasta 4 bloques por tarjeta y repite lo que el nombre del nivel ya dice. Emparejar por posición — imposible, los cardinales no coinciden. Resolver en JS con `fetch` a la API — añade ida y vuelta, parpadeo, y choca con el cierre de la API pública previsto en la Fase 4 de seguridad. Mostrar todos los niveles de la asignatura sin intersectar con los del recurso — produce enlaces que devuelven 0 resultados (ítem 5051).
+
+**Consecuencias:** Desbloquea el plan de implementación. `groupMetaProperties()` en `asset/js/advanced-search-list.js` deja de mover esas dos propiedades y el `.property-meta-group` queda solo con tipo de recurso y duración. `view/common/linked-resources.phtml` comparte el nombre de clase y divergirá a propósito hasta que se porte. Queda atado a la versión de AdvancedSearch por el override de `results.phtml`, mismo riesgo ya asumido con `facets-list.phtml`. Dependencia a resolver antes de implementar: la suite PHPUnit vive en `security/audit-fixes`, no en `master`, de donde sale esta rama.
+
+**Agente:** architect
