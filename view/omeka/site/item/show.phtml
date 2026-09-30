@@ -224,8 +224,8 @@ if ($mainHasBlocks || $leftSidebarHasBlocks || $hasRightSidebar):
 
     <?php if ($hasRightSidebar): ?>
     <aside class="item-sidebar item-sidebar--right">
-        <?php if ($rightSidebarHasBlocks): echo $rightSidebarBlockContent->getBlocks(); endif; ?>
         <?php if ($licenseValue): echo $this->partial('common/item-license', ['value' => $licenseValue]); endif; ?>
+        <?php if ($rightSidebarHasBlocks): echo $rightSidebarBlockContent->getBlocks(); endif; ?>
         <?php echo $this->partial('common/project-funding', ['projectItem' => $projectItem]); ?>
     </aside>
     <?php endif; ?>

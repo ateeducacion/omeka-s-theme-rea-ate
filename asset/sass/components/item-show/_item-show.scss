@@ -419,13 +419,13 @@ body.item.resource.show {
     }
 }
 
-// Bloque lateral de la licencia: mismo lenguaje visual que .project-funding.
+// Bloque lateral de la licencia: mismo cuadro que .anclaje-curricular (fondo suave,
+// filete izquierdo de 4px, radio lg) con el acento azul de .project-funding.
 .item-license {
-    background: var(--ate-surface-canvas);
-    border: 1px solid var(--ate-hairline);
-    border-left: 3px solid var(--ate-color-brand-blue-mid);
+    background: var(--ate-surface-soft);
+    border-left: 4px solid var(--ate-color-brand-blue-mid);
     border-radius: var(--ate-radius-lg);
-    padding: 16px 18px;
+    padding: 20px;
 
     &__title {
         margin: 0 0 12px;
@@ -434,5 +434,15 @@ body.item.resource.show {
         letter-spacing: 1.4px;
         text-transform: uppercase;
         color: var(--ate-text-muted);
+    }
+
+    .license-badge {
+        color: var(--ate-color-brand-blue-dark);
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+
+        &:hover .license-badge__label,
+        &:focus-visible .license-badge__label { text-decoration: underline; }
     }
 }
