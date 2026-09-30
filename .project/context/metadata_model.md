@@ -12,7 +12,7 @@ durante el desarrollo y la puesta en producción.
 
 | Prefijo | Vocabulario | Uso principal |
 |---------|-------------|---------------|
-| `dcterms:` | Dublin Core Terms | Título, descripción, derechos, relaciones |
+| `dcterms:` | Dublin Core Terms | Título, descripción, licencia, relaciones |
 | `lrmi:` | LRMI (via Schema.org) | Campos educativos específicos |
 | `schema:` | Schema.org | Campos semánticos generales |
 
@@ -30,14 +30,18 @@ sus prefijos canónicos se confirman al inicio del proyecto.
 | Tipo de recurso | `lrmi:learningResourceType` | Literal (vocabulario controlado) |
 | Saberes básicos | `lrmi:teaches` | Ítem vinculado |
 | Criterios de evaluación | `lrmi:assesses` | Ítem vinculado |
-| Nivel educativo | `lrmi:educationalLevel` | Literal (vocabulario controlado) |
-| Materia | `schema:about` | Literal |
-| Derechos / Licencia | `dcterms:rights` | Literal (vocabulario controlado) |
+| Nivel educativo | `lrmi:educationalLevel` | Ítem enlazado (clase Curso del grafo curricular) |
+| Materia | `schema:about` | Ítem enlazado (clase Asignatura) |
+| Licencia | `dcterms:license` | URI (vocabulario de cinco licencias Creative Commons) |
 | Tiempo estimado | `lrmi:timeRequired` | Literal numérico |
-| Áreas, programas o redes vinculadas | `dcterms:relation` | Literal (vocabulario controlado) |
+| Áreas, programas o redes vinculadas | `dcterms:relation` | Ítem enlazado (clase Eje temático) |
 
 > El tema accede a las propiedades por su **nombre cualificado** 
 > (`prefix:term`), nunca por IDs internos de la instancia.
+
+> **Fuente de verdad:** la plantilla REA de la instancia (id 3) y la decisión
+> de arquitectura 0019 del módulo `omeka-s-OERManager`, que es quien escribe
+> estos valores. `dcterms:rights` ya no se usa como licencia.
 
 ---
 
@@ -46,6 +50,15 @@ sus prefijos canónicos se confirman al inicio del proyecto.
 Los campos `lrmi:teaches` y `lrmi:assesses` apuntan a ítems internos 
 de Omeka-S que representan elementos curriculares (saberes básicos, 
 criterios de evaluación, etc.).
+
+Sostienen además el anclaje curricular y temático tres campos que también 
+son ítems enlazados:
+
+| Campo | Clase del ítem de destino |
+|-------|---------------------------|
+| `lrmi:educationalLevel` | Curso |
+| `schema:about` | Asignatura |
+| `dcterms:relation` | Eje temático |
 
 El tema debe ser capaz de renderizar estos vínculos mostrando el título 
 del ítem referenciado, sin asumir una estructura interna específica.
@@ -65,9 +78,26 @@ confirman durante el desarrollo:
 | Campo | Estado del vocabulario controlado |
 |-------|-----------------------------------|
 | `lrmi:learningResourceType` | A confirmar |
-| `lrmi:educationalLevel` | A confirmar |
-| `dcterms:rights` | A confirmar |
-| `dcterms:relation` | A confirmar |
+| `dcterms:license` | Confirmado: cinco URI de Creative Commons (ver abajo) |
+
+`lrmi:educationalLevel`, `schema:about` y `dcterms:relation` ya no son 
+vocabularios controlados de literales: son ítems enlazados (ver «Ítems 
+vinculados»).
+
+### Licencias admitidas (`dcterms:license`)
+
+El valor es la **URI**, no una etiqueta. El tema reconoce estas cinco y 
+muestra el distintivo oficial (`helper/LicenseBadge.php`):
+
+| Licencia | URI |
+|----------|-----|
+| CC0 1.0 | `https://creativecommons.org/publicdomain/zero/1.0/` |
+| CC BY 4.0 | `https://creativecommons.org/licenses/by/4.0/` |
+| CC BY-SA 4.0 | `https://creativecommons.org/licenses/by-sa/4.0/` |
+| CC BY-NC 4.0 | `https://creativecommons.org/licenses/by-nc/4.0/` |
+| CC BY-NC-SA 4.0 | `https://creativecommons.org/licenses/by-nc-sa/4.0/` |
+
+El JSON-LD emite esa URI en `license`. Un valor que no sea URI no se emite.
 
 ---
 

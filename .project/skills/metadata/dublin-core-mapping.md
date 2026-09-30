@@ -29,7 +29,7 @@ Referencia de los elementos Dublin Core y DC Terms usados en REA ATE, qué campo
 | Language | `dcterms:language` | Idioma del recurso (BCP 47, p. ej. "es") | Recomendado |
 | Relation | `dcterms:relation` | Recurso relacionado (enlace a otro ítem) | No |
 | Coverage | `dcterms:coverage` | Ámbito geográfico o temporal | No |
-| Rights | `dcterms:rights` | Licencia o declaración de derechos | Recomendado |
+| License | `dcterms:license` | Licencia del REA, como URI de Creative Commons | Recomendado |
 
 ### Campos obligatorios en REA ATE
 Un ítem debe tener como mínimo:
@@ -58,7 +58,7 @@ En Omeka-S, el vocabulario DC Elements (`dc:`) y DC Terms (`dcterms:`) son vocab
 | `dcterms:description` | Cuerpo de texto en item show; excerpt en cards | Via `$item->displayDescription()` |
 | `dcterms:creator` | Metadata block | Campo simple |
 | `dcterms:language` | Metadata block | Mostrar como badge si procede |
-| `dcterms:rights` | Footer de item show / metadata block | Mostrar icono CC si es Creative Commons |
+| `dcterms:license` | Metadata block de item show | Distintivo CC oficial vía `common/license-badge` |
 | `dcterms:relation` | Pill de recurso relacionado | Componente especial con `.resource-link-info` |
 | `dcterms:date` | `.days-ago-tag` en hero | Calcular distancia desde hoy |
 
@@ -71,7 +71,7 @@ $description = $item->displayDescription();     // helper nativo (usa dcterms:de
 
 // Valores literales
 $language = (string) $item->value('dcterms:language');
-$rights   = (string) $item->value('dcterms:rights');
+$license  = $item->value('dcterms:license'); // ValueRepresentation con uri()
 
 // Fecha y días desde publicación
 $dateValue = $item->value('dcterms:date');
@@ -94,9 +94,9 @@ foreach ($item->value('dcterms:relation', ['all' => true]) ?: [] as $rel) {
 ## Patrones frecuentes
 
 ```php
-// Detectar si un ítem tiene dcterms:rights con Creative Commons
-$rights = (string) $item->value('dcterms:rights');
-$isCC   = str_contains($rights, 'creativecommons.org');
+// Reconocer la licencia y obtener su distintivo (null si no es una de las cinco CC)
+$license = $item->value('dcterms:license');
+$badge   = $license ? $this->licenseBadge($license->uri()) : null;
 ```
 
 ## Errores comunes
