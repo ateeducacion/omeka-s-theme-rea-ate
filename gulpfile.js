@@ -8,9 +8,12 @@ gulp.task('css', function () {
     var autoprefixer = require('autoprefixer');
 
     return gulp.src('./asset/sass/*.scss')
+        // gulp-sass 6 uses the modern Sass API: `style`/`loadPaths`, not the legacy
+        // `outputStyle`/`includePaths`, which are silently ignored.
         .pipe(sass({
-            outputStyle: 'compressed',
-            includePaths: ['node_modules/sass']
+            style: 'compressed',
+            charset: false,
+            loadPaths: ['node_modules/sass']
         }).on('error', sass.logError))
         .pipe(postcss([
             autoprefixer()
