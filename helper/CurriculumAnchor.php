@@ -103,13 +103,96 @@ class CurriculumAnchor extends AbstractHelper
         // Enlace por nivel: el mismo filtro que ya genera el módulo.
         foreach ($rows as &$row) {
             foreach ($row['levels'] as &$level) {
-                $level['url'] = $this->levelUrl($levelTerm, $level['id']);
+                $level['url'] = $this->searchUrl($levelTerm, $level['id']);
             }
             unset($level);
         }
         unset($row);
 
         return $rows;
+    }
+
+    /**
+     * Filas de __invoke() con los valores alineados (criterios, saberes…)
+     * colgados de la materia a la que pertenecen, para la ficha del recurso.
+     *
+     * Cada ítem alineado se asigna a su materia por el grafo curricular: su
+     * propiedad de termset (schema:inDefinedTermSet) apunta a la Asignatura.
+     * Si esa Asignatura no es una de las del recurso, se cae al nombre de la
+     * materia (schema:about del propio criterio). Lo que no casa con nada va
+     * a un grupo final «Otros», para no perder ningún valor.
+     *
+     * @param string[] $alignedTerms Términos a colgar, en orden de pintado.
+     * @return array|null Filas de __invoke() con clave 'aligned' => [term => [entrada, ...]],
+     *                    o null si el modelo no encaja.
+     */
+    public function alignment($resource, array $alignedTerms): ?array
+    {
+        $rows = $this($resource);
+        if (!$rows) {
+            return null;
+        }
+
+        $view = $this->getView();
+        [$subjectTerm] = $this->anchorTerms();
+        $termsetProperty = trim((string) $view->themeSetting('advancedsearch_termset_property'))
+            ?: 'schema:inDefinedTermSet';
+
+        $subjectKeyById = [];
+        foreach ($resource->value($subjectTerm, ['all' => true]) ?: [] as $value) {
+            $linked = $this->linkedResource($value);
+            if ($linked) {
+                $subjectKeyById[$linked->id()] = self::groupKey((string) $linked->displayTitle());
+            }
+        }
+
+        $entries = [];
+        foreach ($alignedTerms as $term) {
+            $ids = [];
+            foreach ($resource->value($term, ['all' => true]) ?: [] as $value) {
+                $linked = $this->linkedResource($value);
+                if ($linked) {
+                    $ids[$linked->id()] = true;
+                } elseif (trim((string) $value) !== '') {
+                    // Literal suelto: sin grafo detrás, va a «Otros».
+                    $entries[] = ['term' => $term, 'id' => null, 'label' => trim((string) $value),
+                        'description' => '', 'url' => null, 'subjectIds' => [], 'subjectLabels' => []];
+                }
+            }
+            // Una consulta por lote por término.
+            foreach ($this->fetchItems(array_keys($ids)) as $item) {
+                $subjectIds = [];
+                foreach ($item->value($termsetProperty, ['all' => true]) ?: [] as $value) {
+                    $linked = $this->linkedResource($value);
+                    if ($linked) {
+                        $subjectIds[] = $linked->id();
+                    }
+                }
+                $subjectLabels = [];
+                foreach ($item->value($subjectTerm, ['all' => true]) ?: [] as $value) {
+                    $linked = $this->linkedResource($value);
+                    $subjectLabels[] = $linked ? (string) $linked->displayTitle() : (string) $value;
+                }
+                $description = $item->value('dcterms:description');
+                $entries[] = [
+                    'term' => $term,
+                    'id' => $item->id(),
+                    'label' => (string) $item->displayTitle(),
+                    'description' => $description ? trim(strip_tags((string) $description)) : '',
+                    'url' => $this->searchUrl($term, $item->id()),
+                    'subjectIds' => $subjectIds,
+                    'subjectLabels' => $subjectLabels,
+                ];
+            }
+        }
+
+        return self::attachAligned(
+            $rows,
+            $subjectKeyById,
+            $alignedTerms,
+            $entries,
+            $view->translate('Otros') // @translate
+        );
     }
 
     /**
@@ -278,7 +361,7 @@ class CurriculumAnchor extends AbstractHelper
         return $value->valueResource();
     }
 
-    private function levelUrl(string $levelTerm, int $levelId): string
+    private function searchUrl(string $term, int $id): string
     {
         return $this->getView()->url(
             'site/resource',
@@ -286,7 +369,7 @@ class CurriculumAnchor extends AbstractHelper
             [
                 'query' => [
                     'property' => [
-                        ['property' => $levelTerm, 'type' => 'res', 'text' => (string) $levelId],
+                        ['property' => $term, 'type' => 'res', 'text' => (string) $id],
                     ],
                 ],
             ],
@@ -315,7 +398,7 @@ class CurriculumAnchor extends AbstractHelper
             if ($label === '') {
                 continue;
             }
-            $key = mb_strtolower($label, 'UTF-8');
+            $key = self::groupKey($label);
             if (!isset($groups[$key])) {
                 // Se conserva la primera forma vista de la etiqueta.
                 $groups[$key] = ['label' => $label, 'levelIds' => []];
@@ -402,5 +485,92 @@ class CurriculumAnchor extends AbstractHelper
         }
 
         return $rows;
+    }
+
+    /** Clave con la que se agrupan materias homónimas. */
+    public static function groupKey(string $label): string
+    {
+        return mb_strtolower(trim(preg_replace('/\s+/u', ' ', $label)), 'UTF-8');
+    }
+
+    /**
+     * Capa pura: cuelga cada entrada alineada de la fila de su materia.
+     *
+     * @param array    $rows           Filas de groupRows()
+     * @param array    $subjectKeyById [int $subjectId => string groupKey] materias del recurso
+     * @param string[] $alignedTerms   Términos, en orden de pintado
+     * @param array    $entries        [['term', 'id', 'label', 'subjectIds' => int[],
+     *                                   'subjectLabels' => string[], ...], ...]
+     * @param string   $otherLabel     Rótulo del grupo final cuando no hay fila huérfana
+     * @return array Filas con 'aligned' => [term => [entrada, ...]] (solo términos no vacíos)
+     */
+    public static function attachAligned(
+        array $rows,
+        array $subjectKeyById,
+        array $alignedTerms,
+        array $entries,
+        string $otherLabel
+    ): array {
+        $rowIndexByKey = [];
+        $orphanIndex = null;
+        foreach ($rows as $i => $row) {
+            $rows[$i]['aligned'] = [];
+            if (!empty($row['orphan'])) {
+                $orphanIndex = $i;
+            } else {
+                $rowIndexByKey[self::groupKey($row['label'])] = $i;
+            }
+        }
+
+        $buckets = [];
+        foreach ($entries as $entry) {
+            $targets = [];
+            foreach ($entry['subjectIds'] ?? [] as $subjectId) {
+                $key = $subjectKeyById[$subjectId] ?? null;
+                if ($key !== null && isset($rowIndexByKey[$key])) {
+                    $targets[$rowIndexByKey[$key]] = true;
+                }
+            }
+            if (!$targets) {
+                foreach ($entry['subjectLabels'] ?? [] as $label) {
+                    $key = self::groupKey((string) $label);
+                    if (isset($rowIndexByKey[$key])) {
+                        $targets[$rowIndexByKey[$key]] = true;
+                    }
+                }
+            }
+            if (!$targets) {
+                $targets = ['other' => true];
+            }
+            foreach (array_keys($targets) as $target) {
+                // Sin id (literal), se deduplica por etiqueta.
+                $dedupe = $entry['id'] !== null ? 'id:' . $entry['id'] : 'label:' . self::groupKey($entry['label']);
+                $buckets[$target][$entry['term']][$dedupe] = $entry;
+            }
+        }
+
+        if (isset($buckets['other'])) {
+            if ($orphanIndex === null) {
+                $rows[] = ['label' => $otherLabel, 'orphan' => true, 'levels' => [], 'aligned' => []];
+                $orphanIndex = array_key_last($rows);
+            }
+            foreach ($buckets['other'] as $term => $list) {
+                $buckets[$orphanIndex][$term] = array_merge($buckets[$orphanIndex][$term] ?? [], $list);
+            }
+            unset($buckets['other']);
+        }
+
+        foreach ($buckets as $i => $byTerm) {
+            foreach ($alignedTerms as $term) {
+                if (empty($byTerm[$term])) {
+                    continue;
+                }
+                $list = array_values($byTerm[$term]);
+                usort($list, static fn ($a, $b) => strnatcasecmp($a['label'], $b['label']));
+                $rows[$i]['aligned'][$term] = $list;
+            }
+        }
+
+        return array_values($rows);
     }
 }
