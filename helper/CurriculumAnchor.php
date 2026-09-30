@@ -406,7 +406,8 @@ class CurriculumAnchor extends AbstractHelper
             foreach ($subject['levelIds'] ?? [] as $levelId) {
                 // Intersección: solo sobreviven los niveles que el recurso declara.
                 // Sin esto se pintarían enlaces que devuelven cero resultados.
-                if (isset($declaredLevels[$levelId])
+                if (
+                    isset($declaredLevels[$levelId])
                     && !in_array($levelId, $groups[$key]['levelIds'], true)
                 ) {
                     $groups[$key]['levelIds'][] = $levelId;
@@ -499,7 +500,8 @@ class CurriculumAnchor extends AbstractHelper
      * @param array    $rows           Filas de groupRows()
      * @param array    $subjectKeyById [int $subjectId => string groupKey] materias del recurso
      * @param string[] $alignedTerms   Términos, en orden de pintado
-     * @param array    $entries        [['term', 'id', 'label', 'subjectIds' => int[], 'subjectLabels' => string[], ...], ...]
+     * @param array    $entries        [['term', 'id', 'label', 'subjectIds' => int[],
+     *                                   'subjectLabels' => string[], ...], ...]
      * @param string   $otherLabel     Rótulo del grupo final cuando no hay fila huérfana
      * @return array Filas con 'aligned' => [term => [entrada, ...]] (solo términos no vacíos)
      */

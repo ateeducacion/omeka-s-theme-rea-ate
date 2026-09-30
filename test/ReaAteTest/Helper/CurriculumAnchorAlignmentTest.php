@@ -15,12 +15,26 @@ class CurriculumAnchorAlignmentTest extends TestCase
     private function rows(): array
     {
         return [
-            ['label' => 'Lengua Castellana y Literatura', 'orphan' => false, 'levels' => [['id' => 1, 'label' => '1º ESO']]],
-            ['label' => 'Historia de España', 'orphan' => false, 'levels' => [['id' => 5, 'label' => '2º Bachillerato']]],
+            [
+                'label' => 'Lengua Castellana y Literatura',
+                'orphan' => false,
+                'levels' => [['id' => 1, 'label' => '1º ESO']],
+            ],
+            [
+                'label' => 'Historia de España',
+                'orphan' => false,
+                'levels' => [['id' => 5, 'label' => '2º Bachillerato']],
+            ],
         ];
     }
 
-    private function entry(string $term, ?int $id, string $label, array $subjectIds = [], array $subjectLabels = []): array
+    private function entry(
+        string $term,
+        ?int $id,
+        string $label,
+        array $subjectIds = [],
+        array $subjectLabels = []
+    ): array
     {
         return compact('term', 'id', 'label', 'subjectIds', 'subjectLabels') + ['description' => '', 'url' => null];
     }
@@ -34,7 +48,11 @@ class CurriculumAnchorAlignmentTest extends TestCase
             24644 => 'historia de españa',
         ];
         return CurriculumAnchor::attachAligned(
-            $rows ?? $this->rows(), $subjectKeyById, [self::T_ASSESSES, self::T_TEACHES], $entries, 'Otros'
+            $rows ?? $this->rows(),
+            $subjectKeyById,
+            [self::T_ASSESSES, self::T_TEACHES],
+            $entries,
+            'Otros'
         );
     }
 
@@ -59,7 +77,9 @@ class CurriculumAnchorAlignmentTest extends TestCase
 
     public function testCaeAlNombreDeLaMateriaSiLaAsignaturaNoEsDelRecurso(): void
     {
-        $rows = $this->attach([$this->entry(self::T_TEACHES, 9, 'SLCL04SB.1', [99999], ['Lengua Castellana y  literatura'])]);
+        $rows = $this->attach([
+            $this->entry(self::T_TEACHES, 9, 'SLCL04SB.1', [99999], ['Lengua Castellana y  literatura']),
+        ]);
 
         $this->assertSame(['SLCL04SB.1'], $this->labels($rows[0], self::T_TEACHES));
     }

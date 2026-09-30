@@ -310,6 +310,12 @@
         opacity: 1;
     }
 
+    // Cerrado con Esc (asset/js/curriculum-anchor.js).
+    .curriculum-card__code-item.curriculum-card__code-item--dismissed .curriculum-card__tip {
+        visibility: hidden;
+        opacity: 0;
+    }
+
     // Términos literales (uso educativo, rol…) bajo las tarjetas.
     .curriculum-cards + .property {
         margin-top: 14px;

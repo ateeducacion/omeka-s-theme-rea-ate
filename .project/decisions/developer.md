@@ -348,7 +348,7 @@ Un recurso puede declarar varios niveles, varias materias (a menudo homónimas: 
 - `_anclaje-curricular.scss`: estilos de `.anclaje-curricular--grouped`.
 
 ### Pendiente
-- El tooltip no se cierra con Esc (WCAG 1.4.13). Requiere un JS mínimo.
+- ~~El tooltip no se cierra con Esc (WCAG 1.4.13).~~ Resuelto con `asset/js/curriculum-anchor.js`.
 
 ### Dependencias
 - Backlog ciclo 7 #5.

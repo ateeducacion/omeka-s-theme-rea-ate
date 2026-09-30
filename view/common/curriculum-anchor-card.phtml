@@ -28,6 +28,9 @@ $countLabel = function (string $term, int $n) use ($countWords, $alignedLabels, 
 
 // Un código puede aparecer en dos tarjetas: el id del tooltip lleva un contador.
 $tipIndex = 0;
+
+// Cierre del tooltip con Esc (WCAG 1.4.13).
+$this->headScript()->appendFile($this->assetUrl('js/curriculum-anchor.js'), 'text/javascript', ['defer' => 'defer']);
 ?>
 <div class="<?php echo $escapeAttr($divClass); ?> anclaje-curricular--grouped">
     <h2 class="anclaje-curricular__title">
