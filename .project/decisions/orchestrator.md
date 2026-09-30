@@ -1057,8 +1057,8 @@ Los cambios que pueden afectar al mobile son:
 | JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias) |
 | Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
 | QA ciclo 7 — búsqueda avanzada | ⏳ Pendiente |
-| Licencia como URI (#33) | ⏳ Pendiente |
-| `metadata_model.md` alineado con el módulo (#34) | ⏳ Pendiente |
+| Licencia como URI (#33) | 🔵 Implementado en PR; pendiente de verificar en instancia real |
+| `metadata_model.md` alineado con el módulo (#34) | ✅ Corregido en PR |
 | Anclaje curricular agrupado (#4) | 🔵 Implementado, pendiente de merge; QA-034 4/5 en PASA |
 | Anclaje curricular de la ficha agrupado (#5) | 🔵 Implementado en PR; pendiente de revisión visual |
 

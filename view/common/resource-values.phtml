@@ -73,6 +73,8 @@ foreach ($values as $term => $propertyData):
                 <span class="value-content">
                     <?php if ($term === 'lrmi:learningResourceType'): ?>
                         <?php echo $this->partial('common/resource-type-badge', ['resourceTypeValue' => $value, 'term' => $term]); ?>
+                    <?php elseif ($term === 'dcterms:license'): ?>
+                        <?php echo $this->partial('common/license-badge', ['value' => $value]); ?>
                     <?php else: ?>
                         <?php echo $filterLocale ? $value->asHtml($lang) : $value->asHtml(); ?>
                     <?php endif; ?>

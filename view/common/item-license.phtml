@@ -1,0 +1,9 @@
+<?php
+/** @var \Omeka\Api\Representation\ValueRepresentation $value dcterms:license con URI */
+$escape    = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+?>
+<section class="item-license" aria-labelledby="item-license-title">
+    <h2 class="item-license__title" id="item-license-title"><?php echo $escape($translate('Licencia')); ?></h2>
+    <?php echo $this->partial('common/license-badge', ['value' => $value]); ?>
+</section>
