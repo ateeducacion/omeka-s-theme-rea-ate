@@ -1043,23 +1043,34 @@ Los cambios que pueden afectar al mobile son:
 
 ---
 
+## [2026-09-30] ACEPTADA — Cierre de los ítems #2 a #5 del ciclo 7 y preparación de `v0.13.0`
+
+**Contexto:** Los PR #41 (anclaje curricular en resultados), #42 (licencia como URI y `metadata_model.md`) y #43 (anclaje curricular de la ficha) están fusionados en `master`, y los issues #33 y #34 están cerrados. La tabla de estado seguía dándolos como pendientes de merge y listaba las releases solo hasta `v0.6.0`, aunque la última publicada es `v0.12.0`.
+
+**Decisión:** Dar por cerrados los ítems #2 a #5 y preparar `v0.13.0`. Queda abierto el ítem #1 (QA de la búsqueda avanzada), que absorbe la verificación del anclaje en resultados y el paso 5 de QA-034.
+
+**Hallazgo en la preparación:** `gulp-sass` 6 usa la API moderna de Sass e ignoraba `outputStyle`/`includePaths`. El CI, que ejecuta `npm ci`, compilaba el CSS sin comprimir (~240 KB frente a ~205 KB). Se corrige `gulpfile.js` (`style`, `charset: false`, `loadPaths`). La versión del repo (`theme.ini`, `package.json`) pasa a `0.13.0`: hasta ahora la subía solo el CI al etiquetar.
+
+**Pendiente fuera del tema:** los recursos con la licencia aún en `dcterms:rights` no muestran licencia hasta que se migren a `dcterms:license`.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
 |---------|--------|
-| Fase | CICLO 7 — EN CURSO |
-| Release v0.1.0 | ✅ Publicada |
-| Release v0.2.0 | ✅ Publicada [2026-05-06] |
-| Release v0.3.0 | ✅ Publicada [2026-05-21] |
-| Release v0.4.0 | ✅ Publicada [2026-05-21] |
-| Release v0.5.0 | ✅ Publicada |
-| Release v0.6.0 | ✅ Publicada [2026-05-26] |
-| JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias) |
+| Fase | CICLO 7 — EN CURSO (#1 abierto) |
+| Releases v0.1.0 → v0.12.0 | ✅ Publicadas (última: v0.12.0, 2026-06-01) |
+| Release v0.13.0 | 🔵 Preparada; pendiente de etiquetar |
+| JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias); `license` emite la URI de `dcterms:license` |
 | Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
-| QA ciclo 7 — búsqueda avanzada | ⏳ Pendiente |
-| Licencia como URI (#33) | 🔵 Implementado en PR; pendiente de verificar en instancia real |
-| `metadata_model.md` alineado con el módulo (#34) | ✅ Corregido en PR |
-| Anclaje curricular agrupado (#4) | 🔵 Implementado, pendiente de merge; QA-034 4/5 en PASA |
-| Anclaje curricular de la ficha agrupado (#5) | 🔵 Implementado en PR; pendiente de revisión visual |
+| #1 QA ciclo 7 — búsqueda avanzada | ⏳ Pendiente; incluye el anclaje en resultados y el paso 5 de QA-034 |
+| #2 Licencia como URI (#33) | ✅ Fusionado (PR #42); issue cerrado |
+| #3 `metadata_model.md` alineado con el módulo (#34) | ✅ Fusionado (PR #42); issue cerrado |
+| #4 Anclaje curricular agrupado en resultados | ✅ Fusionado (PR #41) |
+| #5 Anclaje curricular de la ficha agrupado | ✅ Fusionado (PR #43); tooltip descartable con Esc |
+| Build de CSS en CI | ✅ Corregido (`gulpfile.js`, API moderna de Sass) |
 
 **Agente:** orchestrator
