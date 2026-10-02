@@ -16,15 +16,14 @@ jobs:
   preview:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # The ZIP is pinned to the PR head commit: Playground caches add-ons by
+      # download URL, so a branch ZIP would keep serving an old copy.
       - name: Post or update playground preview comment
-        uses: ateeducacion/action-omeka-s-playground-pr-preview@main
+        uses: ateeducacion/action-omeka-s-playground-pr-preview@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          zip-url: https://github.com/${{ github.repository }}/archive/refs/heads/${{ github.head_ref }}.zip
-          addon-type: theme
-          addon-name: rea-ate
-          extra-modules: '[{"name":"Common","state":"activate","source":{"type":"omeka.org","slug":"Common"}},{"name":"AdvancedSearch","state":"activate","source":{"type":"omeka.org","slug":"AdvancedSearch"}}]'
-          site-json: '{"title":"REA ATE Demo","slug":"demo","theme":"rea-ate","summary":"Minimal install to preview the REA ATE theme (with AdvancedSearch) in Omeka S Playground.","isPublic":true,"setAsDefault":true}'
-          site-locale: es
-          landing-page: /admin
-          debug-enabled: 'true'
+          zip-url: https://github.com/${{ github.repository }}/archive/${{ github.event.pull_request.head.sha }}.zip
+          blueprint-file: blueprint.json
