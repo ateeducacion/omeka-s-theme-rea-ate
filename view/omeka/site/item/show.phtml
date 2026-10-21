@@ -25,16 +25,23 @@ $rightSidebarHasBlocks = $rightSidebarBlockContent->hasBlocks();
 $plugins    = $this->getHelperPluginManager();
 $breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : null;
 
+// El tipo del vínculo llega como "resource" o como "resource:item" según la plantilla de
+// recurso, y el proyecto no tiene por qué ser el primer valor de schema:isPartOf.
 $projectItem = null;
-$isPartOfValue = $item->value('schema:isPartOf');
-if ($isPartOfValue && $isPartOfValue->type() === 'resource') {
-    $projectItem = $isPartOfValue->valueResource();
+foreach ($item->value('schema:isPartOf', ['all' => true]) ?: [] as $isPartOfValue) {
+    if (strpos((string) $isPartOfValue->type(), 'resource') === 0
+        && $isPartOfValue->valueResource() instanceof \Omeka\Api\Representation\ItemRepresentation
+    ) {
+        $projectItem = $isPartOfValue->valueResource();
+        break;
+    }
 }
+unset($isPartOfValue);
 
 // ---- JSON-LD: Schema.org LearningResource ----
 $_resolve = function($v) use ($valueLang) {
     if (!$v) return '';
-    return $v->type() === 'resource'
+    return strpos((string) $v->type(), 'resource') === 0
         ? ($v->valueResource() ? $v->valueResource()->displayTitle(null, $valueLang) : (string) $v)
         : (string) $v;
 };

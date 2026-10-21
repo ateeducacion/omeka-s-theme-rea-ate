@@ -14,9 +14,15 @@ $url         = $projectItem->value('schema:url');
 $logoUrl = null;
 $logoValue = $projectItem->value('schema:logo');
 if ($logoValue) {
-    if ($logoValue->type() === 'resource') {
+    // "resource", "resource:media" o "resource:item"; de un ítem se toma su media principal.
+    if (strpos((string) $logoValue->type(), 'resource') === 0) {
         $logoMedia = $logoValue->valueResource();
-        $logoUrl   = $logoMedia->thumbnailUrl('large') ?: $logoMedia->originalUrl();
+        if ($logoMedia instanceof \Omeka\Api\Representation\ItemRepresentation) {
+            $logoMedia = $logoMedia->primaryMedia();
+        }
+        if ($logoMedia instanceof \Omeka\Api\Representation\MediaRepresentation) {
+            $logoUrl = $logoMedia->thumbnailUrl('large') ?: $logoMedia->originalUrl();
+        }
     } elseif ($logoValue->uri()) {
         $logoUrl = $logoValue->uri();
     } else {
