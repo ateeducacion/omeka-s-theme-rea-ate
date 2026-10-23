@@ -353,11 +353,8 @@ class CurriculumAnchor extends AbstractHelper
      */
     private function linkedResource($value)
     {
-        $type = (string) $value->type();
-        // El tipo llega como "resource" o como "resource:item" según el origen.
-        if ($type !== 'resource' && strpos($type, 'resource') === false) {
-            return null;
-        }
+        // El tipo llega como "resource", "resource:item" o "customvocab:N" según el origen;
+        // solo los valores enlazados tienen recurso, y los literales y URI devuelven null.
         return $value->valueResource();
     }
 

@@ -24,11 +24,8 @@ $getFirstValue = function ($resource, array $terms) {
 
 $displayValue = function ($value) use ($valueLang) {
     if (!$value) return '';
-    if (strpos((string) $value->type(), 'resource') === 0) {
-        $linked = $value->valueResource();
-        return $linked ? $linked->displayTitle(null, $valueLang) : (string) $value;
-    }
-    return (string) $value;
+    $linked = $value->valueResource();
+    return $linked ? $linked->displayTitle(null, $valueLang) : (string) $value;
 };
 
 $itemResults = $results['items'] ?? null;
