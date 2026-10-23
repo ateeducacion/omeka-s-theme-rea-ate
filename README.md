@@ -9,7 +9,7 @@ Tema Omeka S para el **Repositorio de Recursos Educativos Abiertos (REA)** del C
 desarrollado por la **Área de Tecnología Educativa (ATE), Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias**.
 
 Este tema es una obra derivada de [Freedom S Theme](https://github.com/omeka-s-themes/freedom),
-desarrollado por el Roy Rosenzweig Center for History and New Media (RRCHNM) y publicado bajo
+desarrollado por la Corporation for Digital Scholarship y publicado bajo
 [GNU General Public License v3.0](LICENSE). Véase la sección [Atribución y licencia](#atribución-y-licencia).
 
 ---
@@ -252,7 +252,7 @@ asset/sass/
 ## Atribución y licencia
 
 Este tema es una obra derivada de **[Freedom S Theme](https://github.com/omeka-s-themes/freedom)**,
-desarrollado por el [Roy Rosenzweig Center for History and New Media (RRCHNM)](https://rrchnm.org/)
+desarrollado por la [Corporation for Digital Scholarship](https://digitalscholar.org/)
 y publicado bajo [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html).
 
 Las modificaciones realizadas sobre el tema original comprenden, entre otras:
@@ -262,6 +262,8 @@ Las modificaciones realizadas sobre el tema original comprenden, entre otras:
 - Componentes específicos: rail de audiencias, barra de logos institucionales, chip de duración, bloque de anclaje curricular
 - Traducciones al español (es-ES)
 - Correcciones de accesibilidad (skip link, atributos ARIA, `hidden` en modales)
+
+Copyright © 2023-present Corporation for Digital Scholarship, Vienna, Virginia, USA.
 
 Copyright © 2024–2026 Área de Tecnología Educativa (ATE), Consejería de Educación, Formación Profesional, Actividad Física y Deportes (CEFPAD), Gobierno de Canarias.
 
