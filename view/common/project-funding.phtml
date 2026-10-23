@@ -7,16 +7,17 @@ $escAttr   = $this->plugin('escapeHtmlAttr');
 $translate = $this->plugin('translate');
 $safeUrl   = $this->plugin('SafeUrl');
 
-$name        = $projectItem->value('schema:name');
-$description = $projectItem->value('schema:description');
+// Los proyectos catalogados con la plantilla básica usan dcterms:title y dcterms:description.
+$name        = $projectItem->value('schema:name') ?: $projectItem->value('dcterms:title');
+$description = $projectItem->value('schema:description') ?: $projectItem->value('dcterms:description');
 $url         = $projectItem->value('schema:url');
 
 $logoUrl = null;
 $logoValue = $projectItem->value('schema:logo');
 if ($logoValue) {
-    // "resource", "resource:media" o "resource:item"; de un ítem se toma su media principal.
-    if (strpos((string) $logoValue->type(), 'resource') === 0) {
-        $logoMedia = $logoValue->valueResource();
+    // Un media o un ítem enlazado, sea cual sea el tipo; de un ítem se toma su media principal.
+    $logoMedia = $logoValue->valueResource();
+    if ($logoMedia) {
         if ($logoMedia instanceof \Omeka\Api\Representation\ItemRepresentation) {
             $logoMedia = $logoMedia->primaryMedia();
         }
