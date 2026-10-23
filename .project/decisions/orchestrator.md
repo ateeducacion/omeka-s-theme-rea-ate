@@ -1057,13 +1057,35 @@ Los cambios que pueden afectar al mobile son:
 
 ---
 
+## [2026-10-23] ACEPTADA — Corrección del bloque de cofinanciación y estado de las releases
+
+**Contexto:** El bloque de cofinanciación (ciclo 3 #8, `common/project-funding.phtml`) no se mostraba en la ficha aunque el REA tuviera proyecto en `schema:isPartOf`. Ejemplo: el ítem 40435, enlazado al proyecto 40433 (UCTICEE). Había tres causas:
+- `item/show.phtml` exigía que el valor fuera de tipo exactamente `resource`. En los datos reales llega como `resource:item` o como `customvocab:N` (vocabulario personalizado de ítems).
+- Solo se miraba el primer valor de `schema:isPartOf`.
+- El ítem del proyecto guarda el nombre y la descripción en `dcterms:title` y `dcterms:description`, no en `schema:name` y `schema:description` como recoge el modelo de datos del requisito.
+
+La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar.
+
+**Decisión:** Un valor se reconoce como enlace por su recurso (`valueResource()`), no por el nombre de su tipo. El criterio se aplica en `item/show.phtml` (proyecto y JSON-LD), `item/browse.phtml`, `index/search.phtml`, `common/linked-resources.phtml`, el logo de `common/project-funding.phtml` y `CurriculumAnchor::linkedResource()`. Los literales y las URI se siguen mostrando como texto. El partial recurre a `dcterms:title` y `dcterms:description` cuando faltan los valores `schema:*`. Fusionado en los PR #53 y #54.
+
+**Verificación:** `php -l` y PHPUnit (106 tests) pasan. En la instancia local, el ítem 40435 muestra el bloque con nombre, logo y descripción. Pendiente: revisar el bloque en navegador, en móvil y con teclado, y si la descripción larga de UCTICEE cabe en la barra lateral.
+
+**Releases:** `v0.13.0` se publicó el 2026-10-01. `0.13.1`, del 2026-10-06, solo incluye cambios de CI, el formato compartido del blueprint (#45) y dependencias. Su etiqueta numérica sin `v` es intencionada: el CI publica también desde etiquetas numéricas (`34b53a7`). Los PR #53 y #54 aún no están en ninguna release.
+
+**Alternativas descartadas:**
+- Ampliar la lista de tipos aceptados (`resource*`, `customvocab:*`): descartado. Cada módulo que enlace recursos con un tipo propio volvería a romper el bloque.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
 |---------|--------|
 | Fase | CICLO 7 — EN CURSO (#1 abierto) |
-| Releases v0.1.0 → v0.12.0 | ✅ Publicadas (última: v0.12.0, 2026-06-01) |
-| Release v0.13.0 | 🔵 Preparada; pendiente de etiquetar |
+| Releases v0.1.0 → 0.13.1 | ✅ Publicadas (v0.13.0, 2026-10-01; última: 0.13.1, 2026-10-06) |
+| Próxima release | 🔵 Pendiente; incluiría los PR #53 y #54 (bloque de cofinanciación) |
 | JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias); `license` emite la URI de `dcterms:license` |
 | Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
 | #1 QA ciclo 7 — búsqueda avanzada | ⏳ Pendiente; incluye el anclaje en resultados y el paso 5 de QA-034 |
@@ -1072,5 +1094,6 @@ Los cambios que pueden afectar al mobile son:
 | #4 Anclaje curricular agrupado en resultados | ✅ Fusionado (PR #41) |
 | #5 Anclaje curricular de la ficha agrupado | ✅ Fusionado (PR #43); tooltip descartable con Esc |
 | Build de CSS en CI | ✅ Corregido (`gulpfile.js`, API moderna de Sass) |
+| Bloque de cofinanciación con `resource:item` / `customvocab` | ✅ Fusionado (PR #53, #54); pendiente de revisión en navegador y móvil |
 
 **Agente:** orchestrator
