@@ -1079,6 +1079,29 @@ La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar
 
 ---
 
+## [2026-10-23] ACEPTADA — Incorporación al backlog del ciclo 7: aviso de copyright original y miniatura del tema
+
+**Contexto:** El responsable del producto pide dos tareas nuevas:
+- La sección «Atribución y licencia» de `README.md` declara la obra derivada de Freedom S, pero solo incluye el copyright del Gobierno de Canarias. Al distribuir una obra modificada bajo GPLv3 deben conservarse los avisos legales del original; la revisión legal de la tarea confirma el alcance exacto.
+- `theme.jpg`, la miniatura que Omeka S muestra en el panel de temas, debe sustituirse por un diseño propio.
+
+**Decisión:** Añadir ambas tareas al backlog del ciclo 7.
+
+| # | Ítem | Descripción | Tipo | Prioridad |
+|---|------|-------------|------|-----------|
+| 6 | Aviso de copyright original en `README.md` | En «Atribución y licencia», añadir la línea `Copyright © 2023-present Corporation for Digital Scholarship, Vienna, Virginia, USA.` justo encima del copyright del Gobierno de Canarias, con la revisión de un experto en licencias de software libre. Antes de añadirla, contrastar el texto con el aviso que publica el repositorio original (`omeka-s-themes/freedom`). El README atribuye hoy el tema original al RRCHNM, así que la atribución debe quedar coherente con la línea nueva. Entregable: la sección final corregida, lista para copiar y pegar | Documentación / Legal | Alta |
+| 7 | Nueva miniatura del tema (`theme.jpg`) | Diseño gráfico limpio, moderno y minimalista para la portada del tema educativo «REA». Paleta institucional estricta: azul marino oscuro `#0C2C84` y amarillo brillante `#FFB300`, sobre fondo blanco puro o gris muy claro. Iconografía abstracta y sutil de educación digital, repositorios de conocimiento y aprendizaje en línea (libros digitales estilizados, nodos de red, elementos curriculares). Flat design, estilo corporativo, sin texto legible, apto como miniatura de un panel de administración web. Proporción 4:3 | Diseño | Media |
+
+**Puntos a resolver en la ejecución:**
+- **#6:** el texto de la línea lo fija el responsable del producto. Si el repositorio original publica un aviso distinto, se propone el del original y se consulta antes de cambiarlo.
+- **#7:** el `theme.jpg` actual mide 1280×800 (16:10); la tarea pide 4:3, por ejemplo 1280×960. Hay que confirmar cómo recorta Omeka S la miniatura antes de cambiar la proporción.
+- **#7:** `#0C2C84` es el color primario del tema (`primary_color` en `theme.ini`), pero `#FFB300` no es ningún token del tema.
+- **#7:** el encargo nombra el tema «REA », con un espacio al final; el nombre del tema es «REA ATE». Como el diseño no lleva texto legible, solo afecta a la descripción.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
@@ -1095,5 +1118,7 @@ La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar
 | #5 Anclaje curricular de la ficha agrupado | ✅ Fusionado (PR #43); tooltip descartable con Esc |
 | Build de CSS en CI | ✅ Corregido (`gulpfile.js`, API moderna de Sass) |
 | Bloque de cofinanciación con `resource:item` / `customvocab` | ✅ Fusionado (PR #53, #54); pendiente de revisión en navegador y móvil |
+| #6 Aviso de copyright original en `README.md` | ⏳ Pendiente |
+| #7 Nueva miniatura del tema (`theme.jpg`, 4:3) | ⏳ Pendiente |
 
 **Agente:** orchestrator
