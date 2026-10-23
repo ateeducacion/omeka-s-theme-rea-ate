@@ -1118,7 +1118,7 @@ La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar
 | #5 Anclaje curricular de la ficha agrupado | ✅ Fusionado (PR #43); tooltip descartable con Esc |
 | Build de CSS en CI | ✅ Corregido (`gulpfile.js`, API moderna de Sass) |
 | Bloque de cofinanciación con `resource:item` / `customvocab` | ✅ Fusionado (PR #53, #54); pendiente de revisión en navegador y móvil |
-| #6 Aviso de copyright original en `README.md` | ⏳ Pendiente |
-| #7 Nueva miniatura del tema (`theme.jpg`, 4:3) | ⏳ Pendiente |
+| #6 Aviso de copyright original en `README.md` | ✅ Fusionado (PR #57); atribución de Freedom S corregida a la Corporation for Digital Scholarship |
+| #7 Nueva miniatura del tema (`theme.jpg`) | ✅ Hecho; 1280×800 (16:10, como el resto de temas de Omeka S) con contenido apto para recorte 4:3; origen en `.project/design/theme-thumbnail.svg` |
 
 **Agente:** orchestrator
