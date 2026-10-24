@@ -127,8 +127,12 @@ if ($item->primaryMedia()) {
     $_jl['thumbnailUrl'] = $item->primaryMedia()->thumbnailUrl('medium');
 }
 
+// HeadScript prints the source verbatim, and every field here is catalogue metadata: a
+// title containing "</script><script>…" would close the block and run as script on the
+// page that also carries the delete CSRF token. JSON_HEX_TAG/AMP encode < > & as \u00XX,
+// which JSON-LD consumers decode back to the same string.
 $this->headScript()->appendScript(
-    json_encode($_jl, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+    json_encode($_jl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
     'application/ld+json'
 );
 unset($_resolve, $_jl, $_desc, $_prop, $_term, $_v, $_r, $_tVals, $_t, $_aVals, $_a, $_relVals, $_rel, $_kwVals, $_kw, $_creator, $_pub);
