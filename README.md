@@ -16,21 +16,39 @@ desarrollado por la Corporation for Digital Scholarship y publicado bajo
 
 ## Requisitos
 
-| Componente | Versión mínima |
-|------------|---------------|
-| [Omeka S](https://omeka.org/s/) | 4.2 |
-| [Advanced Search](https://github.com/Daniel-KM/Omeka-S-module-AdvancedSearch) (Daniel-KM) | 3.4.60 |
+| Componente | Versión |
+|------------|---------|
+| [Omeka S](https://omeka.org/s/) | 4.2 o posterior dentro de la rama 4.x (`omeka_version_constraint = "^4.2.0"`) |
+| [Advanced Search](https://github.com/Daniel-KM/Omeka-S-module-AdvancedSearch) (Daniel-KM) | 3.4.60 (las plantillas `view/search/` del tema parten de esta versión) |
+| [Common](https://github.com/Daniel-KM/Omeka-S-module-Common) (Daniel-KM) | Dependencia de Advanced Search |
+
+Módulos opcionales; si no están instalados, el tema prescinde de la parte correspondiente:
+
+| Módulo | Uso en el tema |
+|--------|----------------|
+| [BlockPlus](https://github.com/Daniel-KM/Omeka-S-module-BlockPlus) | Bloque de página de recurso `block`, que el tema usa para el **Anclaje Curricular** de la ficha |
+| [Numeric Data Types](https://github.com/omeka-s-modules/NumericDataTypes) | Plantillas propias para sus campos numéricos (duración, entero, fecha) y su filtro de búsqueda avanzada |
+| Breadcrumbs | Migas de pan en la ficha del recurso y en la página de búsqueda, si el helper `breadcrumbs` existe |
 
 ---
 
 ## Instalación
 
-Para instalación básica, sigue las [instrucciones del manual de usuario de Omeka S para temas](https://omeka.org/s/docs/user-manual/sites/site_theme/#installing-themes).
+1. Descarga `rea-ate-X.Y.Z.zip` de la [última versión publicada](https://github.com/ateeducacion/omeka-s-theme-rea-ate/releases/latest).
+2. Descomprímelo en la carpeta `themes/` de Omeka S: el ZIP contiene un único directorio `rea-ate/`,
+   de modo que el tema queda en `themes/rea-ate/`.
+3. Selecciona el tema en el sitio y configúralo, según las
+   [instrucciones del manual de usuario de Omeka S para temas](https://omeka.org/s/docs/user-manual/sites/site_theme/#install-themes).
 
-Para desarrollo con Sass es necesario [Node.js](https://nodejs.org/) ≥ 16:
+El ZIP de la versión ya incluye el CSS compilado y no contiene las fuentes Sass, la configuración de
+Node ni los ficheros de desarrollo. Las versiones se publican automáticamente al crear una etiqueta
+`vX.Y.Z` o `X.Y.Z`.
+
+Para desarrollo con Sass es necesario [Node.js](https://nodejs.org/) ≥ 20.19 (la versión que exige
+`sass`; la integración continua usa Node 20):
 
 ```bash
-npm install
+npm ci
 ```
 
 ---
@@ -43,7 +61,7 @@ npm install
 - Subject picker y collections picker con pills eliminables
 - Filtro de duración por rango numérico (`lrmi:timeRequired`)
 - Integración con módulo Advanced Search (facetas, paginación, refine)
-- **Facetas agrupadas automáticamente** por `schema:DefinedTermSet`: los valores de `lrmi:educationalLevel` se agrupan por etapa educativa (Primaria, ESO, Bachillerato…) sin configuración manual; el orden se controla con `schema:position` en cada DefinedTermSet desde el propio Omeka S
+- **Facetas agrupadas** por `schema:DefinedTermSet`: los valores de las facetas listadas en el ajuste *Facets grouped by linked DefinedTermSet* (p. ej. `lrmi:educationalLevel`) se agrupan por etapa educativa (Primaria, ESO, Bachillerato…). Los grupos se descubren automáticamente a partir de los ítems de clase `schema:DefinedTermSet`, sin definirlos a mano; el orden se controla con `schema:position` en cada DefinedTermSet desde el propio Omeka S
 - Panel de filtros activos como chips eliminables
 
 ### Resultados de búsqueda
@@ -51,12 +69,33 @@ npm install
 - Tarjetas de recurso con nivel educativo, temática, tipo y duración
 - Vista grid y lista conmutables
 - Chip de duración en la barra de metadatos compactos de la vista lista
+- **Anclaje curricular agrupado**: en los resultados de Advanced Search, cada materia
+  (`schema:about`) se pinta como una píldora con los niveles (`lrmi:educationalLevel`) que le
+  corresponden, en lugar de dos listas paralelas. La relación materia → nivel se lee del propio
+  ítem materia, que debe llevar su nivel; cada nivel enlaza al filtro de búsqueda por ese nivel.
+  Sólo se aplica si la propiedad de materia figura entre las propiedades de resultados de la
+  configuración de búsqueda; si no, se usa el renderizado normal del módulo. Las propiedades se
+  configuran en *Advanced Search Settings*.
 
 ### Página de recurso (`item/show`)
 
 - Hero con título, colecciones y badge de tipo de recurso
 - JSON-LD `schema:LearningResource` para SEO — duración emitida en formato ISO 8601 (`PT45M`)
-- Bloque de anclaje curricular configurable por propiedades desde el panel de administración
+- Bloque de anclaje curricular configurable por propiedades desde el panel de tema (requiere
+  BlockPlus). Si el bloque incluye las propiedades de materia y nivel del anclaje, se muestra una
+  tarjeta por materia con sus niveles y, plegados, los valores alineados que sean ítems enlazados
+  (criterios, saberes…); si no, una lista plana de valores
+- **Distintivo de licencia** a partir de `dcterms:license`: si el valor es la URI de CC0 1.0,
+  CC BY 4.0, CC BY-SA 4.0, CC BY-NC 4.0 o CC BY-NC-SA 4.0, se muestra el distintivo oficial de
+  Creative Commons (servido desde `asset/img/cc/`) en la barra lateral y en la lista de valores. Otra
+  URI se muestra como valor normal de Omeka; un literal sin URI no aparece en la barra lateral ni en
+  el JSON-LD (`license` usa la URI)
+- **Bloque «Proyecto cofinanciador»** en la barra lateral derecha, a partir del primer valor de
+  `schema:isPartOf` que enlace a un ítem, sea cual sea su tipo de dato (`resource`, `resource:item`,
+  vocabulario personalizado…). Del ítem proyecto toma el nombre (`schema:name` o, en su defecto,
+  `dcterms:title`), la descripción (`schema:description` o `dcterms:description`), el logotipo
+  (`schema:logo` o su media principal) y el enlace «Más información» (`schema:url`). No se muestra si
+  el proyecto no tiene nombre ni logotipo
 - Acciones de administración inline: editar, añadir media, eliminar con confirmación
 
 ### Home
@@ -73,74 +112,100 @@ npm install
 
 ## Configuración del tema
 
-### General
+Los ajustes aparecen en el panel de tema del sitio con las etiquetas (en inglés o español) que
+se indican, agrupados en el mismo orden que en `config/theme.ini`.
 
-| Ajuste | Descripción |
-|--------|-------------|
-| Primary Color | Color primario del tema |
-| Secondary Color | Color secundario (fondos) |
-| Accent Color | Color de énfasis (enlaces y acentos) |
+### General Settings
+
+| Ajuste | Descripción | Por defecto |
+|--------|-------------|-------------|
+| Theme's Primary Color | Color primario del tema | `#0C2C84` |
+| Theme's Secondary Color | Color secundario (fondos) | `#0C2C84` |
+| Theme's accent Color | Color de énfasis (enlaces y acentos) | `#0768AC` |
 
 ### Header
 
-| Ajuste | Descripción |
-|--------|-------------|
-| Header Menu | Mostrar / ocultar el menú en la cabecera |
-| Header Layout | Logotipo e menú en línea o centrados |
-| Top Navigation Depth | Niveles máximos en la navegación (0 = todos) |
-| Logo | Logotipo horizontal (recomendado: 210×60 px) |
+| Ajuste | Descripción | Por defecto |
+|--------|-------------|-------------|
+| Header Menu | Mostrar el menú en la cabecera; si se desactiva, sólo se muestra el logotipo o el nombre | Activado |
+| Header Layout | Logotipo y menú en línea (*Inline*) o centrados (*Centered*) | En línea |
+| Top Navigation Depth | Niveles máximos en la navegación superior (0 o vacío = todos) | `0` |
+| Logo | Logotipo horizontal (máx. 60 px de alto; recomendado: 210×60 px) | — |
 
 ### Banner
 
-Imagen de cabecera con opciones de título, descripción, posición del contenido, ancho y alto.
+| Ajuste | Descripción |
+|--------|-------------|
+| Banner | Imagen de cabecera (recomendado: 1280×560 px) |
+| Banner heading / Banner description | Título y descripción sobre el banner |
+| Content position | Posición del contenido: izquierda, centro o derecha |
+| Banner width | Dentro del contenedor o a sangre hasta el borde de la ventana |
+| Banner height / Banner height for mobile devices | Altura máxima con unidad CSS (`200px`, `50vh`…), general y para pantallas pequeñas |
+| Banner image vertical / horizontal position within the wrapper | Punto de anclaje de la imagen al recortarla con altura fija |
 
 ### Footer
 
-| Ajuste | Descripción |
-|--------|-------------|
-| Footer Logo | Versión clara del logotipo (sobre fondo oscuro) |
-| Footer Site description | Texto descriptivo |
-| Footer Menu / Footer Menu Depth | Menú en el pie y profundidad |
-| Footer Content | HTML libre en el pie |
-| Footer Copyright | HTML de copyright |
+| Ajuste | Descripción | Por defecto |
+|--------|-------------|-------------|
+| Footer Logo | Versión clara del logotipo (sobre fondo oscuro) | — |
+| Footer Site description | HTML descriptivo (ver [Seguridad](#seguridad)) | Vacío |
+| Footer Menu | Mostrar el menú en el pie | Desactivado |
+| Footer Menu Depth | Profundidad del menú del pie | `1` |
+| Footer Content | HTML libre en el pie (ver [Seguridad](#seguridad)) | Vacío |
+| Footer Copyright | HTML de copyright (ver [Seguridad](#seguridad)) | «© Gobierno de Canarias» con enlaces a Aviso legal y Política de privacidad |
 
 ### Logos Bar
 
-Hasta 8 logos institucionales (asset + URL de enlace opcional) mostrados sobre el footer.
+Hasta 8 logos institucionales mostrados sobre el footer: para cada posición, *Logo N* (asset) y
+*Logo N — URL de enlace (opcional)*.
+
+### Image Settings
+
+*Add decorative border to*: borde decorativo opcional para Media y/o Assets.
+
+### Resource Tags
+
+*Show tags based on*: tags de recurso basados en Tipo de recurso (*Resource Type*) y/o Clase de
+recurso (*Resource Class*).
 
 ### Home Audience Links
 
-URLs de destino para las tarjetas del rail de audiencias (Profesorado, Alumnado, Familias).
-Acepta rutas relativas (`item`, `item?fulltext_search=ciencias`) o URLs absolutas.
+*Teachers / Students / Families card destination*: URLs de destino para las tarjetas del rail de
+audiencias (Profesorado, Alumnado, Familias), que se muestra en la página de inicio del sitio. Por
+defecto, `item`. Acepta rutas relativas al sitio (`item`, `item?fulltext_search=ciencias`), rutas
+absolutas (`/…`) o URLs `http(s)`.
 
 ### Browse Settings
 
 | Ajuste | Descripción |
 |--------|-------------|
-| Layout for Browse Pages | Grid, Lista o Toggle (por defecto grid o lista) |
-| Truncate Body Property | Truncar el cuerpo del recurso en el catálogo |
+| Layout for Browse Pages | Grid, List, o conmutable con grid o lista por defecto (*Toggle*) |
+| Truncate Body Property | Valor completo, 4 líneas con desvanecido o 4 líneas con puntos suspensivos |
 
 ### Bloque: Anclaje Curricular
 
-| Ajuste | Descripción |
-|--------|-------------|
-| CSS class del contenedor | Clase del `<div>` wrapper del bloque |
-| Propiedades del bloque | Una propiedad por línea; el orden es el de visualización |
+Ajustes del bloque `block` de BlockPlus en la página de ítem.
+
+| Ajuste | Descripción | Por defecto |
+|--------|-------------|-------------|
+| CSS class del contenedor | Clase del `<div>` que envuelve el bloque | `anclaje-curricular` |
+| Propiedades del bloque de anclaje | Una propiedad por línea; el orden es el de visualización. Se ignoran las líneas vacías y las que empiezan por `#` | `schema:educationalLevel`, `schema:about`, `schema:assesses`, `schema:teaches` |
 
 ### Advanced Search Settings
 
-| Ajuste | Descripción |
-|--------|-------------|
-| Facets grouped by linked DefinedTermSet | Una faceta por línea a agrupar (ej. `lrmi:educationalLevel`) |
-| Property linking a term to its group | Propiedad que enlaza `DefinedTerm` → `DefinedTermSet` (por defecto `schema:inDefinedTermSet`) |
+| Ajuste | Descripción | Por defecto |
+|--------|-------------|-------------|
+| Facets grouped by linked DefinedTermSet | Una faceta por línea a agrupar (ej. `lrmi:educationalLevel`), con el mismo nombre de campo que en la configuración de Advanced Search. Los valores deben ser recursos enlazados (`schema:DefinedTerm`) | Vacío |
+| Property linking a term to its group (DefinedTermSet) | Propiedad que enlaza `DefinedTerm` → `DefinedTermSet` | `schema:inDefinedTermSet` |
+| Subject property for the curriculum anchor | Propiedad de materia del anclaje curricular; sus valores deben ser ítems enlazados con su propio nivel. Vacío desactiva el anclaje agrupado en los resultados | `schema:about` |
+| Educational level property | Propiedad de nivel educativo, en el recurso y en cada ítem materia | `lrmi:educationalLevel` |
 
-### Image Settings
+### Páginas de recurso
 
-Borde decorativo opcional para Media y/o Assets.
-
-### Resource Tags
-
-Tags de recurso basados en Tipo de recurso o Clase de recurso.
+El tema declara las regiones *Left sidebar*, *Main* y *Right sidebar* para ítems, colecciones y
+medios. Por defecto, la página de ítem muestra en *Main* los medios incrustados y el bloque `block`,
+y en *Right sidebar* los valores, el bloque `block`, las colecciones, los recursos enlazados y la
+lista de medios; la página de media muestra los valores y el medio.
 
 ---
 
@@ -148,13 +213,16 @@ Tags de recurso basados en Tipo de recurso o Clase de recurso.
 
 | Propiedad | Uso en el tema |
 |-----------|----------------|
-| `lrmi:educationalLevel` | Nivel educativo (linked `DefinedTerm`); faceta agrupable |
-| `lrmi:learningResourceType` | Tipo de recurso; badge con icono |
-| `lrmi:timeRequired` | Duración en minutos (entero); chip en tarjetas y JSON-LD |
-| `lrmi:teaches` | Saberes básicos; mostrado en resultados avanzados |
+| `lrmi:educationalLevel` | Nivel educativo (linked `DefinedTerm`); faceta agrupable, chips del formulario, anclaje curricular y JSON-LD |
+| `lrmi:learningResourceType` | Tipo de recurso; badge con icono, chips del formulario y JSON-LD |
+| `lrmi:educationalRole` | Audiencia destinataria; chips del formulario y JSON-LD |
+| `lrmi:educationalUse` | Uso educativo; JSON-LD |
+| `lrmi:timeRequired` | Duración en minutos (entero); filtro por rango, chip en tarjetas y JSON-LD |
+| `lrmi:teaches` | Saberes básicos; plegable en resultados de Advanced Search e incluido en JSON-LD |
 | `lrmi:assesses` | Competencias evaluadas; incluido en JSON-LD |
-| `schema:about` | Temática / materia; eyebrow en tarjetas |
-| `schema:isPartOf` | Proyecto o colección padre; sidebar en item/show |
+| `schema:about` | Temática / materia; eyebrow en tarjetas, selector de materias, anclaje curricular y `keywords` en JSON-LD |
+| `schema:isPartOf` | Proyecto cofinanciador (primer valor enlazado a un ítem); bloque en la barra lateral de item/show y `isPartOf` en JSON-LD |
+| `dcterms:license` | URI de la licencia; distintivo Creative Commons y `license` en JSON-LD |
 
 ---
 
@@ -166,10 +234,12 @@ Los ajustes `footer_site_info`, `footer_content` y `footer_copyright` aceptan HT
 lo reduce a una allowlist de prosa antes de imprimirlo (`helper/HtmlAllowlist.php`):
 
 - **Se conservan:** `a` (con `href` `http`, `https` o `mailto`), `p`, `span`, `div`, `br`, `hr`,
-  `strong`, `b`, `em`, `i`, `small`, `ul`, `ol`, `li`, `h2`–`h6`, y los atributos `title`, `class`
-  y `lang`.
-- **Se eliminan por completo:** `script`, `style`, `iframe`, `object`, `embed`, `form`, `svg` y
-  elementos de formulario, junto con su contenido.
+  `strong`, `b`, `em`, `i`, `small`, `ul`, `ol`, `li`, `h2`–`h6`. Se admite `class` en todas
+  (con sintaxis de clase CSS válida), `lang` en `a`, `p`, `span` y `div`, y en `a` además `title`,
+  `target` (`_blank` o `_self`) y `rel` (`noopener`, `noreferrer`, `nofollow`, `external`, `me`). Un
+  enlace con `target="_blank"` recibe siempre `rel="noopener noreferrer"`.
+- **Se eliminan por completo:** `script`, `style`, `iframe`, `object`, `embed`, `form`, `input`,
+  `button`, `select`, `textarea`, `link`, `meta`, `base`, `svg` y `math`, junto con su contenido.
 - **Se descartan siempre:** los atributos `on*` (`onclick`, `onerror`, …), `style`, y cualquier
   `href` cuyo esquema no esté permitido (`javascript:`, `data:`, …).
 - Las etiquetas no reconocidas se *desenvuelven*: se pierde la etiqueta, pero no el texto.
@@ -192,16 +262,30 @@ cierre el bloque `<style>`.
 ### Pruebas de los helpers de seguridad
 
 Los helpers están cubiertos por la suite PHPUnit del proyecto
-(`test/ReaAteTest/Helper/{SafeUrl,CssToken,HtmlAllowlist}Test.php`):
-
-```bash
-make test    # suite completa
-make lint    # PSR2
-```
+(`test/ReaAteTest/Helper/{SafeUrl,CssToken,HtmlAllowlist}Test.php`), junto con el resto de helpers
+del tema. Véase [Pruebas y estilo de código](#pruebas-y-estilo-de-código).
 
 ---
 
 ## Desarrollo
+
+Ejecuta `make help` para ver todos los objetivos del `Makefile`.
+
+### Entorno local con Docker
+
+```bash
+make up      # en primer plano; make upd para segundo plano
+make down    # detener y eliminar los contenedores
+```
+
+Levanta Omeka S 4.2 (imagen `erseco/alpine-omeka-s:4.2`) y MariaDB en <http://localhost:8080>, con
+este repositorio montado como `themes/rea-ate`. En cada arranque se aplica el mismo
+[`blueprint.json`](blueprint.json) que usa Omeka S Playground: crea el usuario `admin@example.com`
+/ `password`, activa Common y Advanced Search y crea el sitio de demostración `demo` con este tema.
+Además se instalan los módulos de desarrollo EasyAdmin, Adminer y Log.
+
+`make clean` y `make fresh` eliminan los volúmenes, es decir, la base de datos y los ficheros
+subidos: no los uses sobre una instancia con datos que quieras conservar.
 
 ### Compilar CSS
 
@@ -209,17 +293,45 @@ make lint    # PSR2
 npm run build
 ```
 
+Compila `asset/sass/*.scss` en `asset/css/`. Edita siempre las fuentes Sass, no el CSS generado.
+
 ### Vigilar cambios (watch)
 
 ```bash
 npm start
 ```
 
-### Compilar traducciones (`.po` → `.mo`)
+### Traducciones
 
 ```bash
-npm run compile-translations
+npm run compile-translations   # .po → .mo con Node (gettext-parser)
+make i18n                      # extrae cadenas, actualiza .po, comprueba y compila .mo (requiere gettext)
 ```
+
+El catálogo del tema es `language/es.po`.
+
+### Pruebas y estilo de código
+
+```bash
+composer install
+vendor/bin/phpunit -c test/phpunit.xml
+vendor/bin/phpcs . --standard=PSR2 --ignore=vendor/,asset/,node_modules/,view/,language/,test/Stubs/ --extensions=php
+```
+
+`make test` y `make lint` ejecutan lo mismo, pero dependen de `deps-update`, que ejecuta
+`composer update --with-dependencies` si falta `vendor/` o hay dependencias directas
+desactualizadas, de modo que pueden modificar `composer.lock`.
+
+### Empaquetar
+
+```bash
+make package VERSION=X.Y.Z
+```
+
+Genera `rea-ate-X.Y.Z.zip` con un único directorio `rea-ate/`. Cambia temporalmente la versión de
+`config/theme.ini` y la restaura al terminar. Compila antes el CSS: el paquete no incluye las fuentes
+Sass. La publicación de versiones la hace el flujo `.github/workflows/release.yml` al subir una
+etiqueta.
 
 ### Estructura Sass
 
@@ -234,13 +346,14 @@ asset/sass/
 │   └── typography/
 ├── components/
 │   ├── advanced-search/    # formulario de búsqueda avanzada
+│   ├── anclaje-curricular/ # bloque y tarjetas de anclaje curricular
 │   ├── facets/             # panel de facetas
 │   ├── footer/
 │   ├── header/
 │   ├── home/               # audience-rail
 │   ├── item-show/
 │   ├── linked-resources/
-│   ├── resources/          # resource-card, resource-row, resource-catalog
+│   ├── resources/          # resource-catalog, resource-grid, resource-list, browse-controls
 │   ├── search-results/     # resultados Advanced Search list-mode
 │   └── …
 ├── generic/
