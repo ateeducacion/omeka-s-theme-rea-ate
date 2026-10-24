@@ -10,10 +10,19 @@ $translate = $this->plugin('translate');
 // Free-text setting landing in a class attribute: restrict it to valid CSS class
 // syntax so it cannot smuggle extra attributes or classes into the markup.
 $divClass = $this->plugin('CssToken')->cssClass($this->themeSetting('anclaje_div_class'), 'anclaje-curricular');
-$rawProps  = (string) $this->themeSetting('anclaje_properties');
+// themeSetting() returns null until the theme form is saved (theme.ini only fills the
+// form), so fall back to the same LRMI list as config/theme.ini. A saved empty value
+// still turns the block off.
+$rawProps = $this->themeSetting('anclaje_properties');
+$rawProps = $rawProps === null
+    ? "lrmi:educationalLevel\nschema:about\nlrmi:assesses\nlrmi:teaches"
+    : (string) $rawProps;
 
+// Up to 0.13.x theme.ini wrote the default as "a\nb" in one INI line; INI does not
+// expand "\n", so a site that saved that default stores a literal backslash-n. Split
+// on it as well as on real line breaks (no property term contains a backslash).
 $properties = array_values(array_filter(
-    array_map('trim', explode("\n", $rawProps)),
+    array_map('trim', preg_split('/\r\n|\r|\n|\\\\n/', $rawProps)),
     fn(string $line): bool => $line !== '' && !str_starts_with($line, '#')
 ));
 
@@ -80,7 +89,9 @@ if ($subjectTerm !== '' && isset($blocks[$subjectTerm], $blocks[$levelTerm])) {
             continue;
         }
         foreach ($data['values'] as $value) {
-            if (strpos((string) $value->type(), 'resource') !== false) {
+            // Linked by its resource, whatever the data type ("resource:item",
+            // "customvocab:N" item vocabularies…), as CurriculumAnchor reads it.
+            if ($value->valueResource()) {
                 $alignedLabels[$term] = $data['label'];
                 break;
             }
@@ -113,9 +124,10 @@ $termClass = fn(string $term): string => str_replace(':', '-', $term);
         <?php foreach ($data['values'] as $value):
             $valueType = $value->type();
             $ddClass   = ['value'];
-            if ('resource' === $valueType || strpos($valueType, 'resource') !== false) {
+            $linkedResource = $value->valueResource();
+            if ($linkedResource) {
                 $ddClass[] = 'resource';
-                $ddClass[] = $escape($value->valueResource()->resourceName());
+                $ddClass[] = $escape($linkedResource->resourceName());
             } elseif ('uri' === $valueType) {
                 $ddClass[] = 'uri';
             }
