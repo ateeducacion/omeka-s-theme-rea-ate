@@ -1,6 +1,7 @@
 <?php
 
 $translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
 $showLocale = (bool) $this->siteSetting('show_locale_label', true);
 $decoration = $this->themeSetting('image_decoration');
 ?>
@@ -17,8 +18,9 @@ $decoration = $this->themeSetting('image_decoration');
                 $options['siteId'] = $this->currentSite()->id();
             }
 
-            // Get title and title lang.
-            $title = $item->displayTitle();
+            // Get title and title lang. Both are catalogue metadata (the language tag is
+            // free text in the API), so they are escaped before being joined as markup.
+            $title = $escape($item->displayTitle());
 
             if ($showLocale) {
                 $template = $item->resourceTemplate();
@@ -28,10 +30,10 @@ $decoration = $this->themeSetting('image_decoration');
                     $titleTerm = 'dcterms:title';
                 }
                 $titleObj = $item->value($titleTerm);
-                $titleLang = (string) $titleObj->lang();
+                $titleLang = $titleObj ? (string) $titleObj->lang() : '';
 
                 if ($titleLang) {
-                    $title .= '<span class="language">' . $titleLang . '</span>';
+                    $title .= '<span class="language">' . $escape($titleLang) . '</span>';
                 }
             }
         ?>

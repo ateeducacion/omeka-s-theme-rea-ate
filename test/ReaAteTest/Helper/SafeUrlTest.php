@@ -60,6 +60,12 @@ class SafeUrlTest extends TestCase
             'file scheme' => ['file:///etc/passwd'],
             // Protocol-relative URLs inherit the current scheme and silently go off-site.
             'protocol relative' => ['//evil.example/x'],
+            // The WHATWG URL parser treats "\" as "/" in http(s) URLs, so each of these
+            // resolves to https://evil.example/ in a browser.
+            'protocol relative with backslashes' => ['\\\\evil.example/x'],
+            'protocol relative slash backslash' => ['/\\evil.example/x'],
+            'protocol relative backslash slash' => ['\\/evil.example/x'],
+            'backslash inside absolute url' => ['https://good.example\\@evil.example/'],
             'scheme outside allowlist' => ['ftp://example.org'],
             'empty string' => [''],
             'null' => [null],

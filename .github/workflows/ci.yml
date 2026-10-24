@@ -15,11 +15,18 @@ on:
     branches:
       - '*'
 
+# CI only reads the repository; without this block the token inherits the
+# repository default, which may be read/write.
+permissions:
+  contents: read
+
 jobs:
   lint_and_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: PHP setup
         uses: shivammathur/setup-php@v2
@@ -40,21 +47,26 @@ jobs:
       - name: Generate .mo file
         run: make compile-mo
 
+      # Called directly rather than through `make lint` / `make test`: those targets
+      # depend on deps-update, which runs `composer update` and would test against
+      # whatever versions are newest that day instead of composer.lock.
       - name: Run code linting
-        run: make lint
+        run: vendor/bin/phpcs . --standard=PSR2 --ignore=vendor/,asset/,node_modules/,view/,language/,test/Stubs/ --colors --extensions=php
 
       - name: Run unit tests
-        run: make test
+        run: vendor/bin/phpunit -c test/phpunit.xml
 
   build_assets:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install npm dependencies

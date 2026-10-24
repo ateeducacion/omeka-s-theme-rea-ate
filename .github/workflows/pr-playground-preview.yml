@@ -8,16 +8,20 @@ on:
       - '.claude/skills/**'
     types: [opened, synchronize, reopened, edited]
 
-permissions:
-  contents: read
-  pull-requests: write
+# Deny by default; only the preview job may comment on the PR.
+permissions: {}
 
 jobs:
   preview:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # The ZIP is pinned to the PR head commit: Playground caches add-ons by
       # download URL, so a branch ZIP would keep serving an old copy.

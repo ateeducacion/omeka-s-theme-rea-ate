@@ -5,6 +5,9 @@ on:
       - 'v*.*.*'
       - '[0-9]+.[0-9]+.[0-9]+'
 
+# Deny everything by default; the job below asks only for what it needs.
+permissions: {}
+
 jobs:
   build_and_upload:
     runs-on: ubuntu-latest
@@ -14,19 +17,29 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          # The release is created through the action's token input; no step pushes,
+          # so the token does not need to stay in .git/config while npm runs.
+          persist-credentials: false
 
+      # The tag name is the only input to this workflow. The trigger globs accept
+      # characters such as "$", "(", ";" or "`", so the version is validated before
+      # any later step uses it, and it is passed to the shell as an environment
+      # variable rather than interpolated with ${{ }}.
       - name: Set environment variables
         run: |
-          # Extract version from tag (removes 'v' prefix)
-          TAG_NAME=${GITHUB_REF##*/}
-          VERSION=${TAG_NAME#v}
-          echo "RELEASE_TAG=${TAG_NAME}" >> $GITHUB_ENV
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          TAG_NAME="${GITHUB_REF_NAME}"
+          VERSION="${TAG_NAME#v}"
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Release tags must be vX.Y.Z or X.Y.Z"
+            exit 1
+          fi
+          echo "RELEASE_TAG=${TAG_NAME}" >> "$GITHUB_ENV"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
 
       - name: Update theme.ini version
         run: |
-          echo "Updating version to ${{ env.VERSION }} in config/theme.ini..."
-          sed -i 's/^\([[:space:]]*version[[:space:]]*=[[:space:]]*\).*$/\1"${{ env.VERSION }}"/' config/theme.ini
+          echo "Updating version to ${VERSION} in config/theme.ini..."
+          sed -i "s/^\([[:space:]]*version[[:space:]]*=[[:space:]]*\).*\$/\1\"${VERSION}\"/" config/theme.ini
           echo "Updated version in theme.ini:"
           grep -E '^[[:space:]]*version' config/theme.ini
 
@@ -37,17 +50,24 @@ jobs:
           if [ -z "$PREVIOUS_TAG" ]; then
             NOTES=$(git log --pretty=format:"- %s (%h)" HEAD | head -20)
           else
-            NOTES=$(git log --pretty=format:"- %s (%h)" ${PREVIOUS_TAG}..HEAD)
+            NOTES=$(git log --pretty=format:"- %s (%h)" "${PREVIOUS_TAG}..HEAD")
           fi
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # A commit subject equal to a fixed delimiter would end the value early and
+          # let the following lines define other step outputs. Use a random one.
+          DELIMITER="NOTES_$(openssl rand -hex 16)"
+          {
+            echo "notes<<${DELIMITER}"
+            echo "$NOTES"
+            echo "${DELIMITER}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '24'
+          # No dependency cache in the job that publishes: a poisoned cache entry would
+          # end up inside the release ZIP. A clean `npm ci` costs well under a minute.
+          package-manager-cache: false
 
       - name: Install npm dependencies
         run: npm ci
@@ -56,7 +76,7 @@ jobs:
         run: npm run build
 
       - name: Create package using the Makefile
-        run: make package VERSION=${{ env.VERSION }}
+        run: make package VERSION="${VERSION}"
 
       - name: Create Release and Upload ZIP
         uses: softprops/action-gh-release@v3
