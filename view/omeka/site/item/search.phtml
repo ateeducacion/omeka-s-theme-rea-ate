@@ -50,12 +50,16 @@ if (empty($query['resource_class_id'])) {
     $lrmiClassId = (int) ($query['resource_class_id'][0] ?? 0) ?: null;
 }
 
+// Both the count and the collections filter are scoped to the current site: the
+// browse page they lead to only lists this site's items.
+$siteId = $this->currentSite()->id();
+
 // Total resources for count badge.
 $totalResources = null;
 if ($lrmiClassId) {
     try {
         $totalResources = $this->api()->search('items', [
-            'resource_class_id' => [$lrmiClassId], 'limit' => 0,
+            'resource_class_id' => [$lrmiClassId], 'site_id' => $siteId, 'limit' => 0,
         ])->getTotalResults();
     } catch (\Exception $e) {}
 }
@@ -64,7 +68,7 @@ if ($lrmiClassId) {
 $availableItemSets = [];
 try {
     $availableItemSets = $this->api()->search('item_sets', [
-        'sort_by' => 'dcterms:title', 'sort_order' => 'asc', 'limit' => 100,
+        'site_id' => $siteId, 'sort_by' => 'dcterms:title', 'sort_order' => 'asc', 'limit' => 100,
     ])->getContent();
 } catch (\Exception $e) {}
 $selectedItemSets = array_map('intval', $query['item_set_id'] ?? []);
