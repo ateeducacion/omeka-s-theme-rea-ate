@@ -1,7 +1,7 @@
 {
   "name": "rea-ate-theme",
   "version": "0.13.0",
-  "description": "Tema Omeka S para el Repositorio de Recursos Educativos Abiertos (REA) del Canal REA ATE. Derivado de Freedom S Theme (RRCHNM).",
+  "description": "Tema Omeka S para el Repositorio de Recursos Educativos Abiertos (REA) del Canal REA ATE. Derivado de Freedom S Theme (Corporation for Digital Scholarship).",
   "main": "gulpfile.js",
   "scripts": {
     "start": "gulp",
