@@ -56,6 +56,13 @@ class SafeUrl extends AbstractHelper
             return null;
         }
 
+        // Browsers treat "\" as "/" in http(s) URLs, so "/\evil.example" or
+        // "\\evil.example" is protocol-relative too, and "https://a\@b" resolves to host
+        // "a" in a browser but not in PHP. A legitimate URL encodes the character as %5C.
+        if (strpos($url, '\\') !== false) {
+            return null;
+        }
+
         // Protocol-relative ("//evil.example/path"): inherits the current scheme and
         // silently points off-site. Always rejected.
         if (strncmp($url, '//', 2) === 0) {
