@@ -44,8 +44,8 @@ El ZIP de la versión ya incluye el CSS compilado y no contiene las fuentes Sass
 Node ni los ficheros de desarrollo. Las versiones se publican automáticamente al crear una etiqueta
 `vX.Y.Z` o `X.Y.Z`.
 
-Para desarrollo con Sass es necesario [Node.js](https://nodejs.org/) ≥ 20.19 (la versión que exige
-`sass`; la integración continua usa Node 20):
+Para desarrollo con Sass es necesario [Node.js](https://nodejs.org/) ≥ 20.19 (la versión mínima que
+exige `sass`):
 
 ```bash
 npm ci
