@@ -240,6 +240,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                     <?php foreach ($levelChips as $lc): ?>
                     <button type="button"
                             class="bs-chip<?php echo in_array($lc, $lvlVals, true) ? ' selected' : ''; ?>"
+                            aria-pressed="<?php echo in_array($lc, $lvlVals, true) ? 'true' : 'false'; ?>"
                             data-value="<?php echo $escape($lc); ?>">
                         <?php echo $escape($lc); ?>
                     </button>
@@ -263,6 +264,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                     <?php foreach ($typeChips as $tc): ?>
                     <button type="button"
                             class="bs-chip bs-type-chip<?php echo in_array($tc['v'], $typeVals, true) ? ' selected' : ''; ?>"
+                            aria-pressed="<?php echo in_array($tc['v'], $typeVals, true) ? 'true' : 'false'; ?>"
                             data-value="<?php echo $escape($tc['v']); ?>">
                         <span class="bs-type-chip__icon">
                             <span class="material-symbols-outlined" aria-hidden="true"><?php echo $escape($tc['i']); ?></span>
@@ -382,6 +384,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                         <?php foreach ($audienceChips as $ac): ?>
                         <button type="button"
                                 class="bs-chip<?php echo in_array($ac, $audienceVals, true) ? ' selected' : ''; ?>"
+                            aria-pressed="<?php echo in_array($ac, $audienceVals, true) ? 'true' : 'false'; ?>"
                                 data-value="<?php echo $escape($ac); ?>">
                             <?php echo $escape($ac); ?>
                         </button>

@@ -35,7 +35,9 @@
                 layoutToggleDisabled.removeAttribute('disabled');
 
                 const url = new URL(window.location.href);
-                const view = e.currentTarget.getAttribute('aria-label').toLowerCase();
+                // The aria-label is translated ("Cuadrícula", "Liste"…); the server only
+                // understands "list" and "grid", which the button's class carries.
+                const view = e.currentTarget.classList.contains('list') ? 'list' : 'grid';
                 url.searchParams.set('view', view);
                 if (serverToggle) {
                     window.location.assign(url.toString());

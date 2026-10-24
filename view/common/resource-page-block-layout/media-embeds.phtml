@@ -37,8 +37,9 @@ $decoration = $this->themeSetting('image_decoration');
                     </div>
                     <?php if ($type === 'file'): ?>
                     <div class="media-card-footer">
-                        <a href="<?php echo $this->escapeHtml($media->originalUrl()); ?>" download class="media-download" title="<?php echo $this->translate('Download'); ?>">
-                            <span class="material-symbols-outlined">download</span>
+                        <?php $downloadLabel = $this->translate('Descargar') . ': ' . $media->displayTitle(); ?>
+                        <a href="<?php echo $this->escapeHtml($media->originalUrl()); ?>" download class="media-download" title="<?php echo $this->escapeHtmlAttr($downloadLabel); ?>" aria-label="<?php echo $this->escapeHtmlAttr($downloadLabel); ?>">
+                            <span class="material-symbols-outlined" aria-hidden="true">download</span>
                         </a>
                     </div>
                     <?php endif; ?>

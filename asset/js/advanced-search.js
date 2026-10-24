@@ -48,7 +48,8 @@ if (document.readyState === 'loading') {
             group.addEventListener('click', function (e) {
                 const chip = e.target.closest('.bs-chip');
                 if (!chip) return;
-                chip.classList.toggle('selected');
+                const selected = chip.classList.toggle('selected');
+                chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
             });
         });
 
@@ -119,6 +120,7 @@ if (document.readyState === 'loading') {
             resetBtn.addEventListener('click', function () {
                 document.querySelectorAll('.bs-chip').forEach(function (c) {
                     c.classList.remove('selected');
+                    c.setAttribute('aria-pressed', 'false');
                 });
                 document.querySelectorAll('.bs-selected-pills').forEach(function (c) {
                     c.replaceChildren();
