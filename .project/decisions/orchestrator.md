@@ -1120,13 +1120,32 @@ La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar
 
 ---
 
+## [2026-10-24] ACEPTADA — Cierre de los ítems #8 a #10 del ciclo 7
+
+**Contexto:** Las tres revisiones se ejecutaron en paralelo, con un agente por ítem, cada uno en su propio worktree y con archivos repartidos para evitar conflictos. Se fusionaron los PR #61 (README), #60 (seguridad) y #62 (código), junto con el #59, que los añadía al backlog. Antes del merge se probaron combinados en la instancia local, con GET sobre seis páginas del sitio `ceiplajares`: todas responden 200 sin errores de PHP. Se confirmaron en vivo la paginación de colecciones, el recuento de la búsqueda avanzada limitado al sitio, `aria-pressed` en los chips y la etiqueta «Abrir menú».
+
+**Resultados:**
+- **#9 Seguridad:** cuatro XSS almacenados de severidad alta en plantillas anteriores a julio (JSON-LD de la ficha, título en `item-with-metadata`, etiqueta de idioma de los valores, título de media en `file` e `item-showcase`), `SafeUrl` con barras invertidas, e inyección por nombre de etiqueta en `release.yml`. El CI pasa a permisos mínimos, a Node 24 y a ejecutar PHPCS y PHPUnit sin `composer update`. Las fases 2 y 4 quedan como plan.
+- **#10 Código:** 42 hallazgos. Se corrigen los recuentos (el listado ya no carga todos los ítems), la detección de valores enlazados que quedaba por nombre de tipo, varios fallos de accesibilidad e i18n, y los valores por defecto del bloque de anclaje.
+- **#8 README:** contrastado con el código.
+
+**Decisión de producto (CR-16):** el valor por defecto de las propiedades del bloque de anclaje nunca funcionó, porque INI no interpreta `\n`. Pasa a varias líneas con términos `lrmi:`, con un respaldo en código. Los sitios que nunca guardaron el ajuste empiezan a mostrar el bloque. El responsable del producto lo aprobó expresamente.
+
+**Seguimiento:** CR-39 (JSON-LD envuelto en `//<!--`) y CR-41 (media nula en los bloques `file` e `item-showcase`) tocaban líneas del #60 y se corrigen después de su merge, en `hotfix/jsonld-null-media`.
+
+**Nota de entorno:** con el módulo CleanUrl activo, la instancia local sirve los sitios en `/<sitio>/…` en lugar de `/s/<sitio>/…`; el 404 por la ruta antigua lo pinta GlobalLandingPage. Ante un 404 `error-router-no-match`, hay que comprobar si CleanUrl está activo y probar la otra ruta antes de dar la página por rota.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
 |---------|--------|
 | Fase | CICLO 7 — EN CURSO (#1 abierto) |
 | Releases v0.1.0 → 0.13.1 | ✅ Publicadas (v0.13.0, 2026-10-01; última: 0.13.1, 2026-10-06) |
-| Próxima release | 🔵 Pendiente; incluiría los PR #53 y #54 (bloque de cofinanciación) |
+| Próxima release | 🔵 Pendiente; incluiría los PR #53, #54, #57, #58, #60, #61, #62 y la corrección de CR-39/CR-41. Será la primera ejecución del `release.yml` reforzado: revisar el ZIP y las notas |
 | JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias); `license` emite la URI de `dcterms:license` |
 | Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
 | #1 QA ciclo 7 — búsqueda avanzada | ⏳ Pendiente; incluye el anclaje en resultados y el paso 5 de QA-034 |
@@ -1138,8 +1157,8 @@ La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar
 | Bloque de cofinanciación con `resource:item` / `customvocab` | ✅ Fusionado (PR #53, #54); pendiente de revisión en navegador y móvil |
 | #6 Aviso de copyright original en `README.md` | ✅ Fusionado (PR #57); atribución de Freedom S corregida a la Corporation for Digital Scholarship |
 | #7 Nueva miniatura del tema (`theme.jpg`) | ✅ Hecho; 1280×800 (16:10, como el resto de temas de Omeka S) con contenido apto para recorte 4:3; origen en `.project/design/theme-thumbnail.svg` |
-| #8 Revisión del `README.md` | ⏳ Pendiente |
-| #9 Revisión profunda de seguridad | ⏳ Pendiente; retoma las fases 2–4 de la auditoría del 2026-07-21 |
-| #10 Revisión profunda del código | ⏳ Pendiente; después de #9 |
+| #8 Revisión del `README.md` | ✅ Fusionado (PR #61) |
+| #9 Revisión profunda de seguridad | ✅ Fusionado (PR #60); fases 2 (CSP, scripts inline, fuentes) y 4 (instancia) quedan como plan en `.project/docs/security-review-2026-10.md` |
+| #10 Revisión profunda del código | ✅ Fusionado (PR #62); 23 de 42 hallazgos corregidos, el resto propuestos en `.project/docs/code-review-2026-10.md` |
 
 **Agente:** orchestrator

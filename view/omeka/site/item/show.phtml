@@ -134,7 +134,10 @@ if ($item->primaryMedia()) {
 // which JSON-LD consumers decode back to the same string.
 $this->headScript()->appendScript(
     json_encode($_jl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
-    'application/ld+json'
+    'application/ld+json',
+    // Without noescape HeadScript wraps the block in //<!-- … //-->, which is not JSON.
+    // JSON_HEX_TAG above already keeps the content from closing the <script> element.
+    ['noescape' => true]
 );
 unset($_resolve, $_jl, $_desc, $_prop, $_term, $_v, $_r, $_tVals, $_t, $_aVals, $_a, $_relVals, $_rel, $_kwVals, $_kw, $_creator, $_pub);
 ?>
