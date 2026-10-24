@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Compile translations script for Omeka S Theme Freedom ATE
+ * Compile translations script for the REA ATE Omeka S theme
  * This script compiles all .po files in the language/ directory to .mo files
  * Uses gettext-parser (Node.js alternative to msgfmt)
  */

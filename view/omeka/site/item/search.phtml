@@ -50,12 +50,16 @@ if (empty($query['resource_class_id'])) {
     $lrmiClassId = (int) ($query['resource_class_id'][0] ?? 0) ?: null;
 }
 
+// Both the count and the collections filter are scoped to the current site: the
+// browse page they lead to only lists this site's items.
+$siteId = $this->currentSite()->id();
+
 // Total resources for count badge.
 $totalResources = null;
 if ($lrmiClassId) {
     try {
         $totalResources = $this->api()->search('items', [
-            'resource_class_id' => [$lrmiClassId], 'limit' => 0,
+            'resource_class_id' => [$lrmiClassId], 'site_id' => $siteId, 'limit' => 0,
         ])->getTotalResults();
     } catch (\Exception $e) {}
 }
@@ -64,7 +68,7 @@ if ($lrmiClassId) {
 $availableItemSets = [];
 try {
     $availableItemSets = $this->api()->search('item_sets', [
-        'sort_by' => 'dcterms:title', 'sort_order' => 'asc', 'limit' => 100,
+        'site_id' => $siteId, 'sort_by' => 'dcterms:title', 'sort_order' => 'asc', 'limit' => 100,
     ])->getContent();
 } catch (\Exception $e) {}
 $selectedItemSets = array_map('intval', $query['item_set_id'] ?? []);
@@ -236,6 +240,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                     <?php foreach ($levelChips as $lc): ?>
                     <button type="button"
                             class="bs-chip<?php echo in_array($lc, $lvlVals, true) ? ' selected' : ''; ?>"
+                            aria-pressed="<?php echo in_array($lc, $lvlVals, true) ? 'true' : 'false'; ?>"
                             data-value="<?php echo $escape($lc); ?>">
                         <?php echo $escape($lc); ?>
                     </button>
@@ -259,6 +264,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                     <?php foreach ($typeChips as $tc): ?>
                     <button type="button"
                             class="bs-chip bs-type-chip<?php echo in_array($tc['v'], $typeVals, true) ? ' selected' : ''; ?>"
+                            aria-pressed="<?php echo in_array($tc['v'], $typeVals, true) ? 'true' : 'false'; ?>"
                             data-value="<?php echo $escape($tc['v']); ?>">
                         <span class="bs-type-chip__icon">
                             <span class="material-symbols-outlined" aria-hidden="true"><?php echo $escape($tc['i']); ?></span>
@@ -378,6 +384,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                         <?php foreach ($audienceChips as $ac): ?>
                         <button type="button"
                                 class="bs-chip<?php echo in_array($ac, $audienceVals, true) ? ' selected' : ''; ?>"
+                            aria-pressed="<?php echo in_array($ac, $audienceVals, true) ? 'true' : 'false'; ?>"
                                 data-value="<?php echo $escape($ac); ?>">
                             <?php echo $escape($ac); ?>
                         </button>

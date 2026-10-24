@@ -18,12 +18,6 @@ $displayValue = function ($value) use ($valueLang) {
     return $linked ? $linked->displayTitle(null, $valueLang) : (string) $value;
 };
 
-$labelMap = [
-    'items' => 'Items', // @translate
-    'item_sets' => 'Item sets', // @translate
-    'media' => 'Media', // @translate
-];
-
 $escape     = $this->plugin('escapeHtml');
 $escapeAttr = $this->plugin('escapeHtmlAttr');
 ?>
@@ -67,19 +61,19 @@ $escapeAttr = $this->plugin('escapeHtmlAttr');
                     <div class="property-meta-group">
                         <?php if ($edLevel): ?>
                             <div class="property" data-term="lrmi:educationalLevel">
-                                <dt><?php echo $escape($this->translate('Educational Level')); ?></dt>
+                                <dt><?php echo $escape($this->translate('Nivel educativo')); ?></dt>
                                 <dd class="value"><?php echo $escape($displayValue($edLevel)); ?></dd>
                             </div>
                         <?php endif; ?>
                         <?php if ($about): ?>
                             <div class="property" data-term="schema:about">
-                                <dt><?php echo $escape($this->translate('About')); ?></dt>
+                                <dt><?php echo $escape($this->translate('Materia')); ?></dt>
                                 <dd class="value"><?php echo $escape($displayValue($about)); ?></dd>
                             </div>
                         <?php endif; ?>
                         <?php if ($lrt): ?>
                             <div class="property" data-term="lrmi:learningResourceType">
-                                <dt><?php echo $escape($this->translate('Learning Resource Type')); ?></dt>
+                                <dt><?php echo $escape($this->translate('Tipo de recurso')); ?></dt>
                                 <dd class="value"><?php echo $this->partial('common/resource-type-badge', ['resourceTypeValue' => $lrt]); ?></dd>
                             </div>
                         <?php endif; ?>

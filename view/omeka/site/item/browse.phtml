@@ -13,7 +13,6 @@ $filterLocale = (bool) $this->siteSetting('filter_locale_values');
 $lang = $this->lang();
 $valueLang = $filterLocale ? [$lang, ''] : null;
 
-$api = $this->api();
 $site = $this->currentSite();
 $query = $this->params()->fromQuery();
 $itemSetShow = isset($itemSet);
@@ -52,11 +51,10 @@ if (isset($_GET['view'])) {
     }
 }
 
-$countQuery = $query;
-unset($countQuery['view'], $countQuery['page']);
-$countQuery['site_id'] = $site->id();
-$countQuery['is_public'] = true;
-$totalResults = $api->search('items', $countQuery)->getTotalResults();
+// The controller already searched with the real browse query (site, item pool,
+// item set) and passed the total to the paginator: reuse it instead of a second
+// search, which without a limit hydrated every matching item.
+$totalResults = $this->pagination()->getPaginator()->getTotalCount();
 $activeFilters = $this->searchFilters();
 
 $searchAction = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: $this->url(

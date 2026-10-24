@@ -239,7 +239,7 @@ $facetPartialByType = [
                         uksort($grouped, function ($a, $b) use ($grouped) {
                             $posA = $grouped[$a]['position'] ?? PHP_INT_MAX;
                             $posB = $grouped[$b]['position'] ?? PHP_INT_MAX;
-                            return $posA !== $posB ? $posA - $posB : $a - $b;
+                            return ($posA <=> $posB) ?: ($a <=> $b);
                         });
 
                         foreach ($grouped as $group):

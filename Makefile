@@ -113,7 +113,6 @@ package:
 		--exclude='.github' \
 		--exclude='.project' \
 		--exclude='.agents' \
-		--exclude='.claude' \
 		--exclude='*.zip' \
 		--exclude='node_modules' \
 		--exclude='.DS_Store' \

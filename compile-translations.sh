@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Compile translations script for Omeka S Theme Freedom ATE
+# Compile translations script for the REA ATE Omeka S theme
 # This script compiles all .po files in the language/ directory to .mo files
 
 set -e
