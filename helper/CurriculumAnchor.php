@@ -26,7 +26,8 @@ class CurriculumAnchor extends AbstractHelper
      * los recursos de una misma página, así que sin caché cada llamada a
      * curriculumAnchor() repetiría las mismas consultas.
      *
-     * @var \Omeka\Api\Representation\ItemRepresentation[] Indexado por id.
+     * @var (\Omeka\Api\Representation\ItemRepresentation|null)[] Indexado por id;
+     *      null para un id ya pedido que la API no devolvió.
      */
     private $itemCache = [];
 
@@ -333,6 +334,12 @@ class CurriculumAnchor extends AbstractHelper
             $fetched = $this->getView()->api()
                 ->search('items', ['id' => $missingIds, 'limit' => count($missingIds)])
                 ->getContent();
+            // Los ids que la API no devuelve (privados para el visitante, o que no son
+            // ítems) se recuerdan como null: sin esto se volverían a pedir en cada
+            // llamada y el presupuesto de tres consultas por página se rompería.
+            foreach ($missingIds as $id) {
+                $this->itemCache[$id] = null;
+            }
             foreach ($fetched as $item) {
                 $this->itemCache[$item->id()] = $item;
             }
