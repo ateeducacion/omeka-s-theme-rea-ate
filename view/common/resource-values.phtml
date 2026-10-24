@@ -55,18 +55,21 @@ foreach ($values as $term => $propertyData):
             $valueLang = $value->lang();
             $valueAnnotation = $value->valueAnnotation();
             $class = ['value'];
-            if ('resource' == $valueType || strpos($valueType, 'resource') !== false) {
+            // Linked by its resource, not by the data-type name: "resource:item" and
+            // "customvocab:N" item vocabularies are linked too (see PR #53).
+            $linkedResource = $value->valueResource();
+            if ($linkedResource) {
                 $class[] = 'resource';
-                $class[] = $escape($value->valueResource()->resourceName());
+                $class[] = $escape($linkedResource->resourceName());
 
-                if ('media' == $value->valueResource()->resourceName() && is_array($decoration) && in_array('media', $decoration)) {
+                if ('media' == $linkedResource->resourceName() && is_array($decoration) && in_array('media', $decoration)) {
                     $class[] = 'decoration decoration--thumbnail';
                 }
             } elseif ('uri' == $valueType) {
                 $class[] = 'uri';
             }
             ?>
-            <dd class="<?php echo implode(' ', $class); ?>" lang="<?php echo $escape($valueLang); ?>">
+            <dd class="<?php echo implode(' ', $class); ?>"<?php if ($valueLang): ?> lang="<?php echo $escape($valueLang); ?>"<?php endif; ?>>
                 <?php if ($showLocale && $valueLang) : ?>
                     <span class="language"><?php echo $valueLang; ?></span>
                 <?php endif; ?>
@@ -80,11 +83,11 @@ foreach ($values as $term => $propertyData):
                     <?php endif; ?>
                 </span>
                 <?php if(!$value->isPublic()) : ?>
-                    <span class="o-icon-private" aria-role="tooltip" title="<?php echo $this->escapeHtml($translate('Private')); ?>" aria-label="<?php echo $this->escapeHtml($translate('Private')); ?>"></span>
+                    <span class="o-icon-private" role="img" title="<?php echo $this->escapeHtml($translate('Private')); ?>" aria-label="<?php echo $this->escapeHtml($translate('Private')); ?>"></span>
                 <?php endif; ?>
                 <?php if ($valueAnnotation && $showValueAnnotations) : ?>
                     <div class="annotation-btn">
-                        <span class="has-annotation o-icon-annotation" aria-role="tooltip" title="<?php echo $this->escapeHtml($translate('Has annotation')); ?>" aria-label="<?php echo $this->escapeHtml($translate('Has annotation')); ?>"></span>
+                        <span class="has-annotation o-icon-annotation" role="img" title="<?php echo $this->escapeHtml($translate('Has annotation')); ?>" aria-label="<?php echo $this->escapeHtml($translate('Has annotation')); ?>"></span>
                         <div class="annotation-tooltip">
                             <div class="annotation-tooltip__wrapper">
                                 <h6 class="annotation-tooltip__heading"><?php echo $this->escapeHtml($translate('Value Annotations')); ?></h6>
