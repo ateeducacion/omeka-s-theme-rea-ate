@@ -14,10 +14,12 @@ if (!isset($resourceTypeValue)) {
 }
 
 if ($resourceTypeValue):
-    $rawType = (string) $resourceTypeValue;
+    // A linked value casts to its resource URL, so take the linked title as is.
+    $linkedType = $resourceTypeValue->valueResource();
+    $rawType = $linkedType ? (string) $linkedType->displayTitle() : (string) $resourceTypeValue;
 
     // If the value is a URI, extract the last path/hash segment.
-    $typeLabel = preg_match('~[/#]([^/#]+)/?$~', $rawType, $m) ? $m[1] : $rawType;
+    $typeLabel = !$linkedType && preg_match('~[/#]([^/#]+)/?$~', $rawType, $m) ? $m[1] : $rawType;
     // camelCase → space-separated words (e.g. "learningActivity" → "Learning Activity").
     $typeLabel = preg_replace('/([a-z])([A-Z])/', '$1 $2', $typeLabel);
     $typeLabel = ucfirst($typeLabel);

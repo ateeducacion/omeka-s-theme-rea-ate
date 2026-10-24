@@ -118,10 +118,11 @@ if ($_kwVals) {
     if ($_kw) $_jl['keywords'] = implode(', ', $_kw);
 }
 
-$_creator = $item->value('dcterms:creator');
-if ($_creator) $_jl['creator'] = ['@type' => 'Person', 'name' => (string) $_creator];
-$_pub = $item->value('dcterms:publisher');
-if ($_pub) $_jl['publisher'] = ['@type' => 'Organization', 'name' => (string) $_pub];
+// $_resolve, not a string cast: a linked creator/publisher casts to its resource URL.
+$_creator = $_resolve($item->value('dcterms:creator'));
+if ($_creator !== '') $_jl['creator'] = ['@type' => 'Person', 'name' => $_creator];
+$_pub = $_resolve($item->value('dcterms:publisher'));
+if ($_pub !== '') $_jl['publisher'] = ['@type' => 'Organization', 'name' => $_pub];
 
 if ($item->primaryMedia()) {
     $_jl['thumbnailUrl'] = $item->primaryMedia()->thumbnailUrl('medium');
