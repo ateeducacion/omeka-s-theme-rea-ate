@@ -29,11 +29,15 @@ spl_autoload_register(function (string $class): void {
         }
     }
     // Test classes/doubles under the ReaAteTest namespace.
+    // Tests live in test/ReaAteTest/, so ReaAteTest\Helper\Fake\Item is
+    // test/ReaAteTest/Helper/Fake/Item.php.
     if (strpos($class, __NAMESPACE__ . '\\') === 0) {
-        $file = __DIR__ . '/' . str_replace('\\', '/', substr($class, strlen(__NAMESPACE__ . '\\'))) . '.php';
-        if (is_file($file)) {
-            require $file;
-            return;
+        $relative = str_replace('\\', '/', substr($class, strlen(__NAMESPACE__ . '\\'))) . '.php';
+        foreach ([__DIR__ . '/ReaAteTest/' . $relative, __DIR__ . '/' . $relative] as $file) {
+            if (is_file($file)) {
+                require $file;
+                return;
+            }
         }
     }
 });
