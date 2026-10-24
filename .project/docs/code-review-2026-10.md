@@ -56,9 +56,9 @@ review (#9).
 | CR-36 | low | Compatibility | Missing vocabulary properties raise warnings in advanced search | proposed |
 | CR-37 | low | Maintainability | Unused `$labelMap`; blocks rendered twice in item-set view | proposed |
 | CR-38 | low | Test coverage | Helper tests cover only pure functions | proposed |
-| CR-39 | medium | Correctness | Item JSON-LD is wrapped in `//<!--`, so it is not valid JSON | proposed |
+| CR-39 | medium | Correctness | Item JSON-LD is wrapped in `//<!--`, so it is not valid JSON | fixed |
 | CR-40 | low | Correctness | Undefined `$linkType` in the file block's error message | fixed |
-| CR-41 | medium | Correctness | File/showcase blocks call `displayTitle()` on a null media | proposed |
+| CR-41 | medium | Correctness | File/showcase blocks call `displayTitle()` on a null media | fixed |
 | CR-42 | low | Correctness | Showcase block closes unopened elements when an item is missing | proposed |
 
 ## Findings
@@ -440,7 +440,7 @@ Proposal: pass `['noescape' => true]` as the third argument of `appendScript()`.
 Not applied here: it changes the same statement whose `json_encode` flags the
 security branch (`hotfix/security-review`) edits, and the two hunks would conflict.
 Apply it as a one-line follow-up after that branch merges.
-Status: **proposed**.
+Status: **fixed** after #60 merged (`hotfix/jsonld-null-media`): `appendScript()` passes `['noescape' => true]`; the local item page now emits valid JSON-LD.
 
 ### CR-40 — Undefined `$linkType` (low, correctness)
 
@@ -459,7 +459,7 @@ calls `$media->displayTitle()` unconditionally. Scenario: a showcase block with
 title option "file_name" and an item without media → fatal error, page breaks.
 Proposal: guard the `elseif` with `&& $media`. Not applied here because the security
 branch rewrites the adjacent title line in both files; apply after it merges.
-Status: **proposed**.
+Status: **fixed** after #60 merged (`hotfix/jsonld-null-media`): both `elseif` branches require `$media`.
 
 ### CR-42 — Showcase markup when an item is missing (low, correctness)
 
