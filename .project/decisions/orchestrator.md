@@ -1102,6 +1102,24 @@ La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar
 
 ---
 
+## [2026-10-24] ACEPTADA — Incorporación al backlog del ciclo 7: revisiones de README, seguridad y código
+
+**Contexto:** El responsable del producto pide tres revisiones de conjunto. Desde la auditoría de seguridad del 2026-07-21 (fases 0 y 1, fusionadas en el PR #21) el tema ha incorporado el anclaje curricular, la licencia como URI, la corrección del bloque de cofinanciación y cambios de CI y blueprint, sin una revisión global posterior. De esa auditoría quedaron sin registrar como hechas las fases 2 a 4, y al menos dos hallazgos de la fase 3 siguen presentes en `.github/workflows/release.yml`: `${{ env.VERSION }}` se interpola dentro de un `sed`, y `$GITHUB_OUTPUT` usa el delimitador fijo `EOF`.
+
+**Decisión:** Añadir las tres revisiones al backlog del ciclo 7.
+
+| # | Ítem | Descripción | Tipo | Prioridad |
+|---|------|-------------|------|-----------|
+| 8 | Revisión del `README.md` | Contrastar el README con el estado real del tema: requisitos y versiones mínimas, instalación, ajustes de `theme.ini`, módulos opcionales, desarrollo y build, empaquetado y licencia. Corregir lo desactualizado, los enlaces rotos y lo que falte; mantener el idioma del documento | Documentación | Media |
+| 9 | Revisión profunda de seguridad | Retomar la auditoría del 2026-07-21 (OWASP ASVS 4.0 L2, ENS). Verificar que las fases 0 y 1 siguen vigentes en el código añadido desde entonces (plantillas nuevas, `CurriculumAnchor`, `LicenseBadge`, JS) y abordar las fases pendientes: 2 (CSP y `<script>` inline, fuentes autoalojadas, cabeceras), 3 (workflows de GitHub Actions, incluidos los dos hallazgos de `release.yml`, y dependencias npm/Composer) y 4 (recomendaciones para la instancia). Base: `.project/tests/security-qa.md`, los tests de helpers y la skill `github-actions-hardening` | Seguridad | Alta |
+| 10 | Revisión profunda del código | Revisar helpers PHP, plantillas, JS y Sass: errores de lógica, compatibilidad con Omeka S `^4.2.0` y con los módulos opcionales y sus fallbacks, contratos de variables de las plantillas, código muerto, duplicación, accesibilidad, rendimiento (consultas a la API por página) y cobertura de tests. Los hallazgos se registran con su prioridad antes de corregirlos | Calidad | Media |
+
+**Orden propuesto:** #9 antes que #10, porque los hallazgos de seguridad pueden cambiar código que la revisión general evaluaría. #8 es independiente y puede hacerse en paralelo.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
@@ -1120,5 +1138,8 @@ La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar
 | Bloque de cofinanciación con `resource:item` / `customvocab` | ✅ Fusionado (PR #53, #54); pendiente de revisión en navegador y móvil |
 | #6 Aviso de copyright original en `README.md` | ✅ Fusionado (PR #57); atribución de Freedom S corregida a la Corporation for Digital Scholarship |
 | #7 Nueva miniatura del tema (`theme.jpg`) | ✅ Hecho; 1280×800 (16:10, como el resto de temas de Omeka S) con contenido apto para recorte 4:3; origen en `.project/design/theme-thumbnail.svg` |
+| #8 Revisión del `README.md` | ⏳ Pendiente |
+| #9 Revisión profunda de seguridad | ⏳ Pendiente; retoma las fases 2–4 de la auditoría del 2026-07-21 |
+| #10 Revisión profunda del código | ⏳ Pendiente; después de #9 |
 
 **Agente:** orchestrator
