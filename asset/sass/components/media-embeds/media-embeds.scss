@@ -105,27 +105,118 @@
     border-top: 1px solid var(--ate-hairline);
     gap: 1rem;
 
-    .media-download {
+    // Container queries size the tooltips to the footer, so they never get clipped
+    container-type: inline-size;
+
+    .media-actions {
+      --action-size: 2.6rem;
+      --action-gap: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: var(--action-gap);
+      flex-shrink: 0;
+    }
+
+    // Download link and copy buttons share the same look
+    .media-action {
+      // Distance from this button to the right edge of the actions group. Tooltips
+      // are anchored there, so they grow leftwards and the card's overflow: hidden
+      // never clips them.
+      --tip-shift: 0rem;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0.6rem;
+      width: var(--action-size);
+      height: var(--action-size);
+      padding: 0;
+      border: 0;
       border-radius: 4px;
       background: var(--ate-surface-card);
       color: var(--ate-text-muted);
+      font: inherit;
+      line-height: 1;
       text-decoration: none;
+      cursor: pointer;
       transition: all 0.2s ease;
       flex-shrink: 0;
 
-      &:hover {
+      &:hover,
+      &:focus-visible {
         background: var(--ate-color-brand-blue-mid);
         color: var(--ate-text-on-dark);
         transform: scale(1.05);
       }
 
+      &.is-copied {
+        background: var(--ate-success);
+        color: var(--ate-text-on-dark);
+      }
+
+      &:nth-last-child(2) {
+        --tip-shift: calc(var(--action-size) + var(--action-gap));
+      }
+
+      &:nth-last-child(3) {
+        --tip-shift: calc(2 * (var(--action-size) + var(--action-gap)));
+      }
+
       .material-symbols-outlined {
         font-size: 1.4rem;
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+
+      .media-action-tooltip {
+        position: absolute;
+        bottom: calc(100% + 10px);
+        right: calc(-1 * var(--tip-shift));
+        z-index: 10;
+        width: max-content;
+        max-width: 16rem;
+        // cqw = footer content width, so narrow cards never clip the tooltip
+        max-width: min(16rem, 100cqw);
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        background: var(--ate-surface-dark);
+        color: var(--ate-text-on-dark);
+        font-size: 0.8rem;
+        font-weight: 400;
+        line-height: 1.4;
+        letter-spacing: normal;
+        text-align: left;
+        text-transform: none;
+        white-space: normal;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(4px);
+        transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s;
+
+        // Arrow pointing at the button's centre
+        &::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          right: calc(var(--tip-shift) + var(--action-size) / 2 - 6px);
+          border: 6px solid transparent;
+          border-top-color: var(--ate-surface-dark);
+        }
+      }
+
+      // Short delay so the tooltip doesn't flash when the pointer just passes by
+      &:hover .media-action-tooltip,
+      &:focus-visible .media-action-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        transition: opacity 0.15s ease 0.3s, transform 0.15s ease 0.3s, visibility 0s linear 0.3s;
+      }
+
+      // Escape hides it until the pointer or focus leaves (WCAG 1.4.13)
+      &.tooltip-dismissed .media-action-tooltip {
+        opacity: 0;
+        visibility: hidden;
       }
     }
   }
@@ -179,6 +270,95 @@
     // Hide source link in SCORM body as well
     .media-render > a:last-child:not(:first-child) {
       display: none !important;
+    }
+  }
+}
+
+// ── eXeLearning card ────────────────────────────────────────
+// One full-width card per package, about twice as tall as the other media.
+.exelearning-card {
+  grid-column: 1 / -1;
+  background: var(--ate-surface-soft);
+  border: 1px solid var(--ate-hairline);
+  border-radius: var(--ate-radius-lg);
+  overflow: hidden;
+
+  &__header {
+    background: var(--ate-color-brand-blue-dark);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--ate-radius-md);
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .material-symbols-outlined {
+      font-size: 22px;
+      color: #fff;
+    }
+  }
+
+  &__header-text { flex: 1; min-width: 0; }
+
+  // Brand name keeps its own casing; letter-spacing only
+  &__type {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 2px;
+  }
+
+  &__title {
+    color: var(--ate-text-on-dark);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__body {
+    .media-render {
+      height: 800px;
+
+      @media (max-width: 768px) {
+        height: 500px;
+      }
+
+      // Hide the "Source" link Omeka S may add after the media
+      > a:last-child:not(:first-child) {
+        display: none !important;
+      }
+
+      // Let the package viewer fill the card instead of its fixed height
+      .exelearning-viewer {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+      }
+
+      .exelearning-toolbar a {
+        display: inline-flex;
+        width: auto;
+        height: auto;
+      }
+
+      .exelearning-iframe {
+        flex: 1;
+        min-height: 0;
+        max-height: none;
+        height: auto !important; // overrides the renderer's inline 600px height
+      }
     }
   }
 }

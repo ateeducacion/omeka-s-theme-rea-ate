@@ -608,3 +608,35 @@ msgstr "Saberes básicos"
 #: view/omeka/site/item/browse.phtml
 msgid "%s min"
 msgstr "%s min"
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy this text:"
+msgstr "Copia este texto:"
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Download the original file to your device."
+msgstr "Descarga el archivo original en tu equipo."
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Link copied"
+msgstr "Enlace copiado"
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy link"
+msgstr "Copiar enlace"
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy the direct link to this file, to share it by email, chat or social networks."
+msgstr "Copia el enlace directo a este archivo para compartirlo por correo, chat o redes sociales."
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Embed code copied"
+msgstr "Código para insertar copiado"
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy embed code"
+msgstr "Copiar código para insertar"
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy the HTML code to embed this media in a WordPress blog (paste it into a Custom HTML block) or any other website."
+msgstr "Copia el código HTML para insertar este medio en un blog de WordPress (pégalo en un bloque «HTML personalizado») o en cualquier otra web."
