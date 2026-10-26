@@ -347,6 +347,16 @@
         height: 100%;
       }
 
+      // The card header already shows the title: drop the module's copy in the
+      // toolbar and keep its buttons on the right.
+      .exelearning-card--titled & .exelearning-title {
+        display: none;
+      }
+
+      .exelearning-card--titled & .exelearning-toolbar {
+        justify-content: flex-end;
+      }
+
       .exelearning-toolbar a {
         display: inline-flex;
         width: auto;

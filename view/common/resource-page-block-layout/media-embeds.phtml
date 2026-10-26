@@ -68,15 +68,16 @@ foreach ($resourceMedia as $media) {
                     </div>
                 </div>
             <?php elseif ($isExeLearning($media)): ?>
-                <div class="exelearning-card">
+                <?php $exeTitle = $media->displayTitle(); ?>
+                <div class="exelearning-card<?php echo $exeTitle ? ' exelearning-card--titled' : ''; ?>">
                     <div class="exelearning-card__header">
                         <div class="exelearning-card__icon">
                             <span class="material-symbols-outlined" aria-hidden="true">auto_stories</span>
                         </div>
                         <div class="exelearning-card__header-text">
                             <div class="exelearning-card__type">eXeLearning</div>
-                            <?php if ($media->displayTitle()): ?>
-                            <div class="exelearning-card__title"><?php echo $escape($media->displayTitle()); ?></div>
+                            <?php if ($exeTitle): ?>
+                            <div class="exelearning-card__title"><?php echo $escape($exeTitle); ?></div>
                             <?php endif; ?>
                         </div>
                     </div>
