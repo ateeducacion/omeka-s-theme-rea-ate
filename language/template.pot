@@ -607,3 +607,35 @@ msgstr ""
 #: view/omeka/site/item/browse.phtml
 msgid "%s min"
 msgstr ""
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy this text:"
+msgstr ""
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Download the original file to your device."
+msgstr ""
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Link copied"
+msgstr ""
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy link"
+msgstr ""
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy the direct link to this file, to share it by email, chat or social networks."
+msgstr ""
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Embed code copied"
+msgstr ""
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy embed code"
+msgstr ""
+
+#: view/common/resource-page-block-layout/media-embeds.phtml
+msgid "Copy the HTML code to embed this media in a WordPress blog (paste it into a Custom HTML block) or any other website."
+msgstr ""

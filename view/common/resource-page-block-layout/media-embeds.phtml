@@ -1,6 +1,57 @@
 <?php
 $resourceMedia = $resource->media();
 $decoration = $this->themeSetting('image_decoration');
+
+$escape = $this->plugin('escapeHtml');
+$escAttr = $this->plugin('escapeHtmlAttr');
+
+// eXeLearning packages: the ExeLearning module's renderer, or older uploads that still
+// carry the generic `file` renderer, recognised by their .elpx extension.
+$isExeLearning = function ($media) {
+    $renderer = $media->renderer();
+    return $renderer === 'exelearning_renderer'
+        || ($renderer === 'file' && strtolower((string) $media->extension()) === 'elpx');
+};
+
+// Raster formats every browser renders; anything else (TIFF, JP2...) is
+// embedded through its large derivative instead of the original file.
+$webImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/svg+xml'];
+
+// Snippet to paste into WordPress (Custom HTML block) or any other site. It
+// embeds only the file itself; types browsers cannot embed get a file link.
+// Every value is escaped here with escapeHtml, which is safe inside the snippet's
+// double-quoted attributes and keeps URLs readable; the whole snippet is escaped
+// again for data-copy-text.
+$embedCode = function ($media) use ($escape, $webImageTypes) {
+    $fileUrl = $media->originalUrl();
+    $title = (string) $media->displayTitle();
+    $mediaType = (string) $media->mediaType();
+
+    if (strpos($mediaType, 'image/') === 0) {
+        $src = in_array($mediaType, $webImageTypes) || !$media->hasThumbnails()
+            ? $fileUrl
+            : $media->thumbnailUrl('large');
+        return sprintf('<img src="%s" alt="%s" style="max-width:100%%;height:auto;">', $escape($src), $escape($title));
+    }
+    if (strpos($mediaType, 'video/') === 0) {
+        return sprintf('<video src="%s" controls preload="metadata" style="max-width:100%%;"></video>', $escape($fileUrl));
+    }
+    if (strpos($mediaType, 'audio/') === 0) {
+        return sprintf('<audio src="%s" controls preload="metadata"></audio>', $escape($fileUrl));
+    }
+    if ($mediaType === 'application/pdf') {
+        return sprintf('<iframe src="%s" title="%s" width="100%%" height="600" style="border:0;" loading="lazy"></iframe>', $escape($fileUrl), $escape($title));
+    }
+    return sprintf('<a href="%s">%s</a>', $escape($fileUrl), $escape($title));
+};
+
+// The copy buttons need media-share.js; load it only when a file card is shown.
+foreach ($resourceMedia as $media) {
+    if ($media->renderer() === 'file' && !$isExeLearning($media)) {
+        $this->inlineScript()->appendFile($this->assetUrl('js/media-share.js'));
+        break;
+    }
+}
 ?>
 <?php if ($resourceMedia): ?>
 <div class="media-embeds <?php echo is_array($decoration) && in_array('media', $decoration) ? 'decoration' : ''; ?>">
@@ -13,6 +64,24 @@ $decoration = $this->themeSetting('image_decoration');
             ?>
                 <div class="media-card media-card--html">
                     <div class="media-card-content">
+                        <?php echo $media->render(); ?>
+                    </div>
+                </div>
+            <?php elseif ($isExeLearning($media)): ?>
+                <?php $exeTitle = $media->displayTitle(); ?>
+                <div class="exelearning-card<?php echo $exeTitle ? ' exelearning-card--titled' : ''; ?>">
+                    <div class="exelearning-card__header">
+                        <div class="exelearning-card__icon">
+                            <span class="material-symbols-outlined" aria-hidden="true">auto_stories</span>
+                        </div>
+                        <div class="exelearning-card__header-text">
+                            <div class="exelearning-card__type">eXeLearning</div>
+                            <?php if ($exeTitle): ?>
+                            <div class="exelearning-card__title"><?php echo $escape($exeTitle); ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="exelearning-card__body">
                         <?php echo $media->render(); ?>
                     </div>
                 </div>
@@ -37,10 +106,34 @@ $decoration = $this->themeSetting('image_decoration');
                     </div>
                     <?php if ($type === 'file'): ?>
                     <div class="media-card-footer">
-                        <?php $downloadLabel = $this->translate('Descargar') . ': ' . $media->displayTitle(); ?>
-                        <a href="<?php echo $this->escapeHtml($media->originalUrl()); ?>" download class="media-download" title="<?php echo $this->escapeHtmlAttr($downloadLabel); ?>" aria-label="<?php echo $this->escapeHtmlAttr($downloadLabel); ?>">
-                            <span class="material-symbols-outlined" aria-hidden="true">download</span>
-                        </a>
+                        <?php
+                        $downloadLabel = $this->translate('Descargar') . ': ' . $media->displayTitle();
+                        $tipId = 'media-' . $media->id() . '-tip-';
+                        ?>
+                        <div class="media-actions" data-copy-fallback-message="<?php echo $escAttr($this->translate('Copy this text:')); ?>">
+                            <a href="<?php echo $escAttr($media->originalUrl()); ?>" download class="media-action media-download"
+                                aria-label="<?php echo $escAttr($downloadLabel); ?>"
+                                aria-describedby="<?php echo $tipId; ?>download">
+                                <span class="material-symbols-outlined" aria-hidden="true">download</span>
+                                <span class="media-action-tooltip" role="tooltip" id="<?php echo $tipId; ?>download"><?php echo $escape($this->translate('Download the original file to your device.')); ?></span>
+                            </a>
+                            <button type="button" class="media-action media-copy"
+                                data-copy-text="<?php echo $escAttr($media->originalUrl()); ?>"
+                                data-copied-message="<?php echo $escAttr($this->translate('Link copied')); ?>"
+                                aria-label="<?php echo $escAttr($this->translate('Copy link')); ?>"
+                                aria-describedby="<?php echo $tipId; ?>link">
+                                <span class="material-symbols-outlined" aria-hidden="true">link</span>
+                                <span class="media-action-tooltip" role="tooltip" id="<?php echo $tipId; ?>link"><?php echo $escape($this->translate('Copy the direct link to this file, to share it by email, chat or social networks.')); ?></span>
+                            </button>
+                            <button type="button" class="media-action media-copy"
+                                data-copy-text="<?php echo $escAttr($embedCode($media)); ?>"
+                                data-copied-message="<?php echo $escAttr($this->translate('Embed code copied')); ?>"
+                                aria-label="<?php echo $escAttr($this->translate('Copy embed code')); ?>"
+                                aria-describedby="<?php echo $tipId; ?>embed">
+                                <span class="material-symbols-outlined" aria-hidden="true">code</span>
+                                <span class="media-action-tooltip" role="tooltip" id="<?php echo $tipId; ?>embed"><?php echo $escape($this->translate('Copy the HTML code to embed this media in a WordPress blog (paste it into a Custom HTML block) or any other website.')); ?></span>
+                            </button>
+                        </div>
                     </div>
                     <?php endif; ?>
                 </div>
