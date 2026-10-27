@@ -1139,13 +1139,27 @@ La tabla de estado, además, seguía dando `v0.13.0` como pendiente de etiquetar
 
 ---
 
+## [2026-10-27] ACEPTADA — Preparación de `v0.14.0`
+
+**Contexto:** Desde `0.13.1` se han fusionado en `master` el bloque de cofinanciación con `resource:item` y `customvocab` (#53, #54), el aviso de copyright original (#57), la nueva miniatura (#58), las revisiones de seguridad (#60), README (#61) y código (#62) con su seguimiento (#63), y la tarjeta eXeLearning con las acciones de copiar enlace e insertar en las tarjetas de fichero (#64, adaptado de los PR #52, #56 y #61 de `omeka-s-theme-freedom-ate`; el #71, ocultar acciones con acceso restringido, queda fuera por decisión del responsable del producto). Dependabot subió además `sass` a 1.106.1 y `gettext-parser` a 10.0.0.
+
+**Decisión:** Versión menor, `0.14.0`, porque añade funcionalidad (tarjeta eXeLearning, acciones de medios). `theme.ini`, `package.json` y `package-lock.json` pasan a `0.14.0`.
+
+**Verificación previa:** con `npm ci`, el CSS compilado con `sass` 1.106.1 no cambia y `gettext-parser` 10 genera un `es.mo` idéntico byte a byte. PHPUnit (114 tests), PHPCS y `msgfmt --check` pasan. El ZIP se genera desde una exportación limpia del commit.
+
+**Pendiente:** etiquetar `v0.14.0` es una publicación y requiere la orden expresa del responsable del producto. Será la primera ejecución del `release.yml` reforzado (#60): hay que revisar el ZIP y las notas que publique.
+
+**Agente:** orchestrator
+
+---
+
 ## Estado actual del proyecto
 
 | Aspecto | Estado |
 |---------|--------|
 | Fase | CICLO 7 — EN CURSO (#1 abierto) |
 | Releases v0.1.0 → 0.13.1 | ✅ Publicadas (v0.13.0, 2026-10-01; última: 0.13.1, 2026-10-06) |
-| Próxima release | 🔵 Pendiente; incluiría los PR #53, #54, #57, #58, #60, #61, #62 y la corrección de CR-39/CR-41. Será la primera ejecución del `release.yml` reforzado: revisar el ZIP y las notas |
+| Release v0.14.0 | 🔵 Preparada; pendiente de etiquetar. Incluye los PR #53, #54, #57, #58, #60–#64. Primera ejecución del `release.yml` reforzado: revisar el ZIP y las notas |
 | JSON-LD `LearningResource` | ✅ Validado (0 errores, 0 advertencias); `license` emite la URI de `dcterms:license` |
 | Búsqueda Avanzada rediseño | ✅ Implementado (ciclo 6) |
 | #1 QA ciclo 7 — búsqueda avanzada | ⏳ Pendiente; incluye el anclaje en resultados y el paso 5 de QA-034 |
