@@ -10,13 +10,41 @@ use Laminas\View\Helper\AbstractHelper;
  * píldora compuesta por materia en lugar de dos tiras paralelas.
  *
  * La relación materia→nivel no es deducible por posición: un recurso puede
- * declarar 4 niveles y 8 materias. Se lee del propio ítem Asignatura, que
- * lleva su lrmi:educationalLevel.
+ * declarar 4 niveles y 8 materias. Se lee del propio ítem materia.
+ *
+ * Lee dos modelos de currículo:
+ * - Modelo `cur:` (curriculo_lomloe_canarias, módulo EducationalCurriculum):
+ *   schema:about apunta a una cur:MateriaCurso («Matemáticas · 1º ESO») con
+ *   cur:curso (su curso) y cur:materia (la materia de la etapa, «Matemáticas
+ *   (ESO)»), que da el rótulo del grupo; el curso lleva cur:etapa y la etapa
+ *   skos:notation; criterios y saberes cuelgan de cur:materiaCurso.
+ * - Modelo anterior (DefinedTerm): la Asignatura lleva lrmi:educationalLevel,
+ *   el curso apunta a su etapa (DefinedTermSet con schema:position) por el
+ *   ajuste advancedsearch_termset_property, y criterios y saberes cuelgan de
+ *   la Asignatura por esa misma propiedad.
+ * Con el modelo `cur:` cargado se lee primero lo suyo; lo anterior queda de
+ * respaldo para los catálogos que no han migrado.
  *
  * Diseño: .project/docs/specs/2026-09-01-anclaje-curricular-busqueda-facetada-design.md
  */
 class CurriculumAnchor extends AbstractHelper
 {
+    /** Curso de una materia en un curso (modelo cur:). */
+    public const CUR_COURSE = 'cur:curso';
+    /** Etapa de un curso (modelo cur:). */
+    public const CUR_STAGE = 'cur:etapa';
+    /** Materia de la etapa de una materia en un curso, criterio o saber (modelo cur:). */
+    public const CUR_SUBJECT = 'cur:materia';
+    /** Materia en un curso de la que cuelga un criterio o saber (modelo cur:). */
+    public const CUR_SUBJECT_YEAR = 'cur:materiaCurso';
+
+    /**
+     * Orden de las etapas por su skos:notation cuando el ajuste
+     * curriculum_stage_order nunca se ha guardado. Son los códigos estables
+     * del currículo (INF, PRI, ESO, BAC), no rótulos traducibles.
+     */
+    public const DEFAULT_STAGE_ORDER = ['INF', 'PRI', 'ESO', 'BAC'];
+
     /**
      * Caché de ítems por id, de instancia (no static): Laminas crea un
      * helper por render, así que esta caché vive lo que dura la página.
@@ -70,22 +98,18 @@ class CurriculumAnchor extends AbstractHelper
             return null;
         }
 
-        // Consulta por lote 1: los ítems asignatura, para leer su nivel.
-        $subjectLevels = [];
+        // Consulta por lote 1: los ítems materia, para leer su curso y, en el
+        // modelo cur:, la materia de la etapa que da el rótulo del grupo.
+        $subjectInfo = [];
         foreach ($this->fetchItems(array_keys($subjectIds)) as $item) {
-            $ids = [];
-            foreach ($item->value($levelTerm, ['all' => true]) ?: [] as $value) {
-                $linked = $this->linkedResource($value);
-                if ($linked) {
-                    $ids[] = $linked->id();
-                }
-            }
-            $subjectLevels[$item->id()] = $ids;
+            $subjectInfo[$item->id()] = $this->subjectInfo($item, $levelTerm);
         }
         foreach ($subjects as &$subject) {
-            $subject['levelIds'] = $subject['id'] === null
-                ? []
-                : ($subjectLevels[$subject['id']] ?? []);
+            $info = $subject['id'] === null ? null : ($subjectInfo[$subject['id']] ?? null);
+            $subject['levelIds'] = $info['levelIds'] ?? [];
+            if (isset($info['label'])) {
+                $subject['label'] = $info['label'];
+            }
         }
         unset($subject);
 
@@ -118,10 +142,11 @@ class CurriculumAnchor extends AbstractHelper
      * colgados de la materia a la que pertenecen, para la ficha del recurso.
      *
      * Cada ítem alineado se asigna a su materia por el grafo curricular: su
-     * propiedad de termset (schema:inDefinedTermSet) apunta a la Asignatura.
-     * Si esa Asignatura no es una de las del recurso, se cae al nombre de la
-     * materia (schema:about del propio criterio). Lo que no casa con nada va
-     * a un grupo final «Otros», para no perder ningún valor.
+     * cur:materiaCurso (modelo cur:) o su propiedad de termset
+     * (schema:inDefinedTermSet, modelo anterior) apunta a la materia del
+     * recurso. Si no es una de las del recurso, se cae al nombre de la materia
+     * (cur:materia o schema:about del propio criterio). Lo que no casa con
+     * nada va a un grupo final «Otros», para no perder ningún valor.
      *
      * @param string[] $alignedTerms Términos a colgar, en orden de pintado.
      * @return array|null Filas de __invoke() con clave 'aligned' => [term => [entrada, ...]],
@@ -139,13 +164,22 @@ class CurriculumAnchor extends AbstractHelper
         $termsetProperty = trim((string) $view->themeSetting('advancedsearch_termset_property'))
             ?: 'schema:inDefinedTermSet';
 
+        // Misma clave de grupo que __invoke(): el rótulo de la materia de la
+        // etapa si el ítem la tiene. Los ítems ya están en caché.
+        [, $levelTerm] = $this->anchorTerms();
         $subjectKeyById = [];
         foreach ($resource->value($subjectTerm, ['all' => true]) ?: [] as $value) {
             $linked = $this->linkedResource($value);
             if ($linked) {
-                $subjectKeyById[$linked->id()] = self::groupKey((string) $linked->displayTitle());
+                $label = (string) $linked->displayTitle();
+                foreach ($this->fetchItems([$linked->id()]) as $item) {
+                    $label = $this->subjectInfo($item, $levelTerm)['label'] ?? $label;
+                }
+                $subjectKeyById[$linked->id()] = self::groupKey($label);
             }
         }
+        $subjectLinkTerms = array_values(array_unique([self::CUR_SUBJECT_YEAR, $termsetProperty]));
+        $subjectNameTerms = array_values(array_unique([self::CUR_SUBJECT, $subjectTerm]));
 
         $entries = [];
         foreach ($alignedTerms as $term) {
@@ -163,22 +197,31 @@ class CurriculumAnchor extends AbstractHelper
             // Una consulta por lote por término.
             foreach ($this->fetchItems(array_keys($ids)) as $item) {
                 $subjectIds = [];
-                foreach ($item->value($termsetProperty, ['all' => true]) ?: [] as $value) {
-                    $linked = $this->linkedResource($value);
-                    if ($linked) {
-                        $subjectIds[] = $linked->id();
+                foreach ($subjectLinkTerms as $linkTerm) {
+                    foreach ($item->value($linkTerm, ['all' => true]) ?: [] as $value) {
+                        $linked = $this->linkedResource($value);
+                        if ($linked) {
+                            $subjectIds[] = $linked->id();
+                        }
                     }
                 }
                 $subjectLabels = [];
-                foreach ($item->value($subjectTerm, ['all' => true]) ?: [] as $value) {
-                    $linked = $this->linkedResource($value);
-                    $subjectLabels[] = $linked ? (string) $linked->displayTitle() : (string) $value;
+                foreach ($subjectNameTerms as $nameTerm) {
+                    foreach ($item->value($nameTerm, ['all' => true]) ?: [] as $value) {
+                        $linked = $this->linkedResource($value);
+                        $subjectLabels[] = $linked ? (string) $linked->displayTitle() : (string) $value;
+                    }
                 }
-                $description = $item->value('dcterms:description');
+                // Modelo cur:: el título es «código · enunciado», así que la
+                // píldora muestra el código (skos:notation) y el enunciado
+                // (skos:definition) va al tooltip. Modelo anterior: título y
+                // dcterms:description.
+                $notation = trim((string) $item->value('skos:notation'));
+                $description = $item->value('skos:definition') ?: $item->value('dcterms:description');
                 $entries[] = [
                     'term' => $term,
                     'id' => $item->id(),
-                    'label' => (string) $item->displayTitle(),
+                    'label' => $notation !== '' ? $notation : (string) $item->displayTitle(),
                     'description' => $description ? trim(strip_tags((string) $description)) : '',
                     'url' => $this->searchUrl($term, $item->id()),
                     'subjectIds' => $subjectIds,
@@ -233,10 +276,10 @@ class CurriculumAnchor extends AbstractHelper
             }
         }
 
-        // Consulta por lote 1: todos los ítems asignatura de la página.
+        // Consulta por lote 1: todos los ítems materia de la página.
         $this->fetchItems(array_keys($subjectIds));
         // Consultas por lote 2 y 3: todos los niveles declarados de la
-        // página y los termsets a los que pertenecen.
+        // página y las etapas a las que pertenecen.
         $this->levelStages(array_keys($levelIds));
     }
 
@@ -275,45 +318,160 @@ class CurriculumAnchor extends AbstractHelper
     }
 
     /**
-     * Posición de la etapa de cada curso, para ordenar Infantil → Bachillerato.
-     * Consultas por lote 2 y 3.
+     * Orden de las etapas: los skos:notation del ajuste curriculum_stage_order
+     * (separados por espacios, comas o saltos de línea), o el orden por
+     * defecto mientras el ajuste no se haya guardado. Lo comparte
+     * view/search/facets-list.phtml para ordenar sus grupos de cursos.
+     *
+     * @return string[] Notaciones en mayúsculas, en orden.
+     */
+    public function stageOrder(): array
+    {
+        $raw = $this->getView()->themeSetting('curriculum_stage_order');
+        if ($raw === null) {
+            return self::DEFAULT_STAGE_ORDER;
+        }
+        $codes = preg_split('/[\s,;]+/u', mb_strtoupper((string) $raw, 'UTF-8'), -1, PREG_SPLIT_NO_EMPTY);
+        return array_values(array_unique($codes));
+    }
+
+    /**
+     * Rango de una etapa para ordenarla. Capa pura.
+     *
+     * Modelo cur:: la posición de su skos:notation en $order. Modelo anterior:
+     * su schema:position. Sin ninguno de los dos, al final.
+     */
+    public static function stageRank(?string $notation, ?string $position, array $order): int
+    {
+        $notation = mb_strtoupper(trim((string) $notation), 'UTF-8');
+        if ($notation !== '') {
+            $index = array_search($notation, $order, true);
+            if ($index !== false) {
+                return (int) $index;
+            }
+        }
+        $position = trim((string) $position);
+        if ($position !== '' && is_numeric($position)) {
+            return (int) $position;
+        }
+        return PHP_INT_MAX;
+    }
+
+    /**
+     * Orden total de los cursos: etapa, luego notación del curso (I01 < I02,
+     * modelo cur:) y por último id. Capa pura.
+     *
+     * @param array $levels [int $levelId => ['stage' => int, 'notation' => string]]
+     * @return array [int $levelId => int $rank] rangos consecutivos desde 0
+     */
+    public static function rankLevels(array $levels): array
+    {
+        $ids = array_keys($levels);
+        usort($ids, static function ($a, $b) use ($levels): int {
+            return ($levels[$a]['stage'] <=> $levels[$b]['stage'])
+                ?: strnatcmp($levels[$a]['notation'], $levels[$b]['notation'])
+                ?: ($a <=> $b);
+        });
+        return array_flip($ids);
+    }
+
+    /**
+     * Rango de cada curso para ordenarlos de Infantil a Bachillerato.
+     * Consultas por lote 2 (cursos) y 3 (etapas).
      *
      * @param int[] $levelIds
-     * @return array [int $levelId => int $position]
+     * @return array [int $levelId => int $rank]
      */
     private function levelStages(array $levelIds): array
     {
         $view = $this->getView();
         $termsetProperty = trim((string) $view->themeSetting('advancedsearch_termset_property'))
             ?: 'schema:inDefinedTermSet';
+        $stageTerms = array_values(array_unique([self::CUR_STAGE, $termsetProperty]));
 
-        $levelToTermset = [];
-        $termsetIds = [];
+        $levelToStage = [];
+        $levelNotation = [];
+        $stageIds = [];
         foreach ($this->fetchItems($levelIds) as $item) {
-            foreach ($item->value($termsetProperty, ['all' => true]) ?: [] as $value) {
+            $levelNotation[$item->id()] = trim((string) $item->value('skos:notation'));
+            $stageId = $this->firstLinkedId($item, $stageTerms);
+            if ($stageId !== null) {
+                $levelToStage[$item->id()] = $stageId;
+                $stageIds[$stageId] = true;
+            }
+        }
+
+        $order = $this->stageOrder();
+        $stageRanks = [];
+        foreach ($this->fetchItems(array_keys($stageIds)) as $item) {
+            $notation = $item->value('skos:notation');
+            $position = $item->value('schema:position');
+            $stageRanks[$item->id()] = self::stageRank(
+                $notation === null ? null : (string) $notation,
+                $position === null ? null : (string) $position,
+                $order
+            );
+        }
+
+        $levels = [];
+        foreach ($levelIds as $levelId) {
+            $stageId = $levelToStage[$levelId] ?? null;
+            $levels[$levelId] = [
+                'stage' => $stageId === null ? PHP_INT_MAX : ($stageRanks[$stageId] ?? PHP_INT_MAX),
+                'notation' => $levelNotation[$levelId] ?? '',
+            ];
+        }
+        return self::rankLevels($levels);
+    }
+
+    /**
+     * Curso y rótulo de grupo de un ítem materia. Modelo cur:: cursos en
+     * cur:curso y rótulo de su cur:materia. Modelo anterior: cursos en la
+     * propiedad de nivel y sin rótulo propio (se usa el título de la materia).
+     *
+     * @param \Omeka\Api\Representation\ItemRepresentation $item
+     * @return array{label: ?string, levelIds: int[]}
+     */
+    private function subjectInfo($item, string $levelTerm): array
+    {
+        $levelIds = [];
+        foreach (array_unique([self::CUR_COURSE, $levelTerm]) as $term) {
+            foreach ($item->value($term, ['all' => true]) ?: [] as $value) {
                 $linked = $this->linkedResource($value);
-                if ($linked) {
-                    $levelToTermset[$item->id()] = $linked->id();
-                    $termsetIds[$linked->id()] = true;
-                    break;
+                if ($linked && !in_array($linked->id(), $levelIds, true)) {
+                    $levelIds[] = $linked->id();
                 }
             }
         }
 
-        $positions = [];
-        foreach ($this->fetchItems(array_keys($termsetIds)) as $item) {
-            $position = $item->value('schema:position');
-            $positions[$item->id()] = $position === null ? PHP_INT_MAX : (int) (string) $position;
+        $label = null;
+        foreach ($item->value(self::CUR_SUBJECT, ['all' => true]) ?: [] as $value) {
+            $linked = $this->linkedResource($value);
+            $title = $linked ? trim((string) $linked->displayTitle()) : '';
+            if ($title !== '') {
+                $label = $title;
+                break;
+            }
         }
 
-        $stages = [];
-        foreach ($levelIds as $levelId) {
-            $termsetId = $levelToTermset[$levelId] ?? null;
-            $stages[$levelId] = $termsetId === null
-                ? PHP_INT_MAX
-                : ($positions[$termsetId] ?? PHP_INT_MAX);
+        return ['label' => $label, 'levelIds' => $levelIds];
+    }
+
+    /**
+     * @param \Omeka\Api\Representation\ItemRepresentation $item
+     * @param string[] $terms En orden de preferencia.
+     */
+    private function firstLinkedId($item, array $terms): ?int
+    {
+        foreach ($terms as $term) {
+            foreach ($item->value($term, ['all' => true]) ?: [] as $value) {
+                $linked = $this->linkedResource($value);
+                if ($linked) {
+                    return $linked->id();
+                }
+            }
         }
-        return $stages;
+        return null;
     }
 
     /**

@@ -16,8 +16,14 @@ also live below `view/search/`; inspect the real path before relying on legacy
   links and escaping rather than flattening every value into untrusted HTML.
 - Grouped facets use `advancedsearch_grouped_facets` and
   `advancedsearch_termset_property` settings in `config/theme.ini`; the latter
-  defaults to `schema:inDefinedTermSet`. Do not hardcode translated group labels
-  or item IDs. Maintain filter values, active chips, counts and pagination together.
+  defaults to `schema:inDefinedTermSet`. Curriculum courses (`cur:Curso`) group by
+  `cur:etapa`, ordered by stage `skos:notation` (`curriculum_stage_order`). Do not
+  hardcode translated group labels or item IDs. Maintain filter values, active
+  chips, counts and pagination together.
+- The curriculum follows the `cur:` model of `curriculo_lomloe_canarias`:
+  `schema:about` → `cur:MateriaCurso` (`cur:curso`, `cur:materia`), criteria and
+  knowledge → `cur:materiaCurso`. `helper/CurriculumAnchor.php` reads it first and
+  keeps the former DefinedTerm model as a fallback.
 - Preserve the existing fallback if AdvancedSearch is unavailable. Avoid adding
   per-result API requests to rendering or deriving item-set filters by fetching
   every child item.

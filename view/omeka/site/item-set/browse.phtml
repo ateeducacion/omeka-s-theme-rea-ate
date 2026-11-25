@@ -26,41 +26,89 @@ foreach ($itemSets as $itemSet) {
 // the visible sets of this page made later pages unreachable.
 $pagination = $this->pagination();
 
-// Build filter select options from visible sets
+// Filter values of each visible set, as [slug => label] per filter.
+//
+// Values may be literals, URIs or linked curriculum terms (cur: model of
+// curriculo_lomloe_canarias):
+// - Nivel: lrmi:educationalLevel (preferred) or lom:educationalLevel.
+// - Etapa: the cur:etapa of each linked course, plus lrmi:educationalAlignment
+//   values that are not a stage subject (the former literal «Etapa»).
+// - Temática: schema:about (a cur:MateriaCurso counts as its stage subject,
+//   cur:materia) or dcterms:subject, plus stage subjects (cur:Materia) linked
+//   in lrmi:educationalAlignment, which is what OERManager writes on REA.
+// Theme helpers are autoloaded only once fetched from the plugin manager, so
+// fetch both before calling their static methods.
+$helpers      = $this->getHelperPluginManager();
+$slugifyClass = get_class($helpers->get('SlugifyValues'));
+$anchorHelper = $helpers->get('CurriculumAnchor');
+$anchorClass  = get_class($anchorHelper);
+$stageOrder   = $anchorHelper->stageOrder();
+$classTerm = function ($resource): string {
+    $class = $resource ? $resource->resourceClass() : null;
+    return $class ? $class->term() : '';
+};
+$add = function (array &$list, string $label) use ($slugifyClass): void {
+    $slug = $slugifyClass::slug($label);
+    if ($slug !== '' && !isset($list[$slug])) {
+        $list[$slug] = $label;
+    }
+};
+$stageRanks = [];
+$filterValues = function ($is) use ($slugifyClass, $anchorClass, $stageOrder, $classTerm, $add, &$stageRanks): array {
+    $etapa = $nivel = $tematica = [];
+
+    $levelValues = $is->value('lrmi:educationalLevel', ['all' => true]) ?: $is->value('lom:educationalLevel', ['all' => true]) ?: [];
+    foreach ($levelValues as $v) {
+        $add($nivel, $slugifyClass::label($v));
+        $course = $v->valueResource();
+        $stage  = $course ? $course->value($anchorClass::CUR_STAGE) : null;
+        $stage  = $stage ? $stage->valueResource() : null;
+        if ($stage) {
+            $label = trim((string) $stage->displayTitle());
+            $add($etapa, $label);
+            $notation = $stage->value('skos:notation');
+            $stageRanks[$slugifyClass::slug($label)] = $anchorClass::stageRank(
+                $notation ? (string) $notation : null,
+                null,
+                $stageOrder
+            );
+        }
+    }
+
+    foreach ($is->value('lrmi:educationalAlignment', ['all' => true]) ?: [] as $v) {
+        $linked = $v->valueResource();
+        if ($linked && $classTerm($linked) === 'cur:Materia') {
+            $add($tematica, $slugifyClass::label($v));
+        } else {
+            $add($etapa, $slugifyClass::label($v));
+        }
+    }
+
+    $topicValues = $is->value('schema:about', ['all' => true]) ?: $is->value('dcterms:subject', ['all' => true]) ?: [];
+    foreach ($topicValues as $v) {
+        $linked  = $v->valueResource();
+        $subject = $linked ? $linked->value($anchorClass::CUR_SUBJECT) : null;
+        $subject = $subject ? $subject->valueResource() : null;
+        $add($tematica, $subject ? trim((string) $subject->displayTitle()) : $slugifyClass::label($v));
+    }
+
+    return ['etapa' => $etapa, 'nivel' => $nivel, 'tematica' => $tematica];
+};
+
+// Build filter select options from visible sets.
 $etapas = $niveles = $tematicas = [];
-foreach ($visibleSets as $entry) {
-    $is = $entry['itemSet'];
-
-    // Etapa: lrmi:educationalAlignment
-    $etapaValues = $is->value('lrmi:educationalAlignment', ['all' => true]) ?: [];
-    foreach ($etapaValues as $v) {
-        $label = (string) $v->value();
-        $slug  = implode('', $this->SlugifyValues([$v]));
-        if ($slug !== '' && !isset($etapas[$slug])) {
-            $etapas[$slug] = $label;
-        }
-    }
-
-    // Nivel: lrmi:educationalLevel (preferred) or lom:educationalLevel (fallback)
-    $nivelValues = $is->value('lrmi:educationalLevel', ['all' => true]) ?: $is->value('lom:educationalLevel', ['all' => true]) ?: [];
-    foreach ($nivelValues as $v) {
-        $label = (string) $v->value();
-        $slug  = implode('', $this->SlugifyValues([$v]));
-        if ($slug !== '' && !isset($niveles[$slug])) {
-            $niveles[$slug] = $label;
-        }
-    }
-
-    // Temática: schema:about (preferred) or dcterms:subject (fallback)
-    $temaValues = $is->value('schema:about', ['all' => true]) ?: $is->value('dcterms:subject', ['all' => true]) ?: [];
-    foreach ($temaValues as $v) {
-        $label = (string) $v->value();
-        $slug  = implode('', $this->SlugifyValues([$v]));
-        if ($slug !== '' && !isset($tematicas[$slug])) {
-            $tematicas[$slug] = $label;
-        }
-    }
+foreach ($visibleSets as $i => $entry) {
+    $values = $filterValues($entry['itemSet']);
+    $visibleSets[$i]['filters'] = $values;
+    $etapas    += $values['etapa'];
+    $niveles   += $values['nivel'];
+    $tematicas += $values['tematica'];
 }
+// Stages in curriculum order (curriculum_stage_order); other labels after, alphabetically.
+uksort($etapas, function ($a, $b) use ($stageRanks, $etapas) {
+    return (($stageRanks[$a] ?? PHP_INT_MAX) <=> ($stageRanks[$b] ?? PHP_INT_MAX))
+        ?: strcoll($etapas[$a], $etapas[$b]);
+});
 ?>
 
 <!-- PAGE HEADER -->
@@ -134,9 +182,9 @@ foreach ($visibleSets as $entry) {
 
         $coverUrl = $itemSet->thumbnailDisplayUrl('large');
 
-        $etapaSlugs   = implode(' ', $this->SlugifyValues($itemSet->value('lrmi:educationalAlignment', ['all' => true]) ?: []));
-        $nivelSlugs   = implode(' ', $this->SlugifyValues($itemSet->value('lrmi:educationalLevel',     ['all' => true]) ?: $itemSet->value('lom:educationalLevel', ['all' => true]) ?: []));
-        $temaSlugs    = implode(' ', $this->SlugifyValues($itemSet->value('schema:about',           ['all' => true]) ?: $itemSet->value('dcterms:subject',         ['all' => true]) ?: []));
+        $etapaSlugs   = implode(' ', array_keys($entry['filters']['etapa']));
+        $nivelSlugs   = implode(' ', array_keys($entry['filters']['nivel']));
+        $temaSlugs    = implode(' ', array_keys($entry['filters']['tematica']));
 
         $description  = $itemSet->displayDescription();
     ?>

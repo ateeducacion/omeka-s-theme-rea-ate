@@ -74,7 +74,10 @@ $hasQuery = isset($query) && trim((string) $query) !== '';
                     $thumbnail     = $this->thumbnail($item, 'large');
                     $resourceType  = $item->value('lrmi:learningResourceType');
                     $eduLevel      = $getFirstValue($item, ['lrmi:educationalLevel', 'lom:educationalLevel']);
-                    $topic         = $getFirstValue($item, ['schema:about', 'dcterms:subject']);
+                    // Topic: the stage subject OERManager derives on each REA (lrmi:educationalAlignment →
+                    // cur:Materia, «Matemáticas (ESO)») before schema:about, which now names a subject in
+                    // one year («Matemáticas · 1º ESO») and repeats the level pill beside it.
+                    $topic         = $getFirstValue($item, ['lrmi:educationalAlignment', 'schema:about', 'dcterms:subject']);
                     $body          = $bodyTerm
                         ? $item->value($bodyTerm, ['lang' => $valueLang])
                         : $item->displayDescription(null, $valueLang);

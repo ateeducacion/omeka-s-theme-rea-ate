@@ -35,7 +35,9 @@ $escapeAttr = $this->plugin('escapeHtmlAttr');
                 $url         = $linked->siteUrl();
                 $description = $linked->value('dcterms:description');
                 $edLevel     = $linked->value('lrmi:educationalLevel');
-                $about       = $linked->value('schema:about');
+                // Stage subject first (lrmi:educationalAlignment, written by OERManager);
+                // schema:about now names a subject in one year.
+                $about       = $linked->value('lrmi:educationalAlignment') ?: $linked->value('schema:about');
                 $lrt         = $linked->value('lrmi:learningResourceType');
                 ?>
                 <div class="linked-resource resource item">

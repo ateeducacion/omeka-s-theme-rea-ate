@@ -75,13 +75,37 @@ unset($_trv);
 
 foreach ([
     'learningResourceType' => 'lrmi:learningResourceType',
-    'educationalLevel'     => 'lrmi:educationalLevel',
     'educationalUse'       => 'lrmi:educationalUse',
     'educationalRole'      => 'lrmi:educationalRole',
 ] as $_prop => $_term) {
     $_v = $item->value($_term);
     if ($_v) { $_r = $_resolve($_v); if ($_r !== '') $_jl[$_prop] = $_r; }
 }
+
+// Every course, not only the first: a REA is often catalogued for several.
+$_lvVals = $item->value('lrmi:educationalLevel', ['all' => true]) ?: [];
+if ($_lvVals) {
+    $_lv = array_values(array_unique(array_filter(array_map($_resolve, $_lvVals))));
+    if ($_lv) $_jl['educationalLevel'] = count($_lv) === 1 ? $_lv[0] : $_lv;
+}
+
+// Stage subjects (lrmi:educationalAlignment → cur:Materia, derived by OERManager) as
+// Schema.org AlignmentObject; targetUrl is the published URI of the curriculum term
+// (its dcterms:identifier of type uri) when it has one.
+$_subjects = [];
+foreach ($item->value('lrmi:educationalAlignment', ['all' => true]) ?: [] as $_alV) {
+    $_name = $_resolve($_alV);
+    if ($_name === '') continue;
+    $_align = ['@type' => 'AlignmentObject', 'alignmentType' => 'educationalSubject', 'targetName' => $_name];
+    $_alR = $_alV->valueResource();
+    foreach ($_alR ? ($_alR->value('dcterms:identifier', ['all' => true]) ?: []) : [] as $_idV) {
+        $_idUri = $_idV->uri() ? $this->plugin('SafeUrl')($_idV->uri(), ['http', 'https'], false) : null;
+        if ($_idUri !== null) { $_align['targetUrl'] = $_idUri; break; }
+    }
+    $_jl['educationalAlignment'][] = $_align;
+    $_subjects[] = $_name;
+}
+unset($_alV, $_alR, $_idV, $_idUri, $_align, $_name);
 
 $_tVals = $item->value('lrmi:teaches', ['all' => true]) ?: [];
 if ($_tVals) {
@@ -109,14 +133,13 @@ if ($_relVals) {
     if ($_rel) $_jl['about'] = count($_rel) === 1 ? $_rel[0] : $_rel;
 }
 
-$_kwVals = array_merge(
-    $item->value('dcterms:subject', ['all' => true]) ?: [],
-    $item->value('schema:about', ['all' => true]) ?: []
-);
-if ($_kwVals) {
-    $_kw = array_values(array_filter(array_map($_resolve, $_kwVals)));
-    if ($_kw) $_jl['keywords'] = implode(', ', $_kw);
-}
+// Keywords: dcterms:subject plus the stage subjects; schema:about (a subject in one
+// year, «Matemáticas · 1º ESO») only when the REA has no stage subject.
+$_kw = array_map($_resolve, $item->value('dcterms:subject', ['all' => true]) ?: []);
+$_kw = array_merge($_kw, $_subjects ?: array_map($_resolve, $item->value('schema:about', ['all' => true]) ?: []));
+$_kw = array_values(array_unique(array_filter($_kw)));
+if ($_kw) $_jl['keywords'] = implode(', ', $_kw);
+unset($_kw, $_subjects);
 
 // $_resolve, not a string cast: a linked creator/publisher casts to its resource URL.
 $_creator = $_resolve($item->value('dcterms:creator'));
