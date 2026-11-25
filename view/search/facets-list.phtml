@@ -7,9 +7,10 @@
  * @var \AdvancedSearch\Response $response
  * @var \Omeka\Api\Representation\ItemSetRepresentation|null $itemSet
  *
- * Override del tema: agrupa ciertas facetas por el DefinedTermSet al que
- * pertenecen sus valores. Configuración: Appearance → REA ATE → Advanced
- * Search Settings.
+ * Override del tema: agrupa ciertas facetas por el grupo al que pertenecen
+ * sus valores: el DefinedTermSet de un DefinedTerm o, con el currículo en el
+ * modelo cur:, la etapa (cur:Etapa) de cada curso. Configuración:
+ * Appearance → REA ATE → Advanced Search Settings.
  */
 
 if (!isset($response)) return;
@@ -69,8 +70,9 @@ if ($rawGroupedFacets) {
 //      (índice sobre value_resource_id → consulta rápida).
 //   3) Mapear cada DefinedTerm → { etiqueta del TermSet, id del TermSet }.
 //
-// El mapa se construye una sola vez y se reutiliza para todas las facetas
-// listadas en advancedsearch_grouped_facets.
+// Después se añaden los cursos del modelo cur: (ver más abajo). El mapa se
+// construye una sola vez y se reutiliza para todas las facetas listadas en
+// advancedsearch_grouped_facets.
 $facetGroupsMaps = [];
 if (!empty($groupedFacetNames)) {
     $api = $plugins->get('api');
@@ -107,6 +109,61 @@ if (!empty($groupedFacetNames)) {
                 'order'    => $tsId,
                 'position' => $tsPos,
             ];
+        }
+    }
+
+    // Modelo cur: del currículo (curriculo_lomloe_canarias, cargado por el
+    // módulo EducationalCurriculum): las etapas son cur:Etapa y los cursos
+    // cur:Curso con cur:etapa; no hay DefinedTermSet ni schema:position, y
+    // las etapas se ordenan por su skos:notation (ajuste curriculum_stage_order,
+    // el mismo que usa el anclaje curricular). Dos consultas: etapas (~4) y
+    // cursos con etapa (~18). Sin el vocabulario cur, la clase no existe y la
+    // búsqueda no devuelve nada.
+    $curriculumAnchor = $plugins->get('CurriculumAnchor');
+    try {
+        $curStages = $api->search('items', ['resource_class_term' => 'cur:Etapa'])->getContent();
+    } catch (\Exception $e) {
+        $curStages = [];
+    }
+    if ($curStages) {
+        $stageOrder = $curriculumAnchor->stageOrder();
+        $stageInfo = [];
+        foreach ($curStages as $stage) {
+            $notationV = $stage->value('skos:notation');
+            $positionV = $stage->value('schema:position');
+            $stageInfo[$stage->id()] = [
+                'label'    => $stage->displayTitle(),
+                'order'    => $stage->id(),
+                'position' => \OmekaTheme\Helper\CurriculumAnchor::stageRank(
+                    $notationV !== null ? (string) $notationV : null,
+                    $positionV !== null ? (string) $positionV : null,
+                    $stageOrder
+                ),
+            ];
+        }
+        try {
+            $curCourses = $api->search('items', [
+                'resource_class_term' => 'cur:Curso',
+                'property' => [[
+                    'property' => \OmekaTheme\Helper\CurriculumAnchor::CUR_STAGE,
+                    'type'     => 'ex',
+                ]],
+            ])->getContent();
+        } catch (\Exception $e) {
+            $curCourses = [];
+        }
+        foreach ($curCourses as $course) {
+            $courseTitle = $course->displayTitle();
+            if (isset($globalValueMap[$courseTitle])) {
+                continue;
+            }
+            foreach ($course->value(\OmekaTheme\Helper\CurriculumAnchor::CUR_STAGE, ['all' => true]) ?: [] as $stageValue) {
+                $linkedStage = $stageValue->valueResource();
+                if ($linkedStage && isset($stageInfo[$linkedStage->id()])) {
+                    $globalValueMap[$courseTitle] = $stageInfo[$linkedStage->id()];
+                    break;
+                }
+            }
         }
     }
 
@@ -234,8 +291,9 @@ $facetPartialByType = [
                                 $usedValues[] = $fv['value'];
                             }
                         }
-                        // Ordenar: schema:position del DefinedTermSet primero;
-                        // si no tiene position (null) va al final, desempate por ID.
+                        // Ordenar: posición del grupo primero (schema:position del
+                        // DefinedTermSet o rango de la etapa cur: por su notación);
+                        // sin posición va al final, desempate por ID.
                         uksort($grouped, function ($a, $b) use ($grouped) {
                             $posA = $grouped[$a]['position'] ?? PHP_INT_MAX;
                             $posB = $grouped[$b]['position'] ?? PHP_INT_MAX;

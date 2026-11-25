@@ -756,6 +756,20 @@
     gap: 6px;
 }
 
+// Stage heading inside a course chip group: takes a full line before its courses.
+.bs-chip-group__stage {
+    flex-basis: 100%;
+    margin-top: 6px;
+    font-family: var(--ate-font-heading);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ate-text-muted);
+
+    &:first-child {
+        margin-top: 0;
+    }
+}
+
 .bs-chip {
     display: inline-flex;
     align-items: center;

@@ -229,7 +229,10 @@ $displayValue = function ($value) use ($valueLang) {
             $thumbnail = $this->thumbnail($item, 'large');
             $resourceType = $item->value('lrmi:learningResourceType');
             $educationalLevel = $getFirstValue($item, ['lrmi:educationalLevel', 'lom:educationalLevel']);
-            $topic = $getFirstValue($item, ['schema:about', 'dcterms:subject']);
+            // Topic: the stage subject OERManager derives on each REA (lrmi:educationalAlignment →
+            // cur:Materia, «Matemáticas (ESO)») before schema:about, which now names a subject in
+            // one year («Matemáticas · 1º ESO») and repeats the level pill beside it.
+            $topic = $getFirstValue($item, ['lrmi:educationalAlignment', 'schema:about', 'dcterms:subject']);
             $durationVal = $item->value('lrmi:timeRequired');
             $durationMinutes = $durationVal ? (int)(string)$durationVal : 0;
             $body = $bodyTerm ? $item->value($bodyTerm, ['lang' => $valueLang]) : $item->displayDescription(null, $valueLang);
