@@ -23,11 +23,35 @@ foreach (array_keys($eduPropTerms) as $term) {
 }
 
 // Build prop-id → array of text values from the incoming query (supports multi-value).
+// The form sends one condition per group (see asset/js/advanced-search.js): property
+// rows with text[] for res/list, AdvancedSearch filter rows with val[] for the rest.
+// Single-value property rows from older links are read too. A field may be an id or
+// a term.
 $existingPropValues = [];
+$propIdOf = function ($field) use ($eduProps): int {
+    if (is_numeric($field)) {
+        return (int) $field;
+    }
+    return is_string($field) ? (int) ($eduProps[$field] ?? 0) : 0;
+};
+$addExisting = function (int $pid, $values) use (&$existingPropValues): void {
+    if (!$pid) {
+        return;
+    }
+    foreach ((array) $values as $v) {
+        if (is_scalar($v) && (string) $v !== '') {
+            $existingPropValues[$pid][] = (string) $v;
+        }
+    }
+};
 foreach ($query['property'] ?? [] as $ep) {
-    $pid = (int) ($ep['property'] ?? 0);
-    if ($pid && isset($ep['text']) && $ep['text'] !== '') {
-        $existingPropValues[$pid][] = $ep['text'];
+    if (is_array($ep)) {
+        $addExisting($propIdOf($ep['property'] ?? 0), $ep['text'] ?? []);
+    }
+}
+foreach ($query['filter'] ?? [] as $ef) {
+    if (is_array($ef)) {
+        $addExisting($propIdOf($ef['field'] ?? 0), $ef['val'] ?? []);
     }
 }
 
@@ -170,7 +194,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
 <form id="advanced-search" method="get"
       action="<?php echo $escape($this->url(null, ['action' => 'browse'], true)); ?>">
 
-    <?php /* Container where JS will inject property[n][...] inputs for chip groups */ ?>
+    <?php /* Container where JS injects one condition per filter group (property[n] or filter[n]) */ ?>
     <div id="bs-chip-inputs" aria-hidden="true"
          data-dur-prop-id="<?php echo $escape((string) $durPropId); ?>"
          data-dur-values="<?php echo $escape(json_encode($durValues)); ?>"></div>
@@ -226,7 +250,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
             </span>
         </div>
 
-        <?php /* Level chips — multi-select; JS generates property[n][...] on submit */ ?>
+        <?php /* Level chips — multi-select; JS builds one condition for the group on submit */ ?>
         <?php if (isset($eduProps['lrmi:educationalLevel'])): ?>
         <div class="bs-filter-row">
             <div class="bs-filter-row__label">
@@ -277,7 +301,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
         </div>
         <?php endif; ?>
 
-        <?php /* Subject — dropdown + multi-value pills; JS generates property[n][...] on submit */ ?>
+        <?php /* Subject — dropdown + multi-value pills; JS builds one condition for the group on submit */ ?>
         <?php if (isset($eduProps['schema:about'])): ?>
         <div class="bs-filter-row">
             <div class="bs-filter-row__label">

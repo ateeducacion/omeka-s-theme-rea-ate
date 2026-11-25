@@ -134,76 +134,92 @@ if (document.readyState === 'loading') {
             });
         }
 
-        // Before submit: build property[n][...] inputs from all chip groups AND pill containers.
-        // Chips + pills use consecutive indices 0..N.
-        // Number inputs use static high indices (50, 51) set in PHP — disable when empty.
+        // Before submit: one search condition per filter group (level, type, audience,
+        // subject, duration). The values of a group are alternatives (OR) inside that
+        // single condition, and conditions are joined with AND.
+        //
+        // Not one property row per value joined with "or": Omeka evaluates property
+        // rows in sequence without parentheses, so "3º ESO or 4º ESO and Lengua"
+        // reads as "3º ESO or (4º ESO and Lengua)" and returns 3º ESO resources of
+        // any subject. Grouping needs a multi-value condition instead:
+        // - types that accept a list in a property row (res, list): property[n] with
+        //   text[] (AdvancedSearch matches any of them);
+        // - other types (in = contains): AdvancedSearch filter[n] with val[]; a
+        //   property row drops a list for these types and would match everything.
         const form = document.getElementById('advanced-search');
         if (!form) return;
 
+        const LIST_TYPES = ['res', 'list'];
+
         form.addEventListener('submit', function () {
             const container = document.getElementById('bs-chip-inputs');
-            if (container) {
-                container.replaceChildren();
-                let idx = 0;
+            if (!container) return;
+            container.replaceChildren();
 
-                // 1. Chip groups (multi-select chips for level, type, audience).
-                document.querySelectorAll('.bs-chip-group[data-prop-id]').forEach(function (group) {
-                    const propId   = group.dataset.propId;
-                    const propType = group.dataset.propType || 'in';
-                    const selected = group.querySelectorAll('.bs-chip.selected');
+            let propertyIdx = 0;
+            let filterIdx = 0;
 
-                    selected.forEach(function (chip, i) {
-                        const val = chip.dataset.value || chip.textContent.trim();
-                        addHidden(container, 'property[' + idx + '][property]', propId);
-                        addHidden(container, 'property[' + idx + '][type]',     propType);
-                        addHidden(container, 'property[' + idx + '][text]',     val);
-                        if (i > 0) {
-                            addHidden(container, 'property[' + idx + '][joiner]', 'or');
-                        }
-                        idx++;
+            function addCondition(propId, type, values) {
+                if (!propId || !values.length) return;
+                if (LIST_TYPES.indexOf(type) !== -1) {
+                    const stem = 'property[' + propertyIdx + ']';
+                    if (propertyIdx > 0) addHidden(container, stem + '[joiner]', 'and');
+                    addHidden(container, stem + '[property]', propId);
+                    addHidden(container, stem + '[type]', type);
+                    values.forEach(function (val) {
+                        addHidden(container, stem + '[text][]', val);
                     });
-                });
-
-                // 2. Pill containers (subject multi-value select → property OR conditions).
-                document.querySelectorAll('.bs-selected-pills[data-prop-id]').forEach(function (pills) {
-                    const propId   = pills.dataset.propId;
-                    const propType = pills.dataset.propType || 'in';
-                    const items    = pills.querySelectorAll('.bs-selected-pill[data-value]');
-
-                    items.forEach(function (pill, i) {
-                        const val = pill.dataset.value;
-                        addHidden(container, 'property[' + idx + '][property]', propId);
-                        addHidden(container, 'property[' + idx + '][type]',     propType);
-                        addHidden(container, 'property[' + idx + '][text]',     val);
-                        if (i > 0) {
-                            addHidden(container, 'property[' + idx + '][joiner]', 'or');
-                        }
-                        idx++;
+                    propertyIdx++;
+                } else {
+                    const stem = 'filter[' + filterIdx + ']';
+                    addHidden(container, stem + '[join]', 'and');
+                    addHidden(container, stem + '[field]', propId);
+                    addHidden(container, stem + '[type]', type);
+                    values.forEach(function (val) {
+                        addHidden(container, stem + '[val][]', val);
                     });
-                });
-
-                // 3. Collection pills → item_set_id[] inputs.
-                document.querySelectorAll('.bs-selected-pills[data-item-set-pills]').forEach(function (pills) {
-                    pills.querySelectorAll('.bs-selected-pill[data-value]').forEach(function (pill) {
-                        addHidden(container, 'item_set_id[]', pill.dataset.value);
-                    });
-                });
+                    filterIdx++;
+                }
             }
 
-            // 3. Duration range: Omeka only supports eq/in/sw/ew for property queries.
-            //    Build OR eq conditions for each known value within [min, max].
-            //    Known values come from PHP data attribute; fallback = multiples of 5.
-            const chipContainer = document.getElementById('bs-chip-inputs');
+            // 1. Chip groups (multi-select chips for level, type, audience).
+            document.querySelectorAll('.bs-chip-group[data-prop-id]').forEach(function (group) {
+                const values = Array.prototype.map.call(
+                    group.querySelectorAll('.bs-chip.selected'),
+                    function (chip) { return chip.dataset.value || chip.textContent.trim(); }
+                );
+                addCondition(group.dataset.propId, group.dataset.propType || 'in', values);
+            });
+
+            // 2. Pill containers (subject multi-value select).
+            document.querySelectorAll('.bs-selected-pills[data-prop-id]').forEach(function (pills) {
+                const values = Array.prototype.map.call(
+                    pills.querySelectorAll('.bs-selected-pill[data-value]'),
+                    function (pill) { return pill.dataset.value; }
+                );
+                addCondition(pills.dataset.propId, pills.dataset.propType || 'in', values);
+            });
+
+            // 3. Collection pills → item_set_id[] inputs (already OR inside one argument).
+            document.querySelectorAll('.bs-selected-pills[data-item-set-pills]').forEach(function (pills) {
+                pills.querySelectorAll('.bs-selected-pill[data-value]').forEach(function (pill) {
+                    addHidden(container, 'item_set_id[]', pill.dataset.value);
+                });
+            });
+
+            // 4. Duration range: Omeka has no numeric range for literals, so the known
+            //    values within [min, max] become one "is in list" condition. Known values
+            //    come from a PHP data attribute; fallback = multiples of 5.
             const minInput = document.getElementById('duration-min');
             const maxInput = document.getElementById('duration-max');
-            if (chipContainer && (minInput || maxInput)) {
-                const durPropId = chipContainer.dataset.durPropId;
+            if (minInput || maxInput) {
+                const durPropId = container.dataset.durPropId;
                 const minVal = minInput && minInput.value !== '' ? parseInt(minInput.value, 10) : -Infinity;
                 const maxVal = maxInput && maxInput.value !== '' ? parseInt(maxInput.value, 10) : Infinity;
 
                 let allDurValues = null;
                 try {
-                    const raw = chipContainer.dataset.durValues;
+                    const raw = container.dataset.durValues;
                     allDurValues = raw && raw !== 'null' ? JSON.parse(raw) : null;
                 } catch (e) { allDurValues = null; }
 
@@ -213,28 +229,13 @@ if (document.readyState === 'loading') {
                     for (let m5 = 5; m5 <= 240; m5 += 5) allDurValues.push(m5);
                 }
 
-                if (isFinite(minVal) || isFinite(maxVal)) {
+                if (durPropId && (isFinite(minVal) || isFinite(maxVal))) {
                     const matching = allDurValues.filter(function (v) {
                         return (isFinite(minVal) ? v >= minVal : true)
                             && (isFinite(maxVal) ? v <= maxVal : true);
-                    });
-
-                    if (matching.length === 0 && durPropId) {
-                        // Range entered but no values match — force zero results
-                        addHidden(container, 'property[' + idx + '][property]', durPropId);
-                        addHidden(container, 'property[' + idx + '][type]', 'eq');
-                        addHidden(container, 'property[' + idx + '][text]', '__no_match__');
-                        idx++;
-                    } else {
-                        matching.forEach(function (val, i) {
-                            addHidden(container, 'property[' + idx + '][property]', durPropId);
-                            addHidden(container, 'property[' + idx + '][type]', 'eq');
-                            addHidden(container, 'property[' + idx + '][text]', String(val));
-                            if (i > 0) addHidden(container, 'property[' + idx + '][joiner]', 'or');
-                            idx++;
-                        });
-                    }
-
+                    }).map(String);
+                    // A range with no known value must return nothing, not everything.
+                    addCondition(durPropId, 'list', matching.length ? matching : ['__no_match__']);
                 }
             }
         });
