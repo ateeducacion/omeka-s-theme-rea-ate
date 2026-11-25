@@ -37,6 +37,43 @@ class SlugifyValuesTest extends TestCase
         $this->assertSame(['nandu'], ($this->helper)($values));
     }
 
+    public function testLinkedResourcesAndUrisUseTheirLabel(): void
+    {
+        $values = [
+            new \ReaAteTest\Helper\Fake\Value(new \ReaAteTest\Helper\Fake\Item(1, '1º Primaria', [])),
+            $this->uri('https://example.org/etapa/eso'),
+        ];
+
+        $this->assertSame(['1-primaria', 'https-example-org-etapa-eso'], ($this->helper)($values));
+    }
+
+    private function uri(string $uri): object
+    {
+        return new class ($uri) {
+            private string $uri;
+
+            public function __construct(string $uri)
+            {
+                $this->uri = $uri;
+            }
+
+            public function valueResource()
+            {
+                return null;
+            }
+
+            public function value()
+            {
+                return null;
+            }
+
+            public function uri(): string
+            {
+                return $this->uri;
+            }
+        };
+    }
+
     /**
      * Build a minimal ValueRepresentation-like double exposing value().
      */

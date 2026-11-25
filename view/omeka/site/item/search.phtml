@@ -11,6 +11,7 @@ $eduPropTerms = [
     'lrmi:educationalLevel'     => 'Nivel educativo',
     'lrmi:learningResourceType' => 'Tipo de recurso',
     'schema:about'              => 'Materia o tema',
+    'lrmi:educationalAlignment' => 'Materia',
     'lrmi:educationalRole'      => 'Audiencia destinataria',
     'lrmi:timeRequired'         => 'Duración',
 ];
@@ -77,6 +78,95 @@ foreach ($availableItemSets as $_is) {
     $itemSetTitles[$_is->id()] = $_is->displayTitle();
 }
 
+// Curriculum lists (cur: model of curriculo_lomloe_canarias, loaded by the
+// EducationalCurriculum module): current courses grouped by stage, and current stage
+// subjects (cur:Materia). Filters then match the linked item by id (`res`), not by
+// label: labels such as «Educación Primaria» match no course («1º Primaria»), and
+// «Matemáticas» would also match «Matemáticas II». Without the curriculum the fixed
+// lists below are kept (text `in` filters).
+$anchorHelper = $this->getHelperPluginManager()->get('CurriculumAnchor');
+$anchorClass  = get_class($anchorHelper);
+$curStages    = [];
+try {
+    $_stages = $this->api()->search('items', ['resource_class_term' => 'cur:Etapa'])->getContent();
+} catch (\Exception $e) {
+    $_stages = [];
+}
+if ($_stages) {
+    $_order = $anchorHelper->stageOrder();
+    foreach ($_stages as $_st) {
+        $_n = $_st->value('skos:notation');
+        $_p = $_st->value('schema:position');
+        $curStages[$_st->id()] = [
+            'label'    => $_st->displayTitle(),
+            'rank'     => $anchorClass::stageRank($_n ? (string) $_n : null, $_p ? (string) $_p : null, $_order),
+            'courses'  => [],
+            'subjects' => [],
+        ];
+    }
+    // Current terms only: retired ones carry skos:changeNote.
+    $_current = [
+        ['property' => $anchorClass::CUR_STAGE, 'type' => 'ex'],
+        ['joiner' => 'and', 'property' => 'skos:changeNote', 'type' => 'nex'],
+    ];
+    $_stageOf = function ($term) use ($anchorClass, $curStages) {
+        foreach ($term->value($anchorClass::CUR_STAGE, ['all' => true]) ?: [] as $_v) {
+            $_r = $_v->valueResource();
+            if ($_r && isset($curStages[$_r->id()])) {
+                return $_r->id();
+            }
+        }
+        return null;
+    };
+    try {
+        $_courses = $this->api()->search('items', ['resource_class_term' => 'cur:Curso', 'property' => $_current])->getContent();
+    } catch (\Exception $e) {
+        $_courses = [];
+    }
+    $_courseNotation = [];
+    foreach ($_courses as $_c) {
+        $_sid = $_stageOf($_c);
+        if ($_sid !== null) {
+            $curStages[$_sid]['courses'][$_c->id()] = $_c->displayTitle();
+            $_courseNotation[$_c->id()] = (string) $_c->value('skos:notation');
+        }
+    }
+    try {
+        $_materias = $this->api()->search('items', [
+            'resource_class_term' => 'cur:Materia',
+            'property'            => $_current,
+            'sort_by'             => 'title',
+            'sort_order'          => 'asc',
+        ])->getContent();
+    } catch (\Exception $e) {
+        $_materias = [];
+    }
+    foreach ($_materias as $_m) {
+        $_sid = $_stageOf($_m);
+        if ($_sid !== null) {
+            $curStages[$_sid]['subjects'][$_m->id()] = $_m->displayTitle();
+        }
+    }
+    foreach ($curStages as &$_st) {
+        uksort($_st['courses'], function ($a, $b) use ($_courseNotation) {
+            return strnatcmp($_courseNotation[$a] ?? '', $_courseNotation[$b] ?? '') ?: ($a <=> $b);
+        });
+    }
+    unset($_st);
+    uasort($curStages, fn($a, $b) => ($a['rank'] <=> $b['rank']) ?: strcmp($a['label'], $b['label']));
+    unset($_stages, $_courses, $_materias, $_c, $_m, $_n, $_p, $_sid, $_order, $_current, $_courseNotation);
+}
+$curHasCourses  = (bool) array_filter(array_column($curStages, 'courses'));
+$curHasSubjects = isset($eduProps['lrmi:educationalAlignment'])
+    && (bool) array_filter(array_column($curStages, 'subjects'));
+// Subject filter: stage subject by id when the curriculum is loaded, else schema:about by text.
+$subjectTerm  = $curHasSubjects ? 'lrmi:educationalAlignment' : 'schema:about';
+$subjectLabelById = [];
+foreach ($curStages as $_st) {
+    $subjectLabelById += $_st['subjects'];
+}
+unset($_st);
+
 // Chip option lists.
 $levelChips = [
     'Educación Infantil', 'Educación Primaria',
@@ -99,7 +189,7 @@ $audienceChips = ['Alumnado', 'Docente', 'Familias', 'NEAE', 'Centros educativos
 $lvlVals      = $propVals('lrmi:educationalLevel');
 $typeVals     = $propVals('lrmi:learningResourceType');
 $audienceVals = $propVals('lrmi:educationalRole');
-$subjectVals  = $propVals('schema:about');   // multi-value pills
+$subjectVals  = $propVals($subjectTerm);    // multi-value pills
 
 // Duration range: Omeka-S only supports eq/in/sw/ew/res/ex/dt for property queries.
 // gte/lte are silently ignored. Workaround: build OR conditions for each matching
@@ -234,6 +324,25 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                 <small><?php echo $translate('Uno o varios'); ?></small>
             </div>
             <div class="bs-filter-row__control">
+                <?php if ($curHasCourses): ?>
+                <?php /* One group, so every selected course joins with OR; stage names are headings inside it. */ ?>
+                <div class="bs-chip-group bs-chip-group--staged"
+                     data-prop-id="<?php echo $escape((string) $eduProps['lrmi:educationalLevel']); ?>"
+                     data-prop-type="res">
+                    <?php foreach ($curStages as $stage): if (!$stage['courses']) continue; ?>
+                    <span class="bs-chip-group__stage"><?php echo $escape($stage['label']); ?></span>
+                    <?php foreach ($stage['courses'] as $courseId => $courseLabel):
+                        $isSel = in_array((string) $courseId, $lvlVals, true); ?>
+                    <button type="button"
+                            class="bs-chip<?php echo $isSel ? ' selected' : ''; ?>"
+                            aria-pressed="<?php echo $isSel ? 'true' : 'false'; ?>"
+                            data-value="<?php echo (int) $courseId; ?>">
+                        <?php echo $escape($courseLabel); ?>
+                    </button>
+                    <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </div>
+                <?php else: ?>
                 <div class="bs-chip-group"
                      data-prop-id="<?php echo $escape((string) $eduProps['lrmi:educationalLevel']); ?>"
                      data-prop-type="in">
@@ -246,6 +355,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                     </button>
                     <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
         <?php endif; ?>
@@ -278,7 +388,7 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
         <?php endif; ?>
 
         <?php /* Subject — dropdown + multi-value pills; JS generates property[n][...] on submit */ ?>
-        <?php if (isset($eduProps['schema:about'])): ?>
+        <?php if (isset($eduProps[$subjectTerm])): ?>
         <div class="bs-filter-row">
             <div class="bs-filter-row__label">
                 <?php echo $translate('Materia o tema'); ?>
@@ -292,21 +402,32 @@ $sortOrder = $escape($query['sort_order'] ?? 'desc');
                                     data-pills-target="subject-pills"
                                     aria-label="<?php echo $escape($translate('Seleccionar materia')); ?>">
                                 <option value=""><?php echo $escape($translate('Seleccionar materia…')); ?></option>
+                                <?php if ($curHasSubjects): ?>
+                                <?php foreach ($curStages as $stage): if (!$stage['subjects']) continue; ?>
+                                <optgroup label="<?php echo $escape($stage['label']); ?>">
+                                    <?php foreach ($stage['subjects'] as $subjectId => $subjectLabel): ?>
+                                    <option value="<?php echo (int) $subjectId; ?>"><?php echo $escape($subjectLabel); ?></option>
+                                    <?php endforeach; ?>
+                                </optgroup>
+                                <?php endforeach; ?>
+                                <?php else: ?>
                                 <?php foreach ($subjectOptions as $so): ?>
                                 <option value="<?php echo $escape($so); ?>"><?php echo $escape($so); ?></option>
                                 <?php endforeach; ?>
+                                <?php endif; ?>
                             </select>
                         </div>
                     </div>
                     <div class="bs-selected-pills"
                          id="subject-pills"
-                         data-prop-id="<?php echo $escape((string) $eduProps['schema:about']); ?>"
-                         data-prop-type="in">
-                        <?php foreach ($subjectVals as $sv): ?>
+                         data-prop-id="<?php echo $escape((string) $eduProps[$subjectTerm]); ?>"
+                         data-prop-type="<?php echo $curHasSubjects ? 'res' : 'in'; ?>">
+                        <?php foreach ($subjectVals as $sv):
+                            $svLabel = $curHasSubjects ? ($subjectLabelById[(int) $sv] ?? $sv) : $sv; ?>
                         <span class="bs-selected-pill" data-value="<?php echo $escape($sv); ?>">
-                            <?php echo $escape($sv); ?>
+                            <?php echo $escape($svLabel); ?>
                             <button type="button" class="bs-selected-pill__remove"
-                                    aria-label="<?php echo $escape($translate('Quitar')); ?> <?php echo $escape($sv); ?>">
+                                    aria-label="<?php echo $escape($translate('Quitar')); ?> <?php echo $escape($svLabel); ?>">
                                 <span class="material-symbols-outlined" aria-hidden="true">close</span>
                             </button>
                         </span>
