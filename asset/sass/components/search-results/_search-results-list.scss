@@ -258,15 +258,24 @@ ul.resource-list.search-result-list.list > li.resource.item,
         }
 
         // ---- Description (full-width row) ----
+        // Sits right under the heading, without a rule: it belongs to the
+        // title. A list only needs the gist, so it stops at three lines; the
+        // full text is on the item page.
         .description {
             order: 10;
             flex: 0 0 100%;
-            padding: 0.65rem 0 0;
-            margin: 0.25rem 0 0;
-            border-top: 1px solid $color__gray-93;
+            padding: 0;
+            margin: 0.15rem 0 0;
             font-size: 0.9rem;
             line-height: 1.45;
             color: $color__gray-33;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            overflow: hidden;
+            // Paragraph breaks would spend the three lines on blank space.
+            white-space: normal;
         }
 
         // ---- Linked-resource metadata (full-width rows) ----
@@ -274,6 +283,9 @@ ul.resource-list.search-result-list.list > li.resource.item,
         .property[data-term="dcterms:relation"] {
             position: relative;
             flex: 0 0 100%;
+            // Without it the row grows to its longest unbreakable chip (a
+            // saber básico title) and pushes the page sideways on phones.
+            min-width: 0;
             margin: 0;
             padding: 0.5rem 0 0 $meta-label-col;
             border-top: 1px solid $color__gray-93;
@@ -293,11 +305,9 @@ ul.resource-list.search-result-list.list > li.resource.item,
                 width: $meta-label-col;
                 padding-right: 0.5rem;
                 margin: 0;
-                font-size: 0.75rem;
+                font-size: 0.8rem;
                 font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                line-height: 1.5;
+                line-height: 1.6;
                 color: $color__gray-46;
             }
 
@@ -306,33 +316,56 @@ ul.resource-list.search-result-list.list > li.resource.item,
             // `width: auto !important` neutralises `.resource-list .resource
             // { width: 100% !important }`, which otherwise matches dd.value.
             // resource.items via the shared `resource` class.
+            // Same pill as the item page (_item-show.scss), at list size. The
+            // label searches; the item icon and the info button stay as quiet
+            // secondary actions and take the link colour on hover or focus.
             dd {
                 flex: 0 0 auto;
                 width: auto !important;
                 margin: 0;
-                padding: 3px 10px;
-                background: $color__white;
-                border: 1px solid $color__gray-87;
-                border-radius: 4px;
+                padding: 2px 6px 2px 12px;
+                background: var(--ate-surface-soft);
+                border: 1px solid var(--ate-hairline);
+                border-radius: var(--ate-radius-pill);
                 font-size: 0.85rem;
                 line-height: 1.4;
                 max-width: 100%;
                 transition: background 0.15s ease, border-color 0.15s ease;
 
-                &:hover {
-                    border-color: $color__gray-67;
-                    background: $color__gray-95;
+                &:hover,
+                &:focus-within {
+                    border-color: $color__link;
                 }
 
                 // Neutralise the default right margin that resource-link-info
                 // uses outside of chips — inside a chip we want tight padding.
                 .resource-link-info {
                     margin-right: 0;
+                    margin-left: 0.35rem;
+                    color: $color__gray-58;
+                }
+
+                .resource-link-info .o-icon-items,
+                .resource-link-info__btn {
+                    color: $color__gray-58;
+                    transition: color 0.15s ease;
+                }
+
+                &:hover .resource-link-info .o-icon-items,
+                &:hover .resource-link-info__btn,
+                .resource-link-info .resource-link:focus-visible .o-icon-items,
+                .resource-link-info__btn:focus-visible {
+                    color: $color__link;
                 }
             }
 
             .metadata-search-link {
-                color: $color__gray-33;
+                color: $color__headings;
+                font-weight: 500;
+                // Long labels wrap inside the chip; the icons stay glued to
+                // the last word through .value-content--nobr.
+                white-space: normal;
+                overflow-wrap: anywhere;
                 text-decoration: none;
                 font-size: 0.85rem;
 

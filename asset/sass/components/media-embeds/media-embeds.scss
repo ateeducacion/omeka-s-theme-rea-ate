@@ -15,6 +15,12 @@
       grid-template-columns: 1fr;
       gap: 1rem;
     }
+
+    // A lone medium (the usual SCORM or eXeLearning package) takes the whole
+    // row instead of leaving the second column empty.
+    > :only-child {
+      grid-column: 1 / -1;
+    }
   }
 }
 
@@ -374,7 +380,10 @@
 }
 
 // SCORM Buttons
-.btn-scorm-launch {
+// LearningObjectAdapter now prints .scorm-launch-btn / .scorm-download-btn
+// (with its own #007cba inline styles); the older .btn-scorm-* names stay.
+.btn-scorm-launch,
+.scorm-card .scorm-launch-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -399,7 +408,8 @@
   .material-symbols-outlined { font-size: 16px; }
 }
 
-.btn-scorm-download {
+.btn-scorm-download,
+.scorm-card .scorm-download-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;

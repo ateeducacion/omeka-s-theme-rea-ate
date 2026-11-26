@@ -7,9 +7,8 @@ $escAttr   = $this->plugin('escapeHtmlAttr');
 $translate = $this->plugin('translate');
 $safeUrl   = $this->plugin('SafeUrl');
 
-// Los proyectos catalogados con la plantilla básica usan dcterms:title y dcterms:description.
+// Los proyectos catalogados con la plantilla básica usan dcterms:title.
 $name        = $projectItem->value('schema:name') ?: $projectItem->value('dcterms:title');
-$description = $projectItem->value('schema:description') ?: $projectItem->value('dcterms:description');
 $url         = $projectItem->value('schema:url');
 
 $logoUrl = null;
@@ -48,6 +47,12 @@ $urlStr = '';
 if ($url) {
     $urlStr = $safeUrl($url->uri() ?: trim((string) $url)) ?? '';
 }
+
+// Sidebar row (_sidebar-row.scss): logo as media, name as title. The row goes to
+// the project's own site when there is one, otherwise to its item page. The
+// long description stays on that page.
+$rowUrl = $urlStr !== '' ? $urlStr : $projectItem->url();
+$isExternal = $urlStr !== '';
 ?>
 <aside class="project-funding" aria-label="<?php echo $escAttr($translate('Proyecto cofinanciador')); ?>">
 
@@ -55,32 +60,22 @@ if ($url) {
         <?php echo $escape($translate('Proyecto cofinanciador')); ?>
     </span>
 
-    <?php if ($logoUrl): ?>
-    <div class="project-funding__logo-area">
-        <img class="project-funding__logo"
-             src="<?php echo $escAttr($logoUrl); ?>"
-             alt="<?php echo $escAttr($name ? (string) $name : $translate('Logo del proyecto')); ?>">
-    </div>
-    <?php endif; ?>
-
-    <div class="project-funding__content">
-        <?php if ($name): ?>
-        <span class="project-funding__name"><?php echo $escape((string) $name); ?></span>
+    <a class="sidebar-row sidebar-row--link" href="<?php echo $escAttr($rowUrl); ?>"<?php
+        echo $isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+    ?>>
+        <?php if ($logoUrl): ?>
+        <span class="sidebar-row__media sidebar-row__media--logo">
+            <img src="<?php echo $escAttr($logoUrl); ?>"
+                 alt="<?php echo $name ? '' : $escAttr($translate('Logo del proyecto')); ?>">
+        </span>
         <?php endif; ?>
-
-        <?php if ($description): ?>
-        <p class="project-funding__description"><?php echo $escape((string) $description); ?></p>
-        <?php endif; ?>
-
-        <?php if ($urlStr): ?>
-        <a class="project-funding__link"
-           href="<?php echo $escAttr($urlStr); ?>"
-           target="_blank"
-           rel="noopener noreferrer">
-            <?php echo $escape($translate('Más información')); ?>
-            <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
-        </a>
-        <?php endif; ?>
-    </div>
+        <span class="sidebar-row__text">
+            <?php if ($name): ?>
+            <span class="sidebar-row__title"><?php echo $escape((string) $name); ?></span>
+            <?php endif; ?>
+            <span class="sidebar-row__meta"><?php echo $escape($translate($isExternal ? 'Web del proyecto' : 'Ficha del proyecto')); ?></span>
+        </span>
+        <span class="sidebar-row__chevron material-symbols-outlined" aria-hidden="true"><?php echo $isExternal ? 'open_in_new' : 'chevron_right'; ?></span>
+    </a>
 
 </aside>

@@ -640,3 +640,7 @@ msgstr "Copiar código para insertar"
 #: view/common/resource-page-block-layout/media-embeds.phtml
 msgid "Copy the HTML code to embed this media in a WordPress blog (paste it into a Custom HTML block) or any other website."
 msgstr "Copia el código HTML para insertar este medio en un blog de WordPress (pégalo en un bloque «HTML personalizado») o en cualquier otra web."
+
+#: view/search/facets-list.phtml:35
+msgid "Refine search"
+msgstr "Buscar en los resultados"

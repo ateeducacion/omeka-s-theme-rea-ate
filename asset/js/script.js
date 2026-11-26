@@ -162,12 +162,22 @@ const freedomScripts = () => {
         });
     }
 
-    // Add class to properties with dcterms:relation field-term
+    // The AdvancedResourceTemplate metadata block prints the term only as
+    // "(dcterms:relation)" text. Expose it as data-term, like
+    // common/resource-values does, so styles can target a property, and keep
+    // the dcterms-relation class the item page styles use.
     const properties = document.querySelectorAll('.property');
 
     properties.forEach((property) => {
         const fieldTerm = property.querySelector('dt .field-term');
-        if (fieldTerm && fieldTerm.textContent.includes('dcterms:relation')) {
+        if (!fieldTerm) {
+            return;
+        }
+        const term = fieldTerm.textContent.trim().replace(/^\(|\)$/g, '');
+        if (!property.hasAttribute('data-term')) {
+            property.setAttribute('data-term', term);
+        }
+        if (term === 'dcterms:relation') {
             property.classList.add('dcterms-relation');
         }
     });

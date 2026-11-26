@@ -63,6 +63,22 @@
         &:last-child { margin-bottom: 0; }
     }
 
+    // Literal values (uso educativo, destinatarios, tiempo…) are plain text
+    // with no pill, so separate them with commas; side by side they read as
+    // one phrase («Alumnado Familias»).
+    .property:not(.lrmi-educationalLevel):not(.schema-educationalLevel):not(.schema-about):not(.lrmi-assesses):not(.lrmi-teaches):not(.schema-assesses):not(.schema-teaches) {
+        // The whitespace between the inline-block dd elements is the space
+        // after each comma; drop the 16px gap the generic metadata dd adds.
+        dd.value {
+            margin-right: 0;
+            font-size: 15px;
+        }
+
+        dd.value:not(:last-of-type) .value-content::after {
+            content: ',';
+        }
+    }
+
     // ── Nivel educativo — pill azul sólido ──────────────────
     .lrmi-educationalLevel dd.value,
     .schema-educationalLevel dd.value {
@@ -158,6 +174,25 @@
 // Materia → cursos → (plegado) criterios y saberes. Ver
 // view/common/curriculum-anchor-card.phtml.
 .anclaje-curricular--grouped {
+    // A section without a box: each subject row (.sidebar-row) is a card.
+    background: none;
+    border-left: 0;
+    border-radius: 0;
+    padding: 0;
+
+    .anclaje-curricular__title { margin-bottom: 8px; }
+
+    // The generic `.anclaje-curricular dt` caption style would hit the facts
+    // card labels.
+    .sidebar-fact__label {
+        margin: 0;
+        font-size: inherit;
+        font-weight: inherit;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .sidebar-fact__value { margin-left: 0 !important; }
 
     .curriculum-cards {
         list-style: none;
@@ -168,26 +203,15 @@
     // Anula `ul li { margin-bottom }` de base/elements/_lists.scss.
     .curriculum-cards li { margin-bottom: 0; }
 
-    .curriculum-card {
-        padding: 14px 0;
-
-        &:first-child { padding-top: 0; }
-        & + .curriculum-card { border-top: 1px solid var(--ate-hairline); }
-
-        &--orphan .curriculum-card__subject { color: var(--ate-text-muted); }
+    .curriculum-card--orphan .curriculum-card__subject {
+        color: var(--ate-text-muted);
+        font-style: italic;
     }
 
-    .curriculum-card__subject {
-        margin: 0 0 8px;
-        font-size: 14px;
-        font-weight: 700;
-        line-height: 1.35;
-        color: var(--ate-color-brand-blue-dark);
-    }
-
+    // Course links inside the open row.
     .curriculum-card__levels {
         list-style: none;
-        margin: 0;
+        margin: 0 0 4px;
         padding: 0;
         display: flex;
         flex-wrap: wrap;
@@ -206,38 +230,6 @@
 
         &:hover,
         &:focus-visible { text-decoration: underline; }
-    }
-
-    // Resumen plegable «6 criterios · 10 saberes».
-    .curriculum-card__aligned {
-        margin-top: 10px;
-
-        > summary {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            list-style: none;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--ate-color-brand-blue-mid);
-
-            &::-webkit-details-marker { display: none; }
-
-            &::before {
-                content: '';
-                width: 0;
-                height: 0;
-                border-top: 4px solid transparent;
-                border-bottom: 4px solid transparent;
-                border-left: 6px solid currentColor;
-                transition: transform 0.15s;
-            }
-
-            &:hover { text-decoration: underline; }
-        }
-
-        &[open] > summary::before { transform: rotate(90deg); }
     }
 
     .curriculum-card__term { margin-top: 10px; }
