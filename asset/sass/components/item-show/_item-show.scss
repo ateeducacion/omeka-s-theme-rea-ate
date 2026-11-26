@@ -189,18 +189,21 @@ body.item.resource.show {
         }
     }
 
-    .item-main { min-width: 0; }
+    // .item-main carries the #main-content id, so it also took the layout's
+    // page padding: 48px of extra space between the hero rule and the text.
+    .item-main#main-content {
+        min-width: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
 
+    // Scrolls with the page: with open subject rows the column is taller than
+    // the viewport, and a sticky column would hide its lower rows until the
+    // end of the main column.
     .item-sidebar {
-        position: sticky;
-        top: calc(var(--header-compact-height, 72px) + 20px);
         display: flex;
         flex-direction: column;
-        gap: 16px;
-
-        @media (max-width: 900px) {
-            position: static;
-        }
+        gap: 20px;
     }
 
 
@@ -221,6 +224,20 @@ body.item.resource.show {
         display: none;
     }
 
+    // The hero already shows the title; the metadata block repeated it as a
+    // grey line above the description. data-term is set by script.js.
+    .block-metadata .property[data-term="dcterms:title"] {
+        display: none;
+    }
+
+    // Reading measure: about 90 characters per line instead of the ~140 of
+    // the full column, without leaving a wide gap beside the full-width
+    // relation chips and media below.
+    .block-metadata .property[data-term="dcterms:description"],
+    .block-metadata .property[data-term="dcterms:abstract"] {
+        max-width: 90ch;
+    }
+
 
     // ── dcterms:relation — valores como pill tags ───────────
     .property.dcterms-relation {
@@ -230,14 +247,14 @@ body.item.resource.show {
             position: relative;
         }
 
+        // Plain label, as in the result cards: only section headings
+        // («Medios») use tracked capitals.
         > dt {
             display: block !important;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
+            font-size: 13px;
+            font-weight: 600;
             color: var(--ate-text-muted);
-            margin-bottom: 8px;
+            margin: 20px 0 8px;
             float: none !important;
             width: auto !important;
 
@@ -419,16 +436,11 @@ body.item.resource.show {
     }
 }
 
-// Bloque lateral de la licencia: mismo cuadro que .anclaje-curricular (fondo suave,
-// filete izquierdo de 4px, radio lg) con el acento azul de .project-funding.
+// Bloque lateral de la licencia: una sección sin caja; la fila
+// (.sidebar-row, _sidebar-row.scss) es la tarjeta.
 .item-license {
-    background: var(--ate-surface-soft);
-    border-left: 4px solid var(--ate-color-brand-blue-mid);
-    border-radius: var(--ate-radius-lg);
-    padding: 20px;
-
     &__title {
-        margin: 0 0 12px;
+        margin: 0 0 8px;
         font-size: 10px;
         font-weight: 700;
         letter-spacing: 1.4px;

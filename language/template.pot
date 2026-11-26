@@ -639,3 +639,7 @@ msgstr ""
 #: view/common/resource-page-block-layout/media-embeds.phtml
 msgid "Copy the HTML code to embed this media in a WordPress blog (paste it into a Custom HTML block) or any other website."
 msgstr ""
+
+#: view/search/facets-list.phtml:35
+msgid "Refine search"
+msgstr ""

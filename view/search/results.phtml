@@ -115,9 +115,9 @@ if ($curriculumAnchor) {
         <?php endif; ?>
         <div class="resource-body resource-metadata">
             <?php if (strlen($body)): ?>
-            <div class="description">
-                <?= $escapeValueOrGetHtml($body, $allowHtml) ?>
-            </div>
+            <?php // On one line: .description uses white-space: pre-line, so
+            // template indentation would render as a blank first line. ?>
+            <div class="description"><?= $escapeValueOrGetHtml($body, $allowHtml) ?></div>
             <?php endif; ?>
             <?php if ($showProperties): ?>
             <dl class="properties">

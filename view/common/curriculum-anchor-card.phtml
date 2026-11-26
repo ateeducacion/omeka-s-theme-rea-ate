@@ -6,7 +6,7 @@
  * @var array  $rows          Filas de OmekaTheme\Helper\CurriculumAnchor::alignment()
  * @var string $divClass      Clase del contenedor (ajuste anclaje_div_class)
  * @var array  $alignedLabels [term => rótulo sin traducir]
- * @var array  $flatBlocks    [term => ['label', 'values']] términos literales, en lista plana
+ * @var array  $flatBlocks    [term => ['label', 'values']] términos literales, en la tarjeta de datos
  */
 $escape     = $this->plugin('escapeHtml');
 $escapeAttr = $this->plugin('escapeHtmlAttr');
@@ -26,6 +26,15 @@ $countLabel = function (string $term, int $n) use ($countWords, $alignedLabels, 
     return $translate($alignedLabels[$term] ?? $term) . ' (' . $n . ')';
 };
 
+// Icono de cada término literal de la tarjeta de datos; «info» para el resto.
+$factIcons = [
+    'lrmi:timeRequired'    => 'schedule',
+    'lrmi:educationalRole' => 'group',
+    'lrmi:educationalUse'  => 'lightbulb',
+    'dcterms:rights'       => 'copyright',
+    'dcterms:audience'     => 'group',
+];
+
 // Un código puede aparecer en dos tarjetas: el id del tooltip lleva un contador.
 $tipIndex = 0;
 
@@ -38,57 +47,85 @@ $this->headScript()->appendFile($this->assetUrl('js/curriculum-anchor.js'), 'tex
         <?php echo $escape($translate('Anclaje curricular')); ?>
     </h2>
     <ul class="curriculum-cards">
-        <?php foreach ($rows as $row): ?>
+        <?php foreach ($rows as $row):
+            // Closed row: the stage subject as title, its courses and the
+            // aligned-term counts as secondary text. Open: course links and codes.
+            $levelLabels = array_column($row['levels'], 'label');
+            $counts = [];
+            foreach ($row['aligned'] as $term => $entries) {
+                $counts[] = $countLabel($term, count($entries));
+            }
+        ?>
         <li class="curriculum-card<?php echo $row['orphan'] ? ' curriculum-card--orphan' : ''; ?>">
-            <h3 class="curriculum-card__subject"><?php echo $escape($row['label']); ?></h3>
-
-            <?php if ($row['levels']): ?>
-            <ul class="curriculum-card__levels">
-                <?php foreach ($row['levels'] as $level): ?>
-                <li><a class="curriculum-card__level" href="<?php echo $escapeAttr($level['url']); ?>" aria-label="<?php
-                    echo $escapeAttr($row['label'] . ' — ' . $level['label']);
-                ?>"><?php echo $escape($level['label']); ?></a></li>
-                <?php endforeach; ?>
-            </ul>
-            <?php endif; ?>
-
-            <?php if ($row['aligned']): ?>
-            <details class="curriculum-card__aligned">
-                <summary><?php
-                    $parts = [];
-                    foreach ($row['aligned'] as $term => $entries) {
-                        $parts[] = $countLabel($term, count($entries));
-                    }
-                    echo $escape(implode(' · ', $parts));
-                ?></summary>
-                <?php foreach ($row['aligned'] as $term => $entries): ?>
-                <div class="curriculum-card__term">
-                    <h4 class="curriculum-card__term-label"><?php echo $escape($translate($alignedLabels[$term] ?? $term)); ?></h4>
-                    <ul class="curriculum-card__codes">
-                        <?php foreach ($entries as $entry):
-                            $tipId = $entry['description'] !== '' ? 'curriculum-tip-' . (++$tipIndex) : null;
-                        ?>
-                        <li class="curriculum-card__code-item"><?php if ($entry['url']): ?><a class="curriculum-card__code" href="<?php echo $escapeAttr($entry['url']); ?>"<?php
-                            echo $tipId ? ' aria-describedby="' . $tipId . '"' : '';
-                        ?>><?php echo $escape($entry['label']); ?></a><?php else: ?><span class="curriculum-card__code"<?php
-                            echo $tipId ? ' tabindex="0" aria-describedby="' . $tipId . '"' : '';
-                        ?>><?php echo $escape($entry['label']); ?></span><?php endif; ?><?php if ($tipId): ?><span class="curriculum-card__tip" id="<?php echo $tipId; ?>" role="tooltip"><?php echo $escape($entry['description']); ?></span><?php endif; ?></li>
+            <details class="sidebar-row sidebar-row--disclosure">
+                <summary class="sidebar-row__summary">
+                    <span class="sidebar-row__media sidebar-row__media--soft">
+                        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+                    </span>
+                    <span class="sidebar-row__text">
+                        <span class="sidebar-row__title curriculum-card__subject"><?php echo $escape($row['label']); ?></span>
+                        <?php if ($levelLabels): ?>
+                        <span class="sidebar-row__meta"><?php echo $escape(implode(', ', $levelLabels)); ?></span>
+                        <?php endif; ?>
+                        <?php if ($counts): ?>
+                        <span class="sidebar-row__meta"><?php echo $escape(implode(', ', $counts)); ?></span>
+                        <?php endif; ?>
+                    </span>
+                    <span class="sidebar-row__chevron material-symbols-outlined" aria-hidden="true">expand_more</span>
+                </summary>
+                <div class="sidebar-row__panel">
+                    <?php if ($row['levels']): ?>
+                    <ul class="curriculum-card__levels">
+                        <?php foreach ($row['levels'] as $level): ?>
+                        <li><a class="curriculum-card__level" href="<?php echo $escapeAttr($level['url']); ?>" aria-label="<?php
+                            echo $escapeAttr($row['label'] . ' — ' . $level['label']);
+                        ?>"><?php echo $escape($level['label']); ?></a></li>
                         <?php endforeach; ?>
                     </ul>
+                    <?php endif; ?>
+                    <?php foreach ($row['aligned'] as $term => $entries): ?>
+                    <div class="curriculum-card__term">
+                        <h4 class="curriculum-card__term-label"><?php echo $escape($translate($alignedLabels[$term] ?? $term)); ?></h4>
+                        <ul class="curriculum-card__codes">
+                            <?php foreach ($entries as $entry):
+                                $tipId = $entry['description'] !== '' ? 'curriculum-tip-' . (++$tipIndex) : null;
+                            ?>
+                            <li class="curriculum-card__code-item"><?php if ($entry['url']): ?><a class="curriculum-card__code" href="<?php echo $escapeAttr($entry['url']); ?>"<?php
+                                echo $tipId ? ' aria-describedby="' . $tipId . '"' : '';
+                            ?>><?php echo $escape($entry['label']); ?></a><?php else: ?><span class="curriculum-card__code"<?php
+                                echo $tipId ? ' tabindex="0" aria-describedby="' . $tipId . '"' : '';
+                            ?>><?php echo $escape($entry['label']); ?></span><?php endif; ?><?php if ($tipId): ?><span class="curriculum-card__tip" id="<?php echo $tipId; ?>" role="tooltip"><?php echo $escape($entry['description']); ?></span><?php endif; ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
             </details>
-            <?php endif; ?>
         </li>
         <?php endforeach; ?>
     </ul>
 
-    <?php foreach ($flatBlocks as $term => $data): ?>
-    <div class="property <?php echo $escapeAttr(str_replace(':', '-', $term)); ?>">
-        <dt><?php echo $escape($translate($data['label'])); ?></dt>
-        <?php foreach ($data['values'] as $value): ?>
-        <dd class="value"><span class="value-content"><?php echo $value->asHtml(); ?></span></dd>
+    <?php if ($flatBlocks): ?>
+    <?php // Literal terms are facts, not destinations: one dashed card with an
+          // icon and the value; the term label is for screen readers only. ?>
+    <dl class="sidebar-facts">
+        <?php foreach ($flatBlocks as $term => $data):
+            $values = [];
+            foreach ($data['values'] as $value) {
+                $values[] = $value->asHtml();
+            }
+        ?>
+        <div class="sidebar-fact <?php echo $escapeAttr(str_replace(':', '-', $term)); ?>">
+            <dt class="sidebar-fact__label">
+                <span class="sidebar-row__media sidebar-row__media--soft">
+                    <span class="material-symbols-outlined" aria-hidden="true"><?php echo $escape($factIcons[$term] ?? 'info'); ?></span>
+                </span>
+                <?php // Shown only to screen readers: the icon names the term. ?>
+                <span class="sidebar-fact__name"><?php echo $escape($translate($data['label'])); ?></span>
+            </dt>
+            <dd class="sidebar-fact__value sidebar-row__title"><?php echo implode(', ', $values); ?></dd>
+        </div>
         <?php endforeach; ?>
-    </div>
-    <?php endforeach; ?>
+    </dl>
+    <?php endif; ?>
 </div>

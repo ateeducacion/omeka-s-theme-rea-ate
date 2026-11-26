@@ -1,9 +1,26 @@
 <?php
 /** @var \Omeka\Api\Representation\ValueRepresentation $value dcterms:license con URI */
 $escape    = $this->plugin('escapeHtml');
+$escAttr   = $this->plugin('escapeHtmlAttr');
 $translate = $this->plugin('translate');
+
+$badge = $this->plugin('LicenseBadge')($value->uri());
 ?>
 <section class="item-license" aria-labelledby="item-license-title">
     <h2 class="item-license__title" id="item-license-title"><?php echo $escape($translate('Licencia')); ?></h2>
+    <?php if ($badge): ?>
+    <?php // Sidebar row (_sidebar-row.scss): the official badge is the media. ?>
+    <a class="sidebar-row sidebar-row--link" href="<?php echo $escAttr($badge['uri']); ?>" rel="license noopener" target="_blank">
+        <span class="sidebar-row__media sidebar-row__media--badge">
+            <img src="<?php echo $escAttr($this->assetUrl('img/cc/' . $badge['image'])); ?>" alt="" width="88" height="31">
+        </span>
+        <span class="sidebar-row__text">
+            <span class="sidebar-row__title"><?php echo $escape($badge['label']); ?></span>
+            <span class="sidebar-row__meta"><?php echo $escape($translate($badge['summary'])); ?></span>
+        </span>
+        <span class="sidebar-row__chevron material-symbols-outlined" aria-hidden="true">chevron_right</span>
+    </a>
+    <?php else: ?>
     <?php echo $this->partial('common/license-badge', ['value' => $value]); ?>
+    <?php endif; ?>
 </section>

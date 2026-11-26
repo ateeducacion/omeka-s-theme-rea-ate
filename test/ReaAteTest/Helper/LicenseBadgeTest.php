@@ -14,11 +14,11 @@ class LicenseBadgeTest extends TestCase
     public static function licenciasAdmitidas(): array
     {
         return [
-            'cc0'       => ['https://creativecommons.org/publicdomain/zero/1.0/', 'CC0 1.0', 'zero.png'],
-            'by'        => ['https://creativecommons.org/licenses/by/4.0/', 'CC BY 4.0', 'by.png'],
-            'by-sa'     => ['https://creativecommons.org/licenses/by-sa/4.0/', 'CC BY-SA 4.0', 'by-sa.png'],
-            'by-nc'     => ['https://creativecommons.org/licenses/by-nc/4.0/', 'CC BY-NC 4.0', 'by-nc.png'],
-            'by-nc-sa'  => ['https://creativecommons.org/licenses/by-nc-sa/4.0/', 'CC BY-NC-SA 4.0', 'by-nc-sa.png'],
+            'cc0'       => ['https://creativecommons.org/publicdomain/zero/1.0/', 'CC0 1.0', 'zero.svg'],
+            'by'        => ['https://creativecommons.org/licenses/by/4.0/', 'CC BY 4.0', 'by.svg'],
+            'by-sa'     => ['https://creativecommons.org/licenses/by-sa/4.0/', 'CC BY-SA 4.0', 'by-sa.svg'],
+            'by-nc'     => ['https://creativecommons.org/licenses/by-nc/4.0/', 'CC BY-NC 4.0', 'by-nc.svg'],
+            'by-nc-sa'  => ['https://creativecommons.org/licenses/by-nc-sa/4.0/', 'CC BY-NC-SA 4.0', 'by-nc-sa.svg'],
         ];
     }
 
@@ -27,7 +27,10 @@ class LicenseBadgeTest extends TestCase
     {
         $badge = (new LicenseBadge())($uri);
 
-        $this->assertSame(['uri' => $uri, 'label' => $label, 'image' => $image], $badge);
+        $this->assertSame($uri, $badge['uri']);
+        $this->assertSame($label, $badge['label']);
+        $this->assertSame($image, $badge['image']);
+        $this->assertNotSame('', $badge['summary'], 'every licence has a one-line summary');
     }
 
     public function testToleraHttpSinBarraFinalYMayusculas(): void
@@ -35,7 +38,7 @@ class LicenseBadgeTest extends TestCase
         $badge = (new LicenseBadge())('http://CreativeCommons.org/licenses/by-sa/4.0');
 
         $this->assertSame('https://creativecommons.org/licenses/by-sa/4.0/', $badge['uri']);
-        $this->assertSame('by-sa.png', $badge['image']);
+        $this->assertSame('by-sa.svg', $badge['image']);
     }
 
     /** @return array<string, array{?string}> */

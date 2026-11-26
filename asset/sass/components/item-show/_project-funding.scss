@@ -1,10 +1,5 @@
 .project-funding {
-    background: var(--ate-surface-canvas);
-    border: 1px solid var(--ate-hairline);
-    border-left: 3px solid var(--ate-color-brand-blue-mid);
-    border-radius: var(--ate-radius-lg);
-    padding: 16px 18px;
-    overflow: hidden;
+    // A section without a box: the .sidebar-row inside is the card.
 }
 
 .project-funding__eyebrow {
@@ -14,7 +9,7 @@
     letter-spacing: 1.4px;
     text-transform: uppercase;
     color: var(--ate-text-muted);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .project-funding__logo-area {
